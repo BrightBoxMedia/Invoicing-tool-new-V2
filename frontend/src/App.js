@@ -293,15 +293,28 @@ const Projects = () => {
     }
   };
 
+  const [editableMetadata, setEditableMetadata] = useState({
+    project_name: '',
+    client: '',
+    architect: '',
+    location: ''
+  });
+
   const createProjectFromBOQ = async () => {
     if (!parsedData) return;
+
+    // Validate required fields
+    if (!editableMetadata.project_name || !editableMetadata.client || !editableMetadata.architect) {
+      alert('Please fill in all required fields: Project Name, Client, and Architect');
+      return;
+    }
 
     try {
       const token = localStorage.getItem('token');
       
       // Create client if new
       let clientId = null;
-      const clientName = parsedData.metadata.client || 'Unknown Client';
+      const clientName = editableMetadata.client;
       
       // Check if client exists
       let existingClient = clients.find(c => c.name.toLowerCase() === clientName.toLowerCase());
@@ -309,7 +322,7 @@ const Projects = () => {
       if (!existingClient) {
         const clientData = {
           name: clientName,
-          bill_to_address: 'Address to be updated',
+          bill_to_address: editableMetadata.location || 'Address to be updated',
           gst_no: ''
         };
         
@@ -321,13 +334,16 @@ const Projects = () => {
         clientId = existingClient.id;
       }
 
-      // Create project
+      // Create project with validated data
       const projectData = {
-        project_name: parsedData.metadata.project_name || 'Untitled Project',
-        architect: parsedData.metadata.architect || 'Unknown Architect',
+        project_name: editableMetadata.project_name,
+        architect: editableMetadata.architect,
         client_id: clientId,
         client_name: clientName,
-        metadata: parsedData.metadata,
+        metadata: {
+          ...editableMetadata,
+          date: new Date().toISOString()
+        },
         boq_items: parsedData.items,
         total_project_value: parsedData.total_value,
         advance_received: 0
@@ -340,8 +356,10 @@ const Projects = () => {
       alert('Project created successfully!');
       setShowBOQModal(false);
       setParsedData(null);
+      setEditableMetadata({ project_name: '', client: '', architect: '', location: '' });
       fetchProjects();
     } catch (error) {
+      console.error('Project creation error:', error);
       alert('Error creating project: ' + (error.response?.data?.detail || error.message));
     }
   };
