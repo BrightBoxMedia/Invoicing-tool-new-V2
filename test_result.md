@@ -306,8 +306,7 @@
     - "Projects Page Error Fix"
     - "Activity Logs Backend and Frontend"
     - "Item Master Implementation"
-  stuck_tasks:
-    - "Projects Page Error Fix"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
