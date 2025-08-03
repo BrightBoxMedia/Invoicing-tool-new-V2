@@ -127,6 +127,11 @@ const Navbar = ({ user, onLogout }) => {
                 </Link>
               )}
               {user.role === 'super_admin' && (
+                <Link to="/users" className="text-gray-700 hover:text-blue-600 font-medium">
+                  User Management
+                </Link>
+              )}
+              {user.role === 'super_admin' && (
                 <Link to="/reports" className="text-gray-700 hover:text-blue-600 font-medium">
                   Reports
                 </Link>
