@@ -546,27 +546,36 @@ async def init_super_admin():
 # API Routes
 @api_router.post("/auth/login")
 async def login(user_data: UserLogin):
-    user = await db.users.find_one({"email": user_data.email, "is_active": True})
-    if not user or not await verify_password(user_data.password, user["password_hash"]):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    
-    token = await create_token(user["id"], user["email"], user["role"])
-    
-    await log_activity(
-        user["id"], user["email"], user["role"], 
-        "login", f"User logged in"
-    )
-    
-    return {
-        "access_token": token,
-        "token_type": "bearer",
-        "user": {
-            "id": user["id"],
-            "email": user["email"],
-            "role": user["role"],
-            "company_name": user["company_name"]
+    try:
+        user = await db.users.find_one({"email": user_data.email, "is_active": True})
+        if not user:
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+        
+        if not await verify_password(user_data.password, user["password_hash"]):
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+        
+        token = await create_token(user["id"], user["email"], user["role"])
+        
+        await log_activity(
+            user["id"], user["email"], user["role"], 
+            "login", f"User logged in successfully"
+        )
+        
+        return {
+            "access_token": token,
+            "token_type": "bearer",
+            "user": {
+                "id": user["id"],
+                "email": user["email"],
+                "role": user["role"],
+                "company_name": user["company_name"]
+            }
         }
-    }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Login error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @api_router.post("/auth/register")
 async def register(user_data: UserCreate, current_user: dict = Depends(get_current_user)):
