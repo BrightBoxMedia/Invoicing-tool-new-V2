@@ -457,11 +457,12 @@ const Projects = () => {
       setParsedData(response.data);
       
       // Initialize editable metadata with parsed data
+      const metadata = response.data?.metadata || {};
       setEditableMetadata({
-        project_name: response.data.metadata.project_name || '',
-        client: response.data.metadata.client || '',
-        architect: response.data.metadata.architect || '',
-        location: response.data.metadata.location || ''
+        project_name: metadata.project_name || '',
+        client: metadata.client || '',
+        architect: metadata.architect || '',
+        location: metadata.location || ''
       });
       
       setShowBOQModal(true);
