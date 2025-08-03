@@ -258,13 +258,21 @@ class ExcelParser:
             row_data = self._extract_row_data(worksheet, row_idx, column_mapping)
             
             if self._is_valid_item_row(row_data):
+                quantity = self._safe_float_conversion(row_data.get('quantity')) or 0.0
+                rate = self._safe_float_conversion(row_data.get('rate')) or 0.0
+                amount = self._safe_float_conversion(row_data.get('amount'))
+                
+                # Calculate amount if not provided
+                if amount is None or amount == 0:
+                    amount = quantity * rate
+                
                 items.append({
                     'serial_number': str(row_data.get('serial', row_idx - header_row)),
-                    'description': row_data.get('description', ''),
-                    'unit': row_data.get('unit', 'nos'),
-                    'quantity': float(row_data.get('quantity', 0)),
-                    'rate': float(row_data.get('rate', 0)),
-                    'amount': float(row_data.get('amount', 0))
+                    'description': str(row_data.get('description', '')).strip(),
+                    'unit': str(row_data.get('unit', 'nos')).strip() or 'nos',
+                    'quantity': quantity,
+                    'rate': rate,
+                    'amount': amount
                 })
         
         return items
