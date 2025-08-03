@@ -342,11 +342,11 @@ const Projects = () => {
     }
 
     // Prepare invoice items from selected BOQ items with partial quantities
-    const invoiceItems = boqStatus.boq_items
+    const invoiceItems = (boqStatus.boq_items || [])
       .filter(item => {
         const itemId = item.id || item.serial_number;
         const quantity = partialQuantities[itemId] || 0;
-        return quantity > 0 && quantity <= item.remaining_quantity;
+        return quantity > 0 && quantity <= (item.remaining_quantity || 0);
       })
       .map(item => {
         const itemId = item.id || item.serial_number;
