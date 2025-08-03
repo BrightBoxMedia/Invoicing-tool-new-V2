@@ -369,7 +369,17 @@ const Projects = () => {
       fetchProjects();
     } catch (error) {
       console.error('Project creation error:', error);
-      alert('Error creating project: ' + (error.response?.data?.detail || error.message));
+      let errorMessage = 'Unknown error occurred';
+      
+      if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert('Error creating project: ' + errorMessage);
     }
   };
 
