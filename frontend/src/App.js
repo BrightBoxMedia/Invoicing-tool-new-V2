@@ -865,18 +865,17 @@ const Invoices = () => {
         </table>
       </div>
 
-      {/* Create Invoice Modal */}
+      {/* Create Partial Invoice Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" onClick={(e) => {
-          // Only close if clicking the backdrop, not the modal content
           if (e.target === e.currentTarget) {
             setShowModal(false);
           }
         }}>
-          <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white" onClick={(e) => e.stopPropagation()}>
+          <div className="relative top-10 mx-auto p-5 border w-11/12 max-w-6xl shadow-lg rounded-md bg-white" onClick={(e) => e.stopPropagation()}>
             <div className="mt-3">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-bold text-gray-900">Create New Invoice</h3>
+                <h3 className="text-lg font-bold text-gray-900">Create Partial Invoice (RA System)</h3>
                 <button
                   onClick={() => setShowModal(false)}
                   className="text-gray-400 hover:text-gray-600 text-xl font-bold"
@@ -885,50 +884,189 @@ const Invoices = () => {
                 </button>
               </div>
               
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Project</label>
-                <select
-                  value={selectedProject}
-                  onChange={(e) => handleProjectChange(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">Select Project</option>
-                  {projects.map(project => (
-                    <option key={project.id} value={project.id}>
-                      {project.project_name} - {project.client_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Invoice Type</label>
-                <select
-                  value={invoiceType}
-                  onChange={(e) => setInvoiceType(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="proforma">Proforma Invoice</option>
-                  <option value="tax_invoice">Tax Invoice</option>
-                </select>
-              </div>
-
-              {selectedItems.length > 0 && (
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Selected Items ({selectedItems.length}) - Total: ₹{selectedItems.reduce((sum, item) => sum + item.amount, 0).toLocaleString()}
-                  </label>
-                  <div className="max-h-40 overflow-y-auto border rounded p-2 bg-gray-50">
-                    {selectedItems.slice(0, 5).map((item, index) => (
-                      <div key={index} className="text-sm py-1 border-b border-gray-200">
-                        <div className="font-medium">{item.description}</div>
-                        <div className="text-gray-600">Qty: {item.quantity} {item.unit} × ₹{item.rate} = ₹{item.amount.toLocaleString()}</div>
-                      </div>
+              <div class="grid grid-cols-2 gap-6 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Project</label>
+                  <select
+                    value={selectedProject}
+                    onChange={(e) => handleProjectChange(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Select Project</option>
+                    {projects.map(project => (
+                      <option key={project.id} value={project.id}>
+                        {project.project_name} - {project.client_name}
+                      </option>
                     ))}
-                    {selectedItems.length > 5 && (
-                      <div className="text-sm text-gray-500 pt-2">... and {selectedItems.length - 5} more items</div>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Invoice Type</label>
+                  <select
+                    value={invoiceType}
+                    onChange={(e) => setInvoiceType(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="proforma">Proforma Invoice</option>
+                    <option value="tax_invoice">Tax Invoice</option>
+                  </select>
+                </div>
+              </div>
+
+              {boqStatus && (
+                <div className="mb-4">
+                  <div className="bg-blue-50 p-4 rounded-lg mb-4">
+                    <h4 className="font-semibold text-blue-900">Project Billing Status</h4>
+                    <div className="grid grid-cols-4 gap-4 mt-2 text-sm">
+                      <div>
+                        <span className="text-blue-600">Next RA:</span>
+                        <span className="font-bold ml-2">{boqStatus.next_ra_number}</span>
+                      </div>
+                      <div>
+                        <span className="text-blue-600">Total Project:</span>
+                        <span className="font-bold ml-2">₹{boqStatus.total_project_value?.toLocaleString()}</span>
+                      </div>
+                      <div>
+                        <span className="text-blue-600">Billed So Far:</span>
+                        <span className="font-bold ml-2">₹{boqStatus.total_billed_value?.toLocaleString()}</span>
+                      </div>
+                      <div>
+                        <span className="text-blue-600">Remaining:</span>
+                        <span className="font-bold ml-2">₹{boqStatus.remaining_value?.toLocaleString()}</span>
+                      </div>
+                    </div>
+                    <div className="mt-2">
+                      <span className="text-blue-600">Project Billed:</span>
+                      <span className="font-bold ml-2">{boqStatus.project_billing_percentage}%</span>
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <h4 className="font-semibold mb-2 text-gray-800">Select Items & Quantities to Bill:</h4>
+                    <div className="max-h-80 overflow-y-auto border rounded-lg">
+                      <table className="min-w-full text-sm">
+                        <thead className="bg-gray-100 sticky top-0">
+                          <tr>
+                            <th className="px-3 py-2 text-left">Description</th>
+                            <th className="px-3 py-2 text-left">Unit</th>
+                            <th className="px-3 py-2 text-left">Original Qty</th>
+                            <th className="px-3 py-2 text-left">Billed</th>
+                            <th className="px-3 py-2 text-left">Remaining</th>
+                            <th className="px-3 py-2 text-left">Rate</th>
+                            <th className="px-3 py-2 text-left">Bill Qty</th>
+                            <th className="px-3 py-2 text-left">GST %</th>
+                            <th className="px-3 py-2 text-left">Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {boqStatus.boq_items.filter(item => item.can_bill).map((item, index) => {
+                            const itemId = item.id || item.serial_number;
+                            const billQty = partialQuantities[itemId] || 0;
+                            const gstRate = itemGSTRates[itemId] || 18.0;
+                            const amount = billQty * item.rate;
+                            const gstAmount = (amount * gstRate) / 100;
+                            const totalAmount = amount + gstAmount;
+                            
+                            return (
+                              <tr key={itemId} className={`border-t ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                                <td className="px-3 py-2">
+                                  <div className="font-medium">{item.description}</div>
+                                  <div className="text-xs text-gray-500">#{item.serial_number}</div>
+                                </td>
+                                <td className="px-3 py-2">{item.unit}</td>
+                                <td className="px-3 py-2">{item.quantity}</td>
+                                <td className="px-3 py-2 text-red-600">{item.billed_quantity}</td>
+                                <td className="px-3 py-2 text-green-600 font-medium">{item.remaining_quantity}</td>
+                                <td className="px-3 py-2">₹{item.rate}</td>
+                                <td className="px-3 py-2">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max={item.remaining_quantity}
+                                    step="0.01"
+                                    value={billQty}
+                                    onChange={(e) => updatePartialQuantity(itemId, e.target.value)}
+                                    className="w-20 px-2 py-1 border border-gray-300 rounded text-center"
+                                    placeholder="0"
+                                  />
+                                </td>
+                                <td className="px-3 py-2">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max="30"
+                                    step="0.1"
+                                    value={gstRate}
+                                    onChange={(e) => updateGSTRate(itemId, e.target.value)}
+                                    className={`w-16 px-2 py-1 border rounded text-center ${
+                                      boqStatus.total_invoices > 0 ? 'bg-gray-100 text-gray-600' : 'border-gray-300'
+                                    }`}
+                                    disabled={boqStatus.total_invoices > 0}
+                                    title={boqStatus.total_invoices > 0 ? 'GST locked for RA2+ invoices' : 'Edit GST rate for RA1'}
+                                  />
+                                </td>
+                                <td className="px-3 py-2">
+                                  {billQty > 0 && (
+                                    <div>
+                                      <div className="font-medium">₹{totalAmount.toLocaleString()}</div>
+                                      <div className="text-xs text-gray-500">
+                                        Base: ₹{amount.toLocaleString()} + GST: ₹{gstAmount.toLocaleString()}
+                                      </div>
+                                    </div>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                    
+                    {boqStatus.total_invoices > 0 && (
+                      <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
+                        <strong>RA{boqStatus.total_invoices + 1} Note:</strong> GST rates are locked to match previous invoices for consistency. Only new/unbilled items allow GST editing.
+                      </div>
                     )}
                   </div>
+
+                  {/* Invoice Summary */}
+                  {Object.values(partialQuantities).some(qty => qty > 0) && (
+                    <div className="bg-green-50 p-4 rounded-lg">
+                      <h4 className="font-semibold text-green-900 mb-2">Invoice Summary ({boqStatus.next_ra_number})</h4>
+                      <div className="grid grid-cols-3 gap-4 text-sm">
+                        <div>
+                          <span className="text-green-600">Items Selected:</span>
+                          <span className="font-bold ml-2">
+                            {Object.values(partialQuantities).filter(qty => qty > 0).length}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-green-600">Subtotal:</span>
+                          <span className="font-bold ml-2">
+                            ₹{boqStatus.boq_items.reduce((sum, item) => {
+                              const itemId = item.id || item.serial_number;
+                              const qty = partialQuantities[itemId] || 0;
+                              return sum + (qty * item.rate);
+                            }, 0).toLocaleString()}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-green-600">Total with GST:</span>
+                          <span className="font-bold ml-2">
+                            ₹{boqStatus.boq_items.reduce((sum, item) => {
+                              const itemId = item.id || item.serial_number;
+                              const qty = partialQuantities[itemId] || 0;
+                              const gstRate = itemGSTRates[itemId] || 18.0;
+                              const amount = qty * item.rate;
+                              const gstAmount = (amount * gstRate) / 100;
+                              return sum + amount + gstAmount;
+                            }, 0).toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -941,14 +1079,14 @@ const Invoices = () => {
                 </button>
                 <button
                   onClick={handleCreateInvoice}
-                  disabled={!selectedProject || selectedItems.length === 0}
-                  className={`px-4 py-2 rounded font-medium ${
-                    selectedProject && selectedItems.length > 0
+                  disabled={!selectedProject || !boqStatus || Object.values(partialQuantities).every(qty => qty === 0)}
+                  className={`px-6 py-2 rounded font-medium ${
+                    selectedProject && boqStatus && Object.values(partialQuantities).some(qty => qty > 0)
                       ? 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
                 >
-                  Create Invoice
+                  Create {boqStatus?.next_ra_number} Invoice
                 </button>
               </div>
             </div>
