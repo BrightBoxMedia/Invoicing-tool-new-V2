@@ -13,7 +13,7 @@ from datetime import datetime
 from pathlib import Path
 
 class ActivusAPITester:
-    def __init__(self, base_url="https://5201eaff-7855-4f7c-a40b-50feb9f05a5d.preview.emergentagent.com"):
+    def __init__(self, base_url="https://8aea94e1-2e18-444c-b499-642bffd4fba3.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.token = None
