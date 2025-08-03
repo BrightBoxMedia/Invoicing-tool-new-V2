@@ -790,10 +790,23 @@ const Invoices = () => {
 
       {/* Create Invoice Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" onClick={(e) => {
+          // Only close if clicking the backdrop, not the modal content
+          if (e.target === e.currentTarget) {
+            setShowModal(false);
+          }
+        }}>
+          <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white" onClick={(e) => e.stopPropagation()}>
             <div className="mt-3">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Create New Invoice</h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-bold text-gray-900">Create New Invoice</h3>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="text-gray-400 hover:text-gray-600 text-xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
               
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Project</label>
@@ -826,22 +839,23 @@ const Invoices = () => {
               {selectedItems.length > 0 && (
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Selected Items ({selectedItems.length})
+                    Selected Items ({selectedItems.length}) - Total: ₹{selectedItems.reduce((sum, item) => sum + item.amount, 0).toLocaleString()}
                   </label>
-                  <div className="max-h-40 overflow-y-auto border rounded p-2">
+                  <div className="max-h-40 overflow-y-auto border rounded p-2 bg-gray-50">
                     {selectedItems.slice(0, 5).map((item, index) => (
-                      <div key={index} className="text-sm py-1">
-                        {item.description} - ₹{item.amount}
+                      <div key={index} className="text-sm py-1 border-b border-gray-200">
+                        <div className="font-medium">{item.description}</div>
+                        <div className="text-gray-600">Qty: {item.quantity} {item.unit} × ₹{item.rate} = ₹{item.amount.toLocaleString()}</div>
                       </div>
                     ))}
                     {selectedItems.length > 5 && (
-                      <div className="text-sm text-gray-500">... and {selectedItems.length - 5} more items</div>
+                      <div className="text-sm text-gray-500 pt-2">... and {selectedItems.length - 5} more items</div>
                     )}
                   </div>
                 </div>
               )}
 
-              <div className="flex justify-end space-x-4">
+              <div className="flex justify-end space-x-4 pt-4">
                 <button
                   onClick={() => setShowModal(false)}
                   className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
@@ -850,7 +864,12 @@ const Invoices = () => {
                 </button>
                 <button
                   onClick={handleCreateInvoice}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  disabled={!selectedProject || selectedItems.length === 0}
+                  className={`px-4 py-2 rounded font-medium ${
+                    selectedProject && selectedItems.length > 0
+                      ? 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
                 >
                   Create Invoice
                 </button>
