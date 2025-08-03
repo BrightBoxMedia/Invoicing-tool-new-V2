@@ -973,7 +973,7 @@ const Projects = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {parsedData.items.slice(0, 10).map((item, index) => (
+                      {(parsedData?.items || []).slice(0, 10).map((item, index) => (
                         <tr key={index} className="border-t">
                           <td className="px-4 py-2">{item.description}</td>
                           <td className="px-4 py-2">{item.quantity}</td>
