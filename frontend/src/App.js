@@ -287,6 +287,15 @@ const Projects = () => {
         }
       });
       setParsedData(response.data);
+      
+      // Initialize editable metadata with parsed data
+      setEditableMetadata({
+        project_name: response.data.metadata.project_name || '',
+        client: response.data.metadata.client || '',
+        architect: response.data.metadata.architect || '',
+        location: response.data.metadata.location || ''
+      });
+      
       setShowBOQModal(true);
     } catch (error) {
       alert('Error uploading file: ' + (error.response?.data?.detail || error.message));
