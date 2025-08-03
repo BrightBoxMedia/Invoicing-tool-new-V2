@@ -586,6 +586,9 @@ const Invoices = () => {
   const [selectedProject, setSelectedProject] = useState('');
   const [invoiceType, setInvoiceType] = useState('proforma');
   const [selectedItems, setSelectedItems] = useState([]);
+  const [boqStatus, setBOQStatus] = useState(null);
+  const [partialQuantities, setPartialQuantities] = useState({});
+  const [itemGSTRates, setItemGSTRates] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -632,9 +635,67 @@ const Invoices = () => {
     }
   };
 
+  const fetchBOQStatus = async (projectId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/projects/${projectId}/boq-status`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setBOQStatus(response.data);
+      
+      // Initialize partial quantities and GST rates
+      const quantities = {};
+      const gstRates = {};
+      response.data.boq_items.forEach(item => {
+        const itemId = item.id || item.serial_number;
+        quantities[itemId] = item.remaining_quantity || 0;
+        gstRates[itemId] = item.gst_rate || 18.0;
+      });
+      setPartialQuantities(quantities);
+      setItemGSTRates(gstRates);
+      
+    } catch (error) {
+      console.error('Error fetching BOQ status:', error);
+      alert('Error loading BOQ billing status');
+    }
+  };
+
   const handleCreateInvoice = async () => {
-    if (!selectedProject || selectedItems.length === 0) {
-      alert('Please select a project and items');
+    if (!selectedProject || !boqStatus) {
+      alert('Please select a project first');
+      return;
+    }
+
+    // Prepare invoice items from selected BOQ items with partial quantities
+    const invoiceItems = boqStatus.boq_items
+      .filter(item => {
+        const itemId = item.id || item.serial_number;
+        const quantity = partialQuantities[itemId] || 0;
+        return quantity > 0 && quantity <= item.remaining_quantity;
+      })
+      .map(item => {
+        const itemId = item.id || item.serial_number;
+        const quantity = partialQuantities[itemId];
+        const gstRate = itemGSTRates[itemId] || 18.0;
+        const amount = quantity * item.rate;
+        const gstAmount = (amount * gstRate) / 100;
+        
+        return {
+          boq_item_id: itemId,
+          serial_number: item.serial_number,
+          description: item.description,
+          unit: item.unit,
+          quantity: quantity,
+          rate: item.rate,
+          amount: amount,
+          gst_rate: gstRate,
+          gst_amount: gstAmount,
+          total_with_gst: amount + gstAmount
+        };
+      });
+
+    if (invoiceItems.length === 0) {
+      alert('Please select items and quantities to bill');
       return;
     }
 
@@ -642,32 +703,26 @@ const Invoices = () => {
       const token = localStorage.getItem('token');
       const project = projects.find(p => p.id === selectedProject);
       
-      // Calculate totals
-      const subtotal = selectedItems.reduce((sum, item) => sum + item.amount, 0);
-      const gstAmount = subtotal * 0.18; // 18% GST
-      const totalAmount = subtotal + gstAmount;
-      
       const invoiceData = {
         project_id: selectedProject,
         project_name: project.project_name,
         client_id: project.client_id,
         client_name: project.client_name,
         invoice_type: invoiceType,
-        items: selectedItems,
-        subtotal: subtotal,
-        gst_amount: gstAmount,
-        total_amount: totalAmount,
-        status: 'draft'
+        items: invoiceItems,
+        is_partial: true
       };
 
       const response = await axios.post(`${API}/invoices`, invoiceData, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      alert('Invoice created successfully!');
+      alert(`Invoice ${response.data.ra_number} created successfully! Billing ${response.data.billing_percentage?.toFixed(1)}% of project.`);
       setShowModal(false);
       setSelectedProject('');
-      setSelectedItems([]);
+      setBOQStatus(null);
+      setPartialQuantities({});
+      setItemGSTRates({});
       setInvoiceType('proforma');
       fetchInvoices();
     } catch (error) {
@@ -684,6 +739,31 @@ const Invoices = () => {
       
       alert('Error creating invoice: ' + errorMessage);
     }
+  };
+
+  const handleProjectChange = async (projectId) => {
+    setSelectedProject(projectId);
+    if (projectId) {
+      await fetchBOQStatus(projectId);
+    } else {
+      setBOQStatus(null);
+      setPartialQuantities({});
+      setItemGSTRates({});
+    }
+  };
+
+  const updatePartialQuantity = (itemId, quantity) => {
+    setPartialQuantities(prev => ({
+      ...prev,
+      [itemId]: parseFloat(quantity) || 0
+    }));
+  };
+
+  const updateGSTRate = (itemId, rate) => {
+    setItemGSTRates(prev => ({
+      ...prev,
+      [itemId]: parseFloat(rate) || 18.0
+    }));
   };
 
   const downloadPDF = async (invoiceId) => {
@@ -706,14 +786,6 @@ const Invoices = () => {
     }
   };
 
-  const handleProjectChange = (projectId) => {
-    setSelectedProject(projectId);
-    const project = projects.find(p => p.id === projectId);
-    if (project) {
-      setSelectedItems(project.boq_items || []);
-    }
-  };
-
   if (loading) return <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>;
 
   return (
@@ -724,7 +796,7 @@ const Invoices = () => {
           onClick={() => setShowModal(true)}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
         >
-          Create Invoice
+          Create Partial Invoice
         </button>
       </div>
 
@@ -732,11 +804,12 @@ const Invoices = () => {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice #</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice # / RA#</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Billing %</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
@@ -746,6 +819,7 @@ const Invoices = () => {
               <tr key={invoice.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900">{invoice.invoice_number}</div>
+                  <div className="text-sm text-blue-600 font-semibold">{invoice.ra_number}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">{invoice.project_name}</div>
@@ -764,6 +838,9 @@ const Invoices = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">₹{invoice.total_amount?.toLocaleString()}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">{invoice.billing_percentage?.toFixed(1)}%</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
