@@ -136,7 +136,7 @@ class Project(BaseModel):
     total_project_value: float
     advance_received: float = 0.0
     pending_payment: float = 0.0
-    created_by: str
+    created_by: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
