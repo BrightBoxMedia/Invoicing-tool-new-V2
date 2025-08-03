@@ -84,7 +84,7 @@ class ActivusAPITester:
         """Test login functionality"""
         print("\n🔐 Testing Authentication...")
         
-        # Test invalid credentials
+        # Test invalid login (should return 401, not 200)
         success, result = self.make_request('POST', 'auth/login', 
                                           {'email': 'invalid@test.com', 'password': 'wrong'}, 
                                           expected_status=401)
