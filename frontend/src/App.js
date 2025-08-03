@@ -557,6 +557,7 @@ const Projects = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Value</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pending Payment</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -579,6 +580,14 @@ const Projects = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-500">{new Date(project.created_at).toLocaleDateString()}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <button
+                    onClick={() => openInvoiceModal(project)}
+                    className="text-blue-600 hover:text-blue-900 mr-4 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-md"
+                  >
+                    Create Invoice
+                  </button>
                 </td>
               </tr>
             ))}
