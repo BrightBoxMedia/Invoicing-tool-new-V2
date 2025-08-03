@@ -761,8 +761,44 @@ async def create_project(project_data: Project, current_user: dict = Depends(get
 
 @api_router.get("/projects", response_model=List[Project])
 async def get_projects(current_user: dict = Depends(get_current_user)):
-    projects = await db.projects.find().to_list(1000)
-    return [Project(**project) for project in projects]
+    try:
+        projects = await db.projects.find().to_list(1000)
+        
+        # Filter and validate projects to prevent null errors
+        valid_projects = []
+        for project in projects:
+            if not project or not isinstance(project, dict):
+                continue
+                
+            # Ensure required fields exist with defaults
+            cleaned_project = {
+                "id": project.get("id", str(uuid.uuid4())),
+                "project_name": project.get("project_name", "Untitled Project"),
+                "architect": project.get("architect", "Unknown Architect"),
+                "client_id": project.get("client_id", ""),
+                "client_name": project.get("client_name", "Unknown Client"),
+                "metadata": project.get("metadata", {}),
+                "boq_items": project.get("boq_items", []),
+                "total_project_value": float(project.get("total_project_value", 0)),
+                "advance_received": float(project.get("advance_received", 0)),
+                "pending_payment": float(project.get("pending_payment", 0)),
+                "created_by": project.get("created_by"),
+                "created_at": project.get("created_at", datetime.utcnow()),
+                "updated_at": project.get("updated_at", datetime.utcnow())
+            }
+            
+            try:
+                valid_project = Project(**cleaned_project)
+                valid_projects.append(valid_project)
+            except Exception as e:
+                logger.warning(f"Skipping invalid project {project.get('id', 'unknown')}: {e}")
+                continue
+        
+        return valid_projects
+        
+    except Exception as e:
+        logger.error(f"Error fetching projects: {str(e)}")
+        return []
 
 @api_router.get("/projects/{project_id}", response_model=Project)
 async def get_project(project_id: str, current_user: dict = Depends(get_current_user)):
