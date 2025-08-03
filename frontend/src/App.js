@@ -1243,31 +1243,48 @@ const Invoices = () => {
 
   const handleDownloadInvoice = async (invoiceId, invoiceNumber) => {
     try {
+      setLoading(true);
       const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/invoices/${invoiceId}/pdf`, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob'
       });
 
+      if (response.data.size === 0) {
+        throw new Error('Empty PDF received');
+      }
+
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `${invoiceNumber}.pdf`);
+      link.setAttribute('download', `Invoice_${invoiceNumber}.pdf`);
       document.body.appendChild(link);
       link.click();
       link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      // Show success message
+      alert(`Invoice ${invoiceNumber} downloaded successfully!`);
     } catch (error) {
-      alert('Error downloading PDF: ' + error.message);
+      console.error('Error downloading PDF:', error);
+      alert('Error downloading PDF: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setLoading(false);
     }
   };
 
   const handlePrintInvoice = async (invoiceId) => {
     try {
+      setLoading(true);
       const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/invoices/${invoiceId}/pdf`, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob'
       });
+
+      if (response.data.size === 0) {
+        throw new Error('Empty PDF received');
+      }
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const printWindow = window.open(url, '_blank');
@@ -1275,24 +1292,37 @@ const Invoices = () => {
         printWindow.onload = () => {
           printWindow.print();
         };
+      } else {
+        alert('Please allow popups for this site to enable printing');
       }
     } catch (error) {
-      alert('Error printing invoice: ' + error.message);
+      console.error('Error printing invoice:', error);
+      alert('Error printing invoice: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleViewInvoice = async (invoiceId, invoiceNumber) => {
     try {
+      setLoading(true);
       const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/invoices/${invoiceId}/pdf`, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob'
       });
 
+      if (response.data.size === 0) {
+        throw new Error('Empty PDF received');
+      }
+
       const url = window.URL.createObjectURL(new Blob([response.data]));
       window.open(url, '_blank');
     } catch (error) {
-      alert('Error viewing PDF: ' + error.message);
+      console.error('Error viewing PDF:', error);
+      alert('Error viewing PDF: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setLoading(false);
     }
   };
 
