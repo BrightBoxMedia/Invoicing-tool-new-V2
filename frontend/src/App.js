@@ -561,25 +561,25 @@ const Projects = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {projects.map((project) => (
+            {projects.filter(project => project && project.id).map((project) => (
               <tr key={project.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">{project.project_name}</div>
+                  <div className="text-sm font-medium text-gray-900">{project.project_name || 'Untitled Project'}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{project.client_name}</div>
+                  <div className="text-sm text-gray-900">{project.client_name || 'Unknown Client'}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{project.architect}</div>
+                  <div className="text-sm text-gray-900">{project.architect || 'Unknown Architect'}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">₹{project.total_project_value?.toLocaleString()}</div>
+                  <div className="text-sm text-gray-900">₹{(project.total_project_value || 0).toLocaleString()}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">₹{project.pending_payment?.toLocaleString()}</div>
+                  <div className="text-sm text-gray-900">₹{(project.pending_payment || 0).toLocaleString()}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500">{new Date(project.created_at).toLocaleDateString()}</div>
+                  <div className="text-sm text-gray-500">{project.created_at ? new Date(project.created_at).toLocaleDateString() : 'N/A'}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <button
