@@ -376,6 +376,145 @@ class ActivusAPITester:
             self.log_test("Get activity logs", False, f"- {result}")
             return False
 
+    def test_item_master_apis(self):
+        """Test Item Master Management APIs"""
+        print("\n🔧 Testing Item Master APIs...")
+        
+        # Test getting master items (initially empty)
+        success, result = self.make_request('GET', 'item-master')
+        initial_count = len(result) if success else 0
+        self.log_test("Get master items list", success, f"- Found {initial_count} master items")
+        
+        # Test creating a master item
+        master_item_data = {
+            "description": "Test Construction Material",
+            "unit": "Cum",
+            "standard_rate": 2500.0,
+            "category": "Construction"
+        }
+        
+        success, result = self.make_request('POST', 'item-master', master_item_data)
+        
+        if success and 'item_id' in result:
+            item_id = result['item_id']
+            self.log_test("Create master item", True, f"- Item ID: {item_id}")
+            
+            # Test updating the master item
+            update_data = {
+                "standard_rate": 2800.0,
+                "category": "Updated Construction"
+            }
+            success, result = self.make_request('PUT', f'item-master/{item_id}', update_data)
+            self.log_test("Update master item", success, f"- Updated rate to 2800")
+            
+            # Test getting master items with search
+            success, result = self.make_request('GET', 'item-master?search=Test')
+            found_item = any(item.get('id') == item_id for item in result) if success else False
+            self.log_test("Search master items", found_item, f"- Found item in search results")
+            
+            # Test auto-populate from BOQ data
+            success, result = self.make_request('POST', 'item-master/auto-populate')
+            if success:
+                created_count = result.get('created_count', 0)
+                self.log_test("Auto-populate master items", True, f"- Created {created_count} items from BOQ data")
+            else:
+                self.log_test("Auto-populate master items", False, f"- {result}")
+            
+            # Test deleting the master item
+            success, result = self.make_request('DELETE', f'item-master/{item_id}')
+            self.log_test("Delete master item", success, f"- Item deleted successfully")
+            
+            return True
+        else:
+            self.log_test("Create master item", False, f"- {result}")
+            return False
+
+    def test_search_and_filter_apis(self):
+        """Test Search and Filter APIs"""
+        print("\n🔍 Testing Search and Filter APIs...")
+        
+        # Test global search
+        success, result = self.make_request('GET', 'search?query=Test&limit=10')
+        if success:
+            total_count = result.get('total_count', 0)
+            self.log_test("Global search", True, f"- Found {total_count} results across all entities")
+            
+            # Check search result structure
+            has_sections = all(section in result for section in ['projects', 'clients', 'invoices'])
+            self.log_test("Search result structure", has_sections, f"- Contains all entity sections")
+        else:
+            self.log_test("Global search", False, f"- {result}")
+        
+        # Test filtered projects
+        success, result = self.make_request('GET', 'filters/projects?min_value=5000')
+        if success:
+            self.log_test("Filter projects by value", True, f"- Found {len(result)} projects with value >= 5000")
+        else:
+            self.log_test("Filter projects by value", False, f"- {result}")
+        
+        # Test filtered invoices
+        success, result = self.make_request('GET', 'filters/invoices?status=draft')
+        if success:
+            self.log_test("Filter invoices by status", True, f"- Found {len(result)} draft invoices")
+        else:
+            self.log_test("Filter invoices by status", False, f"- {result}")
+        
+        # Test search by entity type
+        success, result = self.make_request('GET', 'search?query=Client&entity_type=clients')
+        if success:
+            clients_found = len(result.get('clients', []))
+            self.log_test("Search specific entity type", True, f"- Found {clients_found} clients")
+        else:
+            self.log_test("Search specific entity type", False, f"- {result}")
+
+    def test_reports_and_insights_apis(self):
+        """Test Reports and Insights APIs"""
+        print("\n📊 Testing Reports and Insights APIs...")
+        
+        # Test GST summary report
+        success, result = self.make_request('GET', 'reports/gst-summary')
+        if success:
+            required_fields = ['total_invoices', 'total_taxable_amount', 'total_gst_amount', 'gst_breakdown', 'monthly_breakdown']
+            has_all_fields = all(field in result for field in required_fields)
+            self.log_test("GST summary report", has_all_fields, 
+                        f"- Total invoices: {result.get('total_invoices', 0)}, GST amount: ₹{result.get('total_gst_amount', 0)}")
+            
+            # Test GST summary with date filter
+            success, filtered_result = self.make_request('GET', 'reports/gst-summary?date_from=2024-01-01')
+            self.log_test("GST summary with date filter", success, f"- Filtered GST report generated")
+        else:
+            self.log_test("GST summary report", False, f"- {result}")
+        
+        # Test business insights
+        success, result = self.make_request('GET', 'reports/insights')
+        if success:
+            required_sections = ['overview', 'financial', 'trends', 'performance']
+            has_all_sections = all(section in result for section in required_sections)
+            self.log_test("Business insights report", has_all_sections, 
+                        f"- Projects: {result.get('overview', {}).get('total_projects', 0)}, Clients: {result.get('overview', {}).get('total_clients', 0)}")
+            
+            # Check financial metrics
+            financial = result.get('financial', {})
+            has_financial_data = 'total_project_value' in financial and 'collection_percentage' in financial
+            self.log_test("Financial insights data", has_financial_data, 
+                        f"- Collection rate: {financial.get('collection_percentage', 0):.1f}%")
+        else:
+            self.log_test("Business insights report", False, f"- {result}")
+        
+        # Test client-specific summary
+        if self.created_resources['clients']:
+            client_id = self.created_resources['clients'][0]
+            success, result = self.make_request('GET', f'reports/client-summary/{client_id}')
+            if success:
+                required_fields = ['client_info', 'projects_count', 'invoices_count', 'total_project_value']
+                has_all_fields = all(field in result for field in required_fields)
+                self.log_test("Client summary report", has_all_fields, 
+                            f"- Projects: {result.get('projects_count', 0)}, Total value: ₹{result.get('total_project_value', 0)}")
+            else:
+                self.log_test("Client summary report", False, f"- {result}")
+        else:
+            self.log_test("Client summary report", False, "- No clients available for testing")
+
     def test_error_handling(self):
         """Test error handling and edge cases"""
         print("\n⚠️ Testing Error Handling...")
@@ -398,6 +537,22 @@ class ActivusAPITester:
         files = {'file': ('test.txt', b'not an excel file', 'text/plain')}
         success, result = self.make_request('POST', 'upload-boq', files=files, expected_status=400)
         self.log_test("Invalid file type rejection", not success, "- Correctly rejected non-Excel file")
+        
+        # Test invalid master item creation (duplicate)
+        master_item_data = {
+            "description": "Duplicate Test Item",
+            "unit": "nos",
+            "standard_rate": 100.0
+        }
+        # Create first item
+        self.make_request('POST', 'item-master', master_item_data)
+        # Try to create duplicate
+        success, result = self.make_request('POST', 'item-master', master_item_data, expected_status=400)
+        self.log_test("Duplicate master item rejection", not success, "- Correctly rejected duplicate item")
+        
+        # Test invalid client summary
+        success, result = self.make_request('GET', 'reports/client-summary/invalid-client-id', expected_status=404)
+        self.log_test("Invalid client summary handling", not success, "- Correctly returned 404 for invalid client ID")
 
     def run_all_tests(self):
         """Run complete test suite"""
