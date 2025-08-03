@@ -158,22 +158,22 @@ class Project(BaseModel):
 
 class Invoice(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    invoice_number: str
-    ra_number: str  # RA1, RA2, RA3, etc.
+    invoice_number: str = ""
+    ra_number: str = ""  # RA1, RA2, RA3, etc.
     project_id: str
     project_name: str
     client_id: str
     client_name: str
     invoice_type: InvoiceType
     items: List[InvoiceItem]
-    subtotal: float
-    total_gst_amount: float
-    total_amount: float
+    subtotal: float = 0.0
+    total_gst_amount: float = 0.0
+    total_amount: float = 0.0
     is_partial: bool = True  # Most invoices are partial
     billing_percentage: Optional[float] = None  # What % of project is being billed
     cumulative_billed: Optional[float] = None  # Total billed so far including this invoice
     status: InvoiceStatus = InvoiceStatus.DRAFT
-    created_by: str
+    created_by: Optional[str] = None
     reviewed_by: Optional[str] = None
     approved_by: Optional[str] = None
     invoice_date: datetime = Field(default_factory=datetime.utcnow)
