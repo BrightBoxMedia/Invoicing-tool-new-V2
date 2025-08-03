@@ -316,19 +316,22 @@ class ActivusAPITester:
             "invoice_type": "proforma",
             "items": [
                 {
+                    "boq_item_id": "1",  # Required field for invoice items
                     "serial_number": "1",
                     "description": "Test Invoice Item",
                     "unit": "nos",
                     "quantity": 5,
                     "rate": 2000,
-                    "amount": 10000
+                    "amount": 10000,
+                    "gst_rate": 18.0,
+                    "gst_amount": 1800,
+                    "total_with_gst": 11800
                 }
             ],
             "subtotal": 10000,
-            "gst_amount": 1800,
+            "total_gst_amount": 1800,
             "total_amount": 11800,
             "status": "draft",
-            "invoice_number": "TEST-INV-001",
             "created_by": self.user_data['id'] if self.user_data else "test-user-id"
         }
         
