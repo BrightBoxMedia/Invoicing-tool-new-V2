@@ -320,10 +320,11 @@ const Projects = () => {
       const response = await axios.get(`${API}/invoices`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const filtered = response.data.filter(inv => inv.project_id === projectId);
+      const filtered = (response.data || []).filter(inv => inv.project_id === projectId);
       setProjectInvoices(filtered);
     } catch (error) {
       console.error('Error fetching project invoices:', error);
+      setProjectInvoices([]);
     }
   };
 
