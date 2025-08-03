@@ -1236,6 +1236,46 @@ const Invoices = () => {
     }
   };
 
+  const handleDownloadInvoice = async (invoiceId, invoiceNumber) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/invoices/${invoiceId}/pdf`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${invoiceNumber}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      alert('Error downloading PDF: ' + error.message);
+    }
+  };
+
+  const handlePrintInvoice = async (invoiceId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/invoices/${invoiceId}/pdf`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const printWindow = window.open(url, '_blank');
+      if (printWindow) {
+        printWindow.onload = () => {
+          printWindow.print();
+        };
+      }
+    } catch (error) {
+      alert('Error printing invoice: ' + error.message);
+    }
+  };
+
   if (loading) return <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>;
 
   return (
