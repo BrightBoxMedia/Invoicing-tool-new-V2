@@ -1326,6 +1326,275 @@ async def auto_populate_master_items(current_user: dict = Depends(get_current_us
         logger.error(f"Error auto-populating master items: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to auto-populate master items: {str(e)}")
 
+# Smart Search and Filters
+@api_router.get("/search")
+async def global_search(
+    query: str,
+    entity_type: Optional[str] = None,  # projects, clients, invoices, all
+    limit: int = 20,
+    current_user: dict = Depends(get_current_user)
+):
+    """Global search across projects, clients, and invoices"""
+    try:
+        results = {"projects": [], "clients": [], "invoices": [], "total_count": 0}
+        
+        search_regex = {"$regex": query, "$options": "i"}
+        
+        # Search projects
+        if not entity_type or entity_type in ["projects", "all"]:
+            project_query = {"$or": [
+                {"project_name": search_regex},
+                {"client_name": search_regex},
+                {"architect": search_regex}
+            ]}
+            projects = await db.projects.find(project_query).limit(limit).to_list(limit)
+            results["projects"] = [
+                {
+                    "id": p.get("id"),
+                    "project_name": p.get("project_name"),
+                    "client_name": p.get("client_name"),
+                    "architect": p.get("architect"),
+                    "total_value": p.get("total_project_value", 0),
+                    "type": "project"
+                } for p in projects
+            ]
+        
+        # Search clients
+        if not entity_type or entity_type in ["clients", "all"]:
+            client_query = {"$or": [
+                {"name": search_regex},
+                {"bill_to_address": search_regex},
+                {"gst_no": search_regex}
+            ]}
+            clients = await db.clients.find(client_query).limit(limit).to_list(limit)
+            results["clients"] = [
+                {
+                    "id": c.get("id"),
+                    "name": c.get("name"),
+                    "bill_to_address": c.get("bill_to_address"),
+                    "gst_no": c.get("gst_no"),
+                    "type": "client"
+                } for c in clients
+            ]
+        
+        # Search invoices
+        if not entity_type or entity_type in ["invoices", "all"]:
+            invoice_query = {"$or": [
+                {"invoice_number": search_regex},
+                {"ra_number": search_regex},
+                {"project_name": search_regex},
+                {"client_name": search_regex}
+            ]}
+            invoices = await db.invoices.find(invoice_query).limit(limit).to_list(limit)
+            results["invoices"] = [
+                {
+                    "id": i.get("id"),
+                    "invoice_number": i.get("invoice_number"),
+                    "ra_number": i.get("ra_number"),
+                    "project_name": i.get("project_name"),
+                    "client_name": i.get("client_name"),
+                    "total_amount": i.get("total_amount", 0),
+                    "status": i.get("status"),
+                    "type": "invoice"
+                } for i in invoices
+            ]
+        
+        results["total_count"] = len(results["projects"]) + len(results["clients"]) + len(results["invoices"])
+        
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "global_search", f"Performed global search for: {query}"
+        )
+        
+        return results
+        
+    except Exception as e:
+        logger.error(f"Error in global search: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+
+@api_router.get("/filters/projects")
+async def get_filtered_projects(
+    client_id: Optional[str] = None,
+    architect: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    min_value: Optional[float] = None,
+    max_value: Optional[float] = None,
+    status: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get filtered projects with advanced filtering"""
+    try:
+        query = {}
+        
+        if client_id:
+            query["client_id"] = client_id
+            
+        if architect:
+            query["architect"] = {"$regex": architect, "$options": "i"}
+            
+        if date_from or date_to:
+            date_query = {}
+            if date_from:
+                date_query["$gte"] = datetime.fromisoformat(date_from.replace('Z', '+00:00'))
+            if date_to:
+                date_query["$lte"] = datetime.fromisoformat(date_to.replace('Z', '+00:00'))
+            query["created_at"] = date_query
+            
+        if min_value or max_value:
+            value_query = {}
+            if min_value:
+                value_query["$gte"] = min_value
+            if max_value:
+                value_query["$lte"] = max_value
+            query["total_project_value"] = value_query
+            
+        projects = await db.projects.find(query).sort("created_at", -1).to_list(1000)
+        
+        # Filter and validate projects (same as get_projects endpoint)
+        valid_projects = []
+        for project in projects:
+            if not project or not isinstance(project, dict):
+                continue
+                
+            cleaned_project = {
+                "id": project.get("id", str(uuid.uuid4())),
+                "project_name": project.get("project_name", "Untitled Project"),
+                "architect": project.get("architect", "Unknown Architect"),
+                "client_id": project.get("client_id", ""),
+                "client_name": project.get("client_name", "Unknown Client"),
+                "metadata": project.get("metadata", {}),
+                "boq_items": project.get("boq_items", []),
+                "total_project_value": float(project.get("total_project_value", 0)),
+                "advance_received": float(project.get("advance_received", 0)),
+                "pending_payment": float(project.get("pending_payment", 0)),
+                "created_by": project.get("created_by"),
+                "created_at": project.get("created_at", datetime.utcnow()),
+                "updated_at": project.get("updated_at", datetime.utcnow())
+            }
+            
+            try:
+                valid_project = Project(**cleaned_project)
+                valid_projects.append(valid_project)
+            except Exception as e:
+                logger.warning(f"Skipping invalid project {project.get('id', 'unknown')}: {e}")
+                continue
+        
+        return valid_projects
+        
+    except Exception as e:
+        logger.error(f"Error filtering projects: {str(e)}")
+        return []
+
+@api_router.get("/filters/invoices")
+async def get_filtered_invoices(
+    status: Optional[str] = None,
+    invoice_type: Optional[str] = None,
+    project_id: Optional[str] = None,
+    client_id: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    min_amount: Optional[float] = None,
+    max_amount: Optional[float] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get filtered invoices with advanced filtering"""
+    try:
+        query = {}
+        
+        if status:
+            query["status"] = status
+            
+        if invoice_type:
+            query["invoice_type"] = invoice_type
+            
+        if project_id:
+            query["project_id"] = project_id
+            
+        if client_id:
+            query["client_id"] = client_id
+            
+        if date_from or date_to:
+            date_query = {}
+            if date_from:
+                date_query["$gte"] = datetime.fromisoformat(date_from.replace('Z', '+00:00'))
+            if date_to:
+                date_query["$lte"] = datetime.fromisoformat(date_to.replace('Z', '+00:00'))
+            query["created_at"] = date_query
+            
+        if min_amount or max_amount:
+            amount_query = {}
+            if min_amount:
+                amount_query["$gte"] = min_amount
+            if max_amount:
+                amount_query["$lte"] = max_amount
+            query["total_amount"] = amount_query
+        
+        invoices = await db.invoices.find(query).sort("created_at", -1).to_list(1000)
+        
+        # Use the same validation logic as get_invoices endpoint
+        valid_invoices = []
+        for invoice in invoices:
+            if not invoice or not isinstance(invoice, dict):
+                continue
+                
+            try:
+                cleaned_invoice = {
+                    "id": invoice.get("id", str(uuid.uuid4())),
+                    "invoice_number": invoice.get("invoice_number", ""),
+                    "ra_number": invoice.get("ra_number", ""),
+                    "project_id": invoice.get("project_id", ""),
+                    "project_name": invoice.get("project_name", ""),
+                    "client_id": invoice.get("client_id", ""),
+                    "client_name": invoice.get("client_name", ""),
+                    "invoice_type": invoice.get("invoice_type", "proforma"),
+                    "items": [],
+                    "subtotal": float(invoice.get("subtotal", 0)),
+                    "total_gst_amount": float(invoice.get("total_gst_amount", invoice.get("gst_amount", 0))),
+                    "total_amount": float(invoice.get("total_amount", 0)),
+                    "is_partial": invoice.get("is_partial", True),
+                    "billing_percentage": invoice.get("billing_percentage"),
+                    "cumulative_billed": invoice.get("cumulative_billed"),
+                    "status": invoice.get("status", "draft"),
+                    "created_by": invoice.get("created_by"),
+                    "reviewed_by": invoice.get("reviewed_by"),
+                    "approved_by": invoice.get("approved_by"),
+                    "invoice_date": invoice.get("invoice_date", datetime.utcnow()),
+                    "due_date": invoice.get("due_date"),
+                    "created_at": invoice.get("created_at", datetime.utcnow()),
+                    "updated_at": invoice.get("updated_at", datetime.utcnow())
+                }
+                
+                # Clean up items
+                for item in invoice.get("items", []):
+                    if isinstance(item, dict):
+                        cleaned_item = {
+                            "boq_item_id": item.get("boq_item_id", item.get("serial_number", str(uuid.uuid4()))),
+                            "serial_number": str(item.get("serial_number", "")),
+                            "description": str(item.get("description", "")),
+                            "unit": str(item.get("unit", "nos")),
+                            "quantity": float(item.get("quantity", 0)),
+                            "rate": float(item.get("rate", 0)),
+                            "amount": float(item.get("amount", 0)),
+                            "gst_rate": float(item.get("gst_rate", 18.0)),
+                            "gst_amount": float(item.get("gst_amount", 0)),
+                            "total_with_gst": float(item.get("total_with_gst", item.get("amount", 0) * 1.18))
+                        }
+                        cleaned_invoice["items"].append(cleaned_item)
+                
+                valid_invoice = Invoice(**cleaned_invoice)
+                valid_invoices.append(valid_invoice)
+                
+            except Exception as e:
+                logger.warning(f"Skipping invalid invoice {invoice.get('id', 'unknown')}: {e}")
+                continue
+        
+        return valid_invoices
+        
+    except Exception as e:
+        logger.error(f"Error filtering invoices: {str(e)}")
+        return []
+
 # Include router
 app.include_router(api_router)
 
