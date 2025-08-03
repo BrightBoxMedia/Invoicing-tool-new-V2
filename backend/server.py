@@ -631,18 +631,33 @@ async def get_clients(current_user: dict = Depends(get_current_user)):
 
 @api_router.post("/projects", response_model=dict)
 async def create_project(project_data: Project, current_user: dict = Depends(get_current_user)):
-    project_data.created_by = current_user["id"]
-    project_data.pending_payment = project_data.total_project_value - project_data.advance_received
-    
-    await db.projects.insert_one(project_data.dict())
-    
-    await log_activity(
-        current_user["id"], current_user["email"], current_user["role"],
-        "project_created", f"Created project: {project_data.project_name}",
-        project_id=project_data.id
-    )
-    
-    return {"message": "Project created successfully", "project_id": project_data.id}
+    try:
+        # Set additional fields
+        project_data.created_by = current_user["id"]
+        project_data.pending_payment = project_data.total_project_value - project_data.advance_received
+        project_data.updated_at = datetime.utcnow()
+        
+        # Validate BOQ items are properly formed
+        if not project_data.boq_items:
+            raise HTTPException(status_code=400, detail="BOQ items cannot be empty")
+        
+        # Insert into database
+        await db.projects.insert_one(project_data.dict())
+        
+        # Log activity
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "project_created", f"Created project: {project_data.project_name}",
+            project_id=project_data.id
+        )
+        
+        return {"message": "Project created successfully", "project_id": project_data.id}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating project: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create project: {str(e)}")
 
 @api_router.get("/projects", response_model=List[Project])
 async def get_projects(current_user: dict = Depends(get_current_user)):
