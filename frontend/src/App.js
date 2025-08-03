@@ -117,6 +117,11 @@ const Navbar = ({ user, onLogout }) => {
                 Clients
               </Link>
               {user.role === 'super_admin' && (
+                <Link to="/item-master" className="text-gray-700 hover:text-blue-600 font-medium">
+                  Item Master
+                </Link>
+              )}
+              {user.role === 'super_admin' && (
                 <Link to="/logs" className="text-gray-700 hover:text-blue-600 font-medium">
                   Activity Logs
                 </Link>
