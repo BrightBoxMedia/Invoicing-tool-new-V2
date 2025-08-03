@@ -235,9 +235,16 @@ const Projects = () => {
   const [clients, setClients] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [showBOQModal, setShowBOQModal] = useState(false);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [selectedProject, setSelectedProject] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [parsedData, setParsedData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [boqStatus, setBOQStatus] = useState(null);
+  const [partialQuantities, setPartialQuantities] = useState({});
+  const [itemGSTRates, setItemGSTRates] = useState({});
+  const [invoiceType, setInvoiceType] = useState('proforma');
+  const [projectInvoices, setProjectInvoices] = useState([]);
 
   useEffect(() => {
     fetchProjects();
@@ -268,6 +275,145 @@ const Projects = () => {
     } catch (error) {
       console.error('Error fetching clients:', error);
     }
+  };
+
+  const fetchBOQStatus = async (projectId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/projects/${projectId}/boq-status`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setBOQStatus(response.data);
+      
+      // Initialize partial quantities and GST rates
+      const quantities = {};
+      const gstRates = {};
+      response.data.boq_items.forEach(item => {
+        const itemId = item.id || item.serial_number;
+        quantities[itemId] = 0; // Start with 0, user will input
+        gstRates[itemId] = item.gst_rate || 18.0;
+      });
+      setPartialQuantities(quantities);
+      setItemGSTRates(gstRates);
+      
+    } catch (error) {
+      console.error('Error fetching BOQ status:', error);
+      alert('Error loading BOQ billing status');
+    }
+  };
+
+  const fetchProjectInvoices = async (projectId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/invoices`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const filtered = response.data.filter(inv => inv.project_id === projectId);
+      setProjectInvoices(filtered);
+    } catch (error) {
+      console.error('Error fetching project invoices:', error);
+    }
+  };
+
+  const openInvoiceModal = async (project) => {
+    setSelectedProject(project);
+    await fetchBOQStatus(project.id);
+    await fetchProjectInvoices(project.id);
+    setShowInvoiceModal(true);
+  };
+
+  const handleCreateInvoice = async () => {
+    if (!selectedProject || !boqStatus) {
+      alert('Please select a project first');
+      return;
+    }
+
+    // Prepare invoice items from selected BOQ items with partial quantities
+    const invoiceItems = boqStatus.boq_items
+      .filter(item => {
+        const itemId = item.id || item.serial_number;
+        const quantity = partialQuantities[itemId] || 0;
+        return quantity > 0 && quantity <= item.remaining_quantity;
+      })
+      .map(item => {
+        const itemId = item.id || item.serial_number;
+        const quantity = partialQuantities[itemId];
+        const gstRate = itemGSTRates[itemId] || 18.0;
+        const amount = quantity * item.rate;
+        const gstAmount = (amount * gstRate) / 100;
+        
+        return {
+          boq_item_id: itemId,
+          serial_number: item.serial_number,
+          description: item.description,
+          unit: item.unit,
+          quantity: quantity,
+          rate: item.rate,
+          amount: amount,
+          gst_rate: gstRate,
+          gst_amount: gstAmount,
+          total_with_gst: amount + gstAmount
+        };
+      });
+
+    if (invoiceItems.length === 0) {
+      alert('Please select items and quantities to bill');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      const invoiceData = {
+        project_id: selectedProject.id,
+        project_name: selectedProject.project_name,
+        client_id: selectedProject.client_id,
+        client_name: selectedProject.client_name,
+        invoice_type: invoiceType,
+        items: invoiceItems,
+        is_partial: true
+      };
+
+      const response = await axios.post(`${API}/invoices`, invoiceData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      alert(`Invoice ${response.data.ra_number} created successfully! Billing ${response.data.billing_percentage?.toFixed(1)}% of project.`);
+      setShowInvoiceModal(false);
+      setSelectedProject(null);
+      setBOQStatus(null);
+      setPartialQuantities({});
+      setItemGSTRates({});
+      setInvoiceType('proforma');
+      fetchProjects(); // Refresh projects
+    } catch (error) {
+      console.error('Invoice creation error:', error);
+      let errorMessage = 'Unknown error occurred';
+      
+      if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert('Error creating invoice: ' + errorMessage);
+    }
+  };
+
+  const updatePartialQuantity = (itemId, quantity) => {
+    setPartialQuantities(prev => ({
+      ...prev,
+      [itemId]: parseFloat(quantity) || 0
+    }));
+  };
+
+  const updateGSTRate = (itemId, rate) => {
+    setItemGSTRates(prev => ({
+      ...prev,
+      [itemId]: parseFloat(rate) || 18.0
+    }));
   };
 
   const handleFileUpload = async (e) => {
