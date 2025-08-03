@@ -1208,41 +1208,93 @@ async def download_invoice_pdf(invoice_id: str, current_user: dict = Depends(get
         if not invoice_id or len(invoice_id.strip()) == 0:
             raise HTTPException(status_code=400, detail="Invoice ID is required")
         
-        invoice = await db.invoices.find_one({"id": invoice_id})
-        if not invoice:
+        # Get invoice data
+        invoice_data = await db.invoices.find_one({"id": invoice_id})
+        if not invoice_data:
             raise HTTPException(status_code=404, detail=f"Invoice with ID {invoice_id} not found")
         
-        project = await db.projects.find_one({"id": invoice["project_id"]})
-        if not project:
+        # Get related project data
+        project_data = await db.projects.find_one({"id": invoice_data.get("project_id")})
+        if not project_data:
             raise HTTPException(status_code=404, detail="Related project not found")
             
-        client = await db.clients.find_one({"id": invoice["client_id"]})
-        if not client:
+        # Get related client data
+        client_data = await db.clients.find_one({"id": invoice_data.get("client_id")})
+        if not client_data:
             raise HTTPException(status_code=404, detail="Related client not found")
         
-        pdf_generator = PDFGenerator()
-        pdf_buffer = await pdf_generator.generate_invoice_pdf(
-            Invoice(**invoice),
-            Project(**project),
-            ClientInfo(**client)
-        )
+        # Clean and validate data before PDF generation
+        try:
+            # Ensure required fields exist
+            invoice_data["total_gst_amount"] = invoice_data.get("total_gst_amount", 0)
+            invoice_data["subtotal"] = invoice_data.get("subtotal", 0)
+            invoice_data["total_amount"] = invoice_data.get("total_amount", 0)
+            invoice_data["items"] = invoice_data.get("items", [])
+            
+            # Clean items data
+            cleaned_items = []
+            for item in invoice_data.get("items", []):
+                cleaned_item = {
+                    "boq_item_id": item.get("boq_item_id", item.get("serial_number", "")),
+                    "serial_number": str(item.get("serial_number", "")),
+                    "description": str(item.get("description", "Unknown Item")),
+                    "unit": str(item.get("unit", "nos")),
+                    "quantity": float(item.get("quantity", 0)),
+                    "rate": float(item.get("rate", 0)),
+                    "amount": float(item.get("amount", 0)),
+                    "gst_rate": float(item.get("gst_rate", 18.0)),
+                    "gst_amount": float(item.get("gst_amount", 0)),
+                    "total_with_gst": float(item.get("total_with_gst", 0))
+                }
+                cleaned_items.append(cleaned_item)
+            
+            invoice_data["items"] = cleaned_items
+            
+            # Create model instances
+            invoice = Invoice(**invoice_data)
+            project = Project(**project_data)
+            client = ClientInfo(**client_data)
+            
+        except Exception as validation_error:
+            logger.error(f"Data validation error for invoice {invoice_id}: {str(validation_error)}")
+            raise HTTPException(status_code=500, detail=f"Invoice data validation failed: {str(validation_error)}")
         
-        await log_activity(
-            current_user["id"], current_user["email"], current_user["role"],
-            "invoice_downloaded", f"Downloaded PDF for invoice: {invoice['invoice_number']}",
-            invoice_id=invoice_id
-        )
-        
-        return StreamingResponse(
-            io.BytesIO(pdf_buffer.read()),
-            media_type="application/pdf",
-            headers={"Content-Disposition": f"attachment; filename=invoice_{invoice['invoice_number']}.pdf"}
-        )
+        # Generate PDF
+        try:
+            pdf_generator = PDFGenerator()
+            pdf_buffer = await pdf_generator.generate_invoice_pdf(invoice, project, client)
+            
+            # Convert BytesIO to bytes for response
+            pdf_content = pdf_buffer.getvalue()
+            
+            if len(pdf_content) < 100:  # Check if PDF is too small (likely an error)
+                raise Exception("Generated PDF is too small - likely incomplete")
+            
+            await log_activity(
+                current_user["id"], current_user["email"], current_user["role"],
+                "invoice_downloaded", f"Downloaded PDF for invoice: {invoice.invoice_number}",
+                invoice_id=invoice_id
+            )
+            
+            # Return as streaming response
+            return StreamingResponse(
+                io.BytesIO(pdf_content),
+                media_type="application/pdf",
+                headers={
+                    "Content-Disposition": f"attachment; filename=invoice_{invoice.invoice_number}.pdf",
+                    "Content-Length": str(len(pdf_content))
+                }
+            )
+            
+        except Exception as pdf_error:
+            logger.error(f"PDF generation error for invoice {invoice_id}: {str(pdf_error)}")
+            raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(pdf_error)}")
+            
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error downloading invoice PDF {invoice_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to generate PDF")
+        logger.error(f"Unexpected error downloading invoice PDF {invoice_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate PDF: {str(e)}")
 
 @api_router.get("/dashboard/stats")
 async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
