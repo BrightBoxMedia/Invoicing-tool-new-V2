@@ -113,6 +113,22 @@ class BOQItem(BaseModel):
     rate: float
     amount: float
     category: Optional[str] = None
+    billed_quantity: float = 0.0  # Track how much has been billed
+    remaining_quantity: Optional[float] = None  # Calculate remaining
+    gst_rate: float = 18.0  # GST rate for this item
+    is_gst_locked: bool = False  # Lock GST for RA2+ invoices
+
+class InvoiceItem(BaseModel):
+    boq_item_id: str  # Reference to original BOQ item
+    serial_number: str
+    description: str
+    unit: str
+    quantity: float  # Partial quantity being billed
+    rate: float
+    amount: float
+    gst_rate: float = 18.0
+    gst_amount: float = 0.0
+    total_with_gst: float = 0.0
 
 class ClientInfo(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -143,15 +159,19 @@ class Project(BaseModel):
 class Invoice(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     invoice_number: str
+    ra_number: str  # RA1, RA2, RA3, etc.
     project_id: str
     project_name: str
     client_id: str
     client_name: str
     invoice_type: InvoiceType
-    items: List[BOQItem]
+    items: List[InvoiceItem]
     subtotal: float
-    gst_amount: float
+    total_gst_amount: float
     total_amount: float
+    is_partial: bool = True  # Most invoices are partial
+    billing_percentage: Optional[float] = None  # What % of project is being billed
+    cumulative_billed: Optional[float] = None  # Total billed so far including this invoice
     status: InvoiceStatus = InvoiceStatus.DRAFT
     created_by: str
     reviewed_by: Optional[str] = None
