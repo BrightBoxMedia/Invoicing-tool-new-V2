@@ -186,7 +186,10 @@ class ExcelParser:
     async def parse_excel_file(self, file_content: bytes, filename: str) -> Dict[str, Any]:
         try:
             workbook = openpyxl.load_workbook(io.BytesIO(file_content), data_only=True)
-            worksheet = workbook.active
+            worksheet = self._select_worksheet(workbook)
+            
+            if not worksheet:
+                raise ValueError("No valid worksheet found in the Excel file")
             
             # Extract metadata
             metadata = self._extract_metadata(worksheet)
@@ -194,18 +197,51 @@ class ExcelParser:
             # Extract BOQ items
             items = self._extract_boq_items(worksheet)
             
-            # Calculate totals
-            total_value = sum(item['amount'] for item in items)
+            if not items:
+                logger.warning(f"No BOQ items found in file {filename}")
+                # Still allow processing with empty items
+            
+            # Calculate totals with validation
+            total_value = 0.0
+            try:
+                total_value = sum(item['amount'] for item in items if item.get('amount'))
+            except (TypeError, ValueError) as e:
+                logger.warning(f"Error calculating total value: {e}")
+                total_value = 0.0
             
             return {
                 'metadata': metadata,
                 'items': items,
                 'total_value': total_value,
-                'filename': filename
+                'filename': filename,
+                'items_count': len(items)
             }
         except Exception as e:
-            logger.error(f"Error parsing Excel file: {e}")
-            raise HTTPException(status_code=400, detail=f"Error parsing Excel file: {str(e)}")
+            logger.error(f"Error parsing Excel file {filename}: {e}")
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Error parsing Excel file: {str(e)}. Please ensure the file contains BOQ data in the expected format."
+            )
+    
+    def _select_worksheet(self, workbook: openpyxl.Workbook):
+        """Select the appropriate worksheet containing BOQ data"""
+        # Priority order for worksheet selection
+        preferred_names = ['boq', 'bill of quantities', 'quantities', 'estimate', 'summary', 'sheet1', 'main']
+        
+        # First try to find by preferred names
+        for name in preferred_names:
+            for sheet_name in workbook.sheetnames:
+                if name.lower() in sheet_name.lower():
+                    return workbook[sheet_name]
+        
+        # If no preferred name found, return the first non-empty sheet
+        for sheet_name in workbook.sheetnames:
+            worksheet = workbook[sheet_name]
+            if worksheet.max_row > 1 and worksheet.max_column > 1:
+                return worksheet
+        
+        # Return active worksheet as last resort
+        return workbook.active
     
     def _extract_metadata(self, worksheet) -> Dict[str, Any]:
         metadata = {}
