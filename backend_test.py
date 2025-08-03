@@ -579,6 +579,11 @@ class ActivusAPITester:
         # Test activity logs
         self.test_activity_logs()
         
+        # Test newly implemented features
+        self.test_item_master_apis()
+        self.test_search_and_filter_apis()
+        self.test_reports_and_insights_apis()
+        
         # Test error handling
         self.test_error_handling()
         
