@@ -1140,8 +1140,10 @@ async def create_master_item(item_data: MasterItem, current_user: dict = Depends
         item_data.updated_at = datetime.utcnow()
         
         # Check if similar item already exists
+        import re as regex_module
+        escaped_description = regex_module.escape(item_data.description)
         existing_item = await db.master_items.find_one({
-            "description": {"$regex": f"^{item_data.description}$", "$options": "i"},
+            "description": {"$regex": f"^{escaped_description}$", "$options": "i"},
             "unit": item_data.unit
         })
         
