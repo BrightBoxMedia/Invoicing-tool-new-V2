@@ -324,7 +324,12 @@ class ActivusAPITester:
                     "amount": 10000
                 }
             ],
-            "status": "draft"
+            "subtotal": 10000,
+            "gst_amount": 1800,
+            "total_amount": 11800,
+            "status": "draft",
+            "invoice_number": "TEST-INV-001",
+            "created_by": self.user_data['id'] if self.user_data else "test-user-id"
         }
         
         success, result = self.make_request('POST', 'invoices', invoice_data)
