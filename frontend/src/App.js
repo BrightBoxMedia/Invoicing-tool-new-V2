@@ -961,7 +961,7 @@ const Projects = () => {
               </div>
 
               <div className="mb-6">
-                <h4 className="font-semibold mb-2">BOQ Items ({parsedData.items.length}):</h4>
+                <h4 className="font-semibold mb-2">BOQ Items ({parsedData?.items?.length || 0}):</h4>
                 <div className="max-h-64 overflow-y-auto border rounded">
                   <table className="min-w-full text-sm">
                     <thead className="bg-gray-50">
