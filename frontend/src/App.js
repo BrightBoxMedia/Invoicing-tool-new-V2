@@ -595,8 +595,278 @@ const Projects = () => {
         </table>
       </div>
 
-      {/* BOQ Review Modal */}
-      {showBOQModal && parsedData && (
+      {/* Enhanced Invoice Creation Modal */}
+      {showInvoiceModal && selectedProject && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            setShowInvoiceModal(false);
+          }
+        }}>
+          <div className="relative top-5 mx-auto p-5 border w-11/12 max-w-7xl shadow-lg rounded-md bg-white" onClick={(e) => e.stopPropagation()}>
+            <div className="mt-3">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold text-gray-900">
+                  Create Invoice for: {selectedProject.project_name}
+                </h3>
+                <button
+                  onClick={() => setShowInvoiceModal(false)}
+                  className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+              
+              {/* Project Summary */}
+              <div className="bg-gray-50 p-4 rounded-lg mb-6">
+                <div className="grid grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">Client:</span>
+                    <div className="font-semibold">{selectedProject.client_name}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Architect:</span>
+                    <div className="font-semibold">{selectedProject.architect}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Total Project Value:</span>
+                    <div className="font-semibold">₹{selectedProject.total_project_value?.toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Invoice Type:</span>
+                    <select
+                      value={invoiceType}
+                      onChange={(e) => setInvoiceType(e.target.value)}
+                      className="mt-1 px-2 py-1 border border-gray-300 rounded text-sm font-semibold"
+                    >
+                      <option value="proforma">Proforma Invoice</option>
+                      <option value="tax_invoice">Tax Invoice</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {boqStatus && (
+                <>
+                  {/* Billing Status Summary */}
+                  <div className="bg-blue-50 p-4 rounded-lg mb-6">
+                    <h4 className="font-semibold text-blue-900 mb-3">Project Billing Status</h4>
+                    <div className="grid grid-cols-5 gap-4 text-sm">
+                      <div>
+                        <span className="text-blue-600">Next RA:</span>
+                        <div className="font-bold text-lg text-blue-800">{boqStatus.next_ra_number}</div>
+                      </div>
+                      <div>
+                        <span className="text-blue-600">Total Billed:</span>
+                        <div className="font-bold">₹{boqStatus.total_billed_value?.toLocaleString()}</div>
+                      </div>
+                      <div>
+                        <span className="text-blue-600">Remaining:</span>
+                        <div className="font-bold text-green-600">₹{boqStatus.remaining_value?.toLocaleString()}</div>
+                      </div>
+                      <div>
+                        <span className="text-blue-600">Project Completed:</span>
+                        <div className="font-bold">{boqStatus.project_billing_percentage?.toFixed(1)}%</div>
+                      </div>
+                      <div>
+                        <span className="text-blue-600">Previous Invoices:</span>
+                        <div className="font-bold">{boqStatus.total_invoices}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Previous Invoices */}
+                  {projectInvoices.length > 0 && (
+                    <div className="mb-6">
+                      <h4 className="font-semibold mb-2 text-gray-800">Previous Invoices:</h4>
+                      <div className="bg-yellow-50 p-3 rounded border text-sm">
+                        {projectInvoices.map((inv, idx) => (
+                          <span key={inv.id} className="inline-block mr-4 mb-1">
+                            <strong>{inv.ra_number}:</strong> ₹{inv.total_amount?.toLocaleString()} 
+                            ({inv.invoice_type}) - {inv.status}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* BOQ Items Table */}
+                  <div className="mb-6">
+                    <h4 className="font-semibold mb-3 text-gray-800">
+                      BOQ Items - Select Quantities to Bill in {boqStatus.next_ra_number}:
+                    </h4>
+                    <div className="max-h-96 overflow-y-auto border rounded-lg bg-white">
+                      <table className="min-w-full text-sm">
+                        <thead className="bg-gray-100 sticky top-0">
+                          <tr>
+                            <th className="px-3 py-3 text-left font-medium">Item</th>
+                            <th className="px-3 py-3 text-left font-medium">Unit</th>
+                            <th className="px-3 py-3 text-center font-medium">Original Qty</th>
+                            <th className="px-3 py-3 text-center font-medium">Billed</th>
+                            <th className="px-3 py-3 text-center font-medium">Remaining</th>
+                            <th className="px-3 py-3 text-right font-medium">Rate (₹)</th>
+                            <th className="px-3 py-3 text-center font-medium">Bill Qty</th>
+                            <th className="px-3 py-3 text-center font-medium">GST %</th>
+                            <th className="px-3 py-3 text-right font-medium">Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {boqStatus.boq_items.map((item, index) => {
+                            const itemId = item.id || item.serial_number;
+                            const billQty = partialQuantities[itemId] || 0;
+                            const gstRate = itemGSTRates[itemId] || 18.0;
+                            const amount = billQty * item.rate;
+                            const gstAmount = (amount * gstRate) / 100;
+                            const totalAmount = amount + gstAmount;
+                            const canBill = item.remaining_quantity > 0;
+                            
+                            return (
+                              <tr key={itemId} className={`border-t ${
+                                index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                              } ${!canBill ? 'opacity-50' : ''}`}>
+                                <td className="px-3 py-3">
+                                  <div className="font-medium text-gray-900">{item.description}</div>
+                                  <div className="text-xs text-gray-500">#{item.serial_number}</div>
+                                  {!canBill && <div className="text-xs text-red-500 font-medium">Fully Billed</div>}
+                                </td>
+                                <td className="px-3 py-3 text-center">{item.unit}</td>
+                                <td className="px-3 py-3 text-center font-medium">{item.quantity}</td>
+                                <td className="px-3 py-3 text-center text-red-600 font-medium">
+                                  {item.billed_quantity}
+                                </td>
+                                <td className="px-3 py-3 text-center text-green-600 font-bold">
+                                  {item.remaining_quantity}
+                                </td>
+                                <td className="px-3 py-3 text-right">₹{item.rate.toLocaleString()}</td>
+                                <td className="px-3 py-3 text-center">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max={item.remaining_quantity}
+                                    step="0.01"
+                                    value={billQty}
+                                    onChange={(e) => updatePartialQuantity(itemId, e.target.value)}
+                                    className="w-20 px-2 py-1 border border-gray-300 rounded text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="0"
+                                    disabled={!canBill}
+                                  />
+                                </td>
+                                <td className="px-3 py-3 text-center">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max="30"
+                                    step="0.1"
+                                    value={gstRate}
+                                    onChange={(e) => updateGSTRate(itemId, e.target.value)}
+                                    className={`w-16 px-2 py-1 border rounded text-center ${
+                                      boqStatus.total_invoices > 0 ? 'bg-gray-100 text-gray-600 cursor-not-allowed' : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                                    }`}
+                                    disabled={boqStatus.total_invoices > 0 || !canBill}
+                                    title={boqStatus.total_invoices > 0 ? 'GST locked for RA2+ invoices' : 'Edit GST rate for RA1'}
+                                  />
+                                </td>
+                                <td className="px-3 py-3 text-right">
+                                  {billQty > 0 && (
+                                    <div>
+                                      <div className="font-bold text-gray-900">₹{totalAmount.toLocaleString()}</div>
+                                      <div className="text-xs text-gray-500">
+                                        Base: ₹{amount.toLocaleString()}<br/>
+                                        GST: ₹{gstAmount.toLocaleString()}
+                                      </div>
+                                    </div>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                    
+                    {boqStatus.total_invoices > 0 && (
+                      <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
+                        <strong>RA{boqStatus.total_invoices + 1} Note:</strong> GST rates are locked to match previous invoices for consistency. Only new/unbilled items allow GST editing.
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Invoice Summary */}
+                  {Object.values(partialQuantities).some(qty => qty > 0) && (
+                    <div className="bg-green-50 p-4 rounded-lg mb-4 border border-green-200">
+                      <h4 className="font-semibold text-green-900 mb-3">Invoice Summary ({boqStatus.next_ra_number})</h4>
+                      <div className="grid grid-cols-4 gap-4 text-sm">
+                        <div>
+                          <span className="text-green-600">Items Selected:</span>
+                          <div className="font-bold text-lg">
+                            {Object.values(partialQuantities).filter(qty => qty > 0).length}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-green-600">Subtotal:</span>
+                          <div className="font-bold text-lg">
+                            ₹{boqStatus.boq_items.reduce((sum, item) => {
+                              const itemId = item.id || item.serial_number;
+                              const qty = partialQuantities[itemId] || 0;
+                              return sum + (qty * item.rate);
+                            }, 0).toLocaleString()}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-green-600">Total GST:</span>
+                          <div className="font-bold text-lg">
+                            ₹{boqStatus.boq_items.reduce((sum, item) => {
+                              const itemId = item.id || item.serial_number;
+                              const qty = partialQuantities[itemId] || 0;
+                              const gstRate = itemGSTRates[itemId] || 18.0;
+                              const amount = qty * item.rate;
+                              const gstAmount = (amount * gstRate) / 100;
+                              return sum + gstAmount;
+                            }, 0).toLocaleString()}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-green-600">Total Amount:</span>
+                          <div className="font-bold text-xl text-green-800">
+                            ₹{boqStatus.boq_items.reduce((sum, item) => {
+                              const itemId = item.id || item.serial_number;
+                              const qty = partialQuantities[itemId] || 0;
+                              const gstRate = itemGSTRates[itemId] || 18.0;
+                              const amount = qty * item.rate;
+                              const gstAmount = (amount * gstRate) / 100;
+                              return sum + amount + gstAmount;
+                            }, 0).toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-4 pt-4 border-t">
+                <button
+                  onClick={() => setShowInvoiceModal(false)}
+                  className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateInvoice}
+                  disabled={!boqStatus || Object.values(partialQuantities).every(qty => qty === 0)}
+                  className={`px-6 py-2 rounded-lg font-medium text-white ${
+                    boqStatus && Object.values(partialQuantities).some(qty => qty > 0)
+                      ? 'bg-blue-600 hover:bg-blue-700 cursor-pointer'
+                      : 'bg-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  Create {boqStatus?.next_ra_number} Invoice
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
             <div className="mt-3">
