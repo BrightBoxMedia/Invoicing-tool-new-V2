@@ -764,22 +764,66 @@ async def get_projects(current_user: dict = Depends(get_current_user)):
     projects = await db.projects.find().to_list(1000)
     return [Project(**project) for project in projects]
 
-@api_router.get("/projects/{project_id}", response_model=Project)
-async def get_project(project_id: str, current_user: dict = Depends(get_current_user)):
+@api_router.get("/projects/{project_id}/boq-status")
+async def get_project_boq_status(project_id: str, current_user: dict = Depends(get_current_user)):
+    """Get BOQ items with billing status for partial invoicing"""
     try:
-        if not project_id or len(project_id.strip()) == 0:
-            raise HTTPException(status_code=400, detail="Project ID is required")
-        
         project = await db.projects.find_one({"id": project_id})
         if not project:
-            raise HTTPException(status_code=404, detail=f"Project with ID {project_id} not found")
+            raise HTTPException(status_code=404, detail="Project not found")
         
-        return Project(**project)
+        # Get all invoices for this project
+        invoices = await db.invoices.find({"project_id": project_id}).to_list(1000)
+        
+        # Calculate billing status for each BOQ item
+        boq_items_with_status = []
+        for boq_item in project.get("boq_items", []):
+            item_id = boq_item.get("id", boq_item.get("serial_number"))
+            total_billed = 0.0
+            
+            # Calculate total billed quantity for this item
+            for invoice in invoices:
+                for inv_item in invoice.get("items", []):
+                    if inv_item.get("boq_item_id") == item_id:
+                        total_billed += inv_item.get("quantity", 0)
+            
+            original_quantity = boq_item.get("quantity", 0)
+            remaining_quantity = max(0, original_quantity - total_billed)
+            billing_percentage = (total_billed / original_quantity * 100) if original_quantity > 0 else 0
+            
+            boq_item_status = {
+                **boq_item,
+                "billed_quantity": total_billed,
+                "remaining_quantity": remaining_quantity,
+                "billing_percentage": round(billing_percentage, 2),
+                "is_fully_billed": remaining_quantity == 0,
+                "can_bill": remaining_quantity > 0
+            }
+            
+            boq_items_with_status.append(boq_item_status)
+        
+        # Calculate project-level billing status
+        project_total_value = project.get("total_project_value", 0)
+        total_billed_value = sum(invoice.get("subtotal", 0) for invoice in invoices)
+        project_billing_percentage = (total_billed_value / project_total_value * 100) if project_total_value > 0 else 0
+        
+        return {
+            "project_id": project_id,
+            "project_name": project.get("project_name"),
+            "total_project_value": project_total_value,
+            "total_billed_value": total_billed_value,
+            "remaining_value": project_total_value - total_billed_value,
+            "project_billing_percentage": round(project_billing_percentage, 2),
+            "total_invoices": len(invoices),
+            "next_ra_number": f"RA{len(invoices) + 1}",
+            "boq_items": boq_items_with_status
+        }
+        
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error retrieving project {project_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error(f"Error getting BOQ status: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get BOQ status")
 
 @api_router.post("/invoices", response_model=dict)
 async def create_invoice(invoice_data: Invoice, current_user: dict = Depends(get_current_user)):
