@@ -293,9 +293,10 @@ const Projects = () => {
       const response = await axios.get(`${API}/clients`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setClients(response.data);
+      setClients(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error fetching clients:', error);
+      setClients([]);
     }
   };
 
