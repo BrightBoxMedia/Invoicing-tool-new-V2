@@ -86,7 +86,7 @@ const Login = ({ onLogin }) => {
         </form>
         
         <div className="mt-6 text-center text-gray-600">
-          <p>Default Super Admin: brightboxm@gmail.com / admin123</p>
+          <p> </p>
         </div>
       </div>
     </div>
