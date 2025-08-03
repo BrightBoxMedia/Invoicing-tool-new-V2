@@ -764,6 +764,23 @@ async def get_projects(current_user: dict = Depends(get_current_user)):
     projects = await db.projects.find().to_list(1000)
     return [Project(**project) for project in projects]
 
+@api_router.get("/projects/{project_id}", response_model=Project)
+async def get_project(project_id: str, current_user: dict = Depends(get_current_user)):
+    try:
+        if not project_id or len(project_id.strip()) == 0:
+            raise HTTPException(status_code=400, detail="Project ID is required")
+        
+        project = await db.projects.find_one({"id": project_id})
+        if not project:
+            raise HTTPException(status_code=404, detail=f"Project with ID {project_id} not found")
+        
+        return Project(**project)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving project {project_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
 @api_router.get("/projects/{project_id}/boq-status")
 async def get_project_boq_status(project_id: str, current_user: dict = Depends(get_current_user)):
     """Get BOQ items with billing status for partial invoicing"""
