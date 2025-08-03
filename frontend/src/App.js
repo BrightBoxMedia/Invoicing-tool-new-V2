@@ -233,7 +233,6 @@ const Dashboard = () => {
 const Projects = () => {
   const [projects, setProjects] = useState([]);
   const [clients, setClients] = useState([]);
-  const [showModal, setShowModal] = useState(false);
   const [showBOQModal, setShowBOQModal] = useState(false);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
