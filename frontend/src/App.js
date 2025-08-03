@@ -488,7 +488,7 @@ const Projects = () => {
       const clientName = editableMetadata.client;
       
       // Check if client exists
-      let existingClient = clients.find(c => c.name.toLowerCase() === clientName.toLowerCase());
+      let existingClient = clients.find(c => c.name && c.name.toLowerCase() === clientName.toLowerCase());
       
       if (!existingClient) {
         const clientData = {
