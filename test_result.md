@@ -136,40 +136,49 @@
         - comment: "✅ TESTED: Activity logs endpoint working correctly. Found 72 log entries with proper structure (user_email, action, description, timestamp). Super admin access control working."
 
   - task: "Item Master System"
-    implemented: false
-    working: "NA"
-    file: ""
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
         - agent: "main"
         - comment: "Need to implement item master for auto-storing/reusing BOQ items"
+        - working: true
+        - agent: "testing"
+        - comment: "✅ TESTED: Item Master APIs fully implemented and working. All CRUD operations (GET, POST, PUT, DELETE) working correctly. Auto-populate from BOQ data working (created 51 items from existing data). Search functionality working. Fixed regex escaping issue in duplicate detection."
 
   - task: "Smart Filters & Search API"
-    implemented: false
-    working: "NA"
-    file: ""
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
         - agent: "main"
         - comment: "Need to implement global search and filter endpoints"
+        - working: true
+        - agent: "testing"
+        - comment: "✅ TESTED: Search and Filter APIs fully implemented and working. Global search across projects/clients/invoices working (found 22 results). Filtered projects by value working (9 projects >= 5000). Filtered invoices by status working (4 draft invoices). Entity-specific search working correctly."
 
   - task: "Reports & Insights API"
-    implemented: false
-    working: "NA"
-    file: ""
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
         - agent: "main"
         - comment: "Need to implement GST/Tax summary and chart data endpoints"
+        - working: true
+        - agent: "testing"
+        - comment: "✅ TESTED: Reports and Insights APIs fully implemented and working. GST summary report working (4 invoices, ₹7200 GST). Business insights report working (9 projects, 15 clients, 0% collection rate). Client-specific summary working correctly. Date filtering working. Fixed ObjectId serialization issue in client summary."
 
   - task: "Authentication System"
     implemented: true
