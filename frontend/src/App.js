@@ -2175,4 +2175,493 @@ const App = () => {
   );
 };
 
+const SearchResults = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [results, setResults] = useState({ projects: [], clients: [], invoices: [], total_count: 0 });
+  const [entityType, setEntityType] = useState('all');
+  const [loading, setLoading] = useState(false);
+
+  const performSearch = async () => {
+    if (!searchQuery.trim()) return;
+    
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const params = new URLSearchParams({
+        query: searchQuery,
+        entity_type: entityType,
+        limit: '50'
+      });
+      
+      const response = await axios.get(`${API}/search?${params}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setResults(response.data);
+    } catch (error) {
+      console.error('Search error:', error);
+      alert('Search failed: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    performSearch();
+  };
+
+  return (
+    <div className="p-6">
+      <h2 className="text-2xl font-bold text-gray-900 mb-6">Global Search</h2>
+      
+      {/* Search Form */}
+      <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+        <form onSubmit={handleSearch} className="flex space-x-4">
+          <div className="flex-1">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search across projects, clients, invoices..."
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <select
+              value={entityType}
+              onChange={(e) => setEntityType(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All</option>
+              <option value="projects">Projects</option>
+              <option value="clients">Clients</option>
+              <option value="invoices">Invoices</option>
+            </select>
+          </div>
+          <button
+            type="submit"
+            disabled={loading || !searchQuery.trim()}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          >
+            {loading ? 'Searching...' : 'Search'}
+          </button>
+        </form>
+      </div>
+
+      {/* Results Summary */}
+      {results.total_count > 0 && (
+        <div className="bg-blue-50 p-4 rounded-lg mb-6">
+          <p className="text-blue-800">
+            Found <strong>{results.total_count}</strong> results for "<strong>{searchQuery}</strong>"
+          </p>
+        </div>
+      )}
+
+      {/* Projects Results */}
+      {results.projects.length > 0 && (
+        <div className="mb-8">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Projects ({results.projects.length})</h3>
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Client</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Architect</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Value</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {results.projects.map((project) => (
+                  <tr key={project.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium text-gray-900">{project.project_name}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900">{project.client_name}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900">{project.architect}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900">₹{project.total_value.toLocaleString()}</div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Clients Results */}
+      {results.clients.length > 0 && (
+        <div className="mb-8">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Clients ({results.clients.length})</h3>
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Address</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">GST No</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {results.clients.map((client) => (
+                  <tr key={client.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium text-gray-900">{client.name}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900">{client.bill_to_address}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900">{client.gst_no || '-'}</div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Invoices Results */}
+      {results.invoices.length > 0 && (
+        <div className="mb-8">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Invoices ({results.invoices.length})</h3>
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Invoice No</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">RA Number</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {results.invoices.map((invoice) => (
+                  <tr key={invoice.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium text-gray-900">{invoice.invoice_number}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900">{invoice.ra_number}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900">{invoice.project_name}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900">₹{invoice.total_amount.toLocaleString()}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                        {invoice.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* No Results */}
+      {searchQuery && results.total_count === 0 && !loading && (
+        <div className="text-center py-8">
+          <p className="text-gray-500">No results found for "{searchQuery}"</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const Reports = () => {
+  const [activeTab, setActiveTab] = useState('gst');
+  const [gstSummary, setGstSummary] = useState(null);
+  const [insights, setInsights] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+
+  const fetchGSTSummary = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const params = new URLSearchParams();
+      if (dateFrom) params.append('date_from', dateFrom);
+      if (dateTo) params.append('date_to', dateTo);
+      
+      const response = await axios.get(`${API}/reports/gst-summary?${params}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setGstSummary(response.data);
+    } catch (error) {
+      console.error('GST report error:', error);
+      alert('Failed to fetch GST summary');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchInsights = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/reports/insights`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setInsights(response.data);
+    } catch (error) {
+      console.error('Insights error:', error);
+      alert('Failed to fetch insights');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'gst') {
+      fetchGSTSummary();
+    } else if (activeTab === 'insights') {
+      fetchInsights();
+    }
+  }, [activeTab]);
+
+  return (
+    <div className="p-6">
+      <h2 className="text-2xl font-bold text-gray-900 mb-6">Reports & Insights</h2>
+      
+      {/* Tab Navigation */}
+      <div className="flex space-x-1 mb-6">
+        <button
+          onClick={() => setActiveTab('gst')}
+          className={`px-4 py-2 rounded-lg font-medium ${
+            activeTab === 'gst' 
+              ? 'bg-blue-600 text-white' 
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          GST Summary
+        </button>
+        <button
+          onClick={() => setActiveTab('insights')}
+          className={`px-4 py-2 rounded-lg font-medium ${
+            activeTab === 'insights' 
+              ? 'bg-blue-600 text-white' 
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          Business Insights
+        </button>
+      </div>
+
+      {loading && (
+        <div className="flex justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      )}
+
+      {/* GST Summary Tab */}
+      {activeTab === 'gst' && gstSummary && (
+        <div className="space-y-6">
+          {/* Date Filter */}
+          <div className="bg-white p-4 rounded-lg shadow-md">
+            <div className="flex items-end space-x-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">From Date</label>
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">To Date</label>
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <button
+                onClick={fetchGSTSummary}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Apply Filter
+              </button>
+            </div>
+          </div>
+
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold text-gray-900">Total Invoices</h3>
+              <p className="text-2xl font-bold text-blue-600">{gstSummary.total_invoices}</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold text-gray-900">Taxable Amount</h3>
+              <p className="text-2xl font-bold text-green-600">₹{gstSummary.total_taxable_amount.toLocaleString()}</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold text-gray-900">Total GST</h3>
+              <p className="text-2xl font-bold text-orange-600">₹{gstSummary.total_gst_amount.toLocaleString()}</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold text-gray-900">Total with GST</h3>
+              <p className="text-2xl font-bold text-purple-600">₹{gstSummary.total_amount_with_gst.toLocaleString()}</p>
+            </div>
+          </div>
+
+          {/* GST Breakdown */}
+          {gstSummary.gst_breakdown.length > 0 && (
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">GST Rate Breakdown</h3>
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead>
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">GST Rate</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Taxable Amount</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">GST Amount</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Amount</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {gstSummary.gst_breakdown.map((item, index) => (
+                    <tr key={index}>
+                      <td className="px-6 py-4">{item.rate}%</td>
+                      <td className="px-6 py-4">₹{item.taxable_amount.toLocaleString()}</td>
+                      <td className="px-6 py-4">₹{item.gst_amount.toLocaleString()}</td>
+                      <td className="px-6 py-4">₹{item.total_amount.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Monthly Breakdown */}
+          {gstSummary.monthly_breakdown.length > 0 && (
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Monthly Breakdown</h3>
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead>
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Month</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Invoices</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Taxable Amount</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">GST Amount</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Amount</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {gstSummary.monthly_breakdown.map((item, index) => (
+                    <tr key={index}>
+                      <td className="px-6 py-4">{item.month}</td>
+                      <td className="px-6 py-4">{item.total_invoices}</td>
+                      <td className="px-6 py-4">₹{item.taxable_amount.toLocaleString()}</td>
+                      <td className="px-6 py-4">₹{item.gst_amount.toLocaleString()}</td>
+                      <td className="px-6 py-4">₹{item.total_amount.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Business Insights Tab */}
+      {activeTab === 'insights' && insights && (
+        <div className="space-y-6">
+          {/* Overview Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold text-gray-900">Total Projects</h3>
+              <p className="text-2xl font-bold text-blue-600">{insights.overview.total_projects}</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold text-gray-900">Total Clients</h3>
+              <p className="text-2xl font-bold text-green-600">{insights.overview.total_clients}</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold text-gray-900">Total Invoices</h3>
+              <p className="text-2xl font-bold text-orange-600">{insights.overview.total_invoices}</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold text-gray-900">Active Users</h3>
+              <p className="text-2xl font-bold text-purple-600">{insights.overview.active_users}</p>
+            </div>
+          </div>
+
+          {/* Financial Overview */}
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Financial Overview</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <p className="text-sm text-gray-600">Total Project Value</p>
+                <p className="text-xl font-bold text-blue-600">₹{insights.financial.total_project_value.toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Total Invoiced</p>
+                <p className="text-xl font-bold text-green-600">₹{insights.financial.total_invoiced_value.toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Collection %</p>
+                <p className="text-xl font-bold text-orange-600">{insights.financial.collection_percentage.toFixed(1)}%</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Top Clients */}
+          {insights.trends.top_clients.length > 0 && (
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Clients by Value</h3>
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead>
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Client Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Value</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {insights.trends.top_clients.map((client, index) => (
+                    <tr key={index}>
+                      <td className="px-6 py-4">{client.name}</td>
+                      <td className="px-6 py-4">₹{client.total_value.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Performance Metrics */}
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance Metrics</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <p className="text-sm text-gray-600">Average Project Value</p>
+                <p className="text-xl font-bold text-blue-600">₹{insights.performance.avg_project_value.toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Average Invoice Value</p>
+                <p className="text-xl font-bold text-green-600">₹{insights.performance.avg_invoice_value.toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Projects per Client</p>
+                <p className="text-xl font-bold text-orange-600">{insights.performance.projects_per_client.toFixed(1)}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+
 export default App;
