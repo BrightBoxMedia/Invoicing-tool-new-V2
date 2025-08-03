@@ -298,11 +298,13 @@ const Projects = () => {
       // Initialize partial quantities and GST rates
       const quantities = {};
       const gstRates = {};
-      response.data.boq_items.forEach(item => {
-        const itemId = item.id || item.serial_number;
-        quantities[itemId] = 0; // Start with 0, user will input
-        gstRates[itemId] = item.gst_rate || 18.0;
-      });
+      if (response.data && response.data.boq_items) {
+        response.data.boq_items.forEach(item => {
+          const itemId = item.id || item.serial_number;
+          quantities[itemId] = 0; // Start with 0, user will input
+          gstRates[itemId] = item.gst_rate || 18.0;
+        });
+      }
       setPartialQuantities(quantities);
       setItemGSTRates(gstRates);
       
