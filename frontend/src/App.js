@@ -2233,6 +2233,7 @@ const App = () => {
               <>
                 <Route path="/item-master" element={<ItemMaster />} />
                 <Route path="/logs" element={<ActivityLogs />} />
+                <Route path="/users" element={<UserManagement />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/search" element={<SearchResults />} />
               </>
