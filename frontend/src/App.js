@@ -983,9 +983,9 @@ const Projects = () => {
                       ))}
                     </tbody>
                   </table>
-                  {parsedData.items.length > 10 && (
+                  {(parsedData?.items?.length || 0) > 10 && (
                     <div className="p-2 text-center text-gray-500">
-                      ... and {parsedData.items.length - 10} more items
+                      ... and {(parsedData?.items?.length || 0) - 10} more items
                     </div>
                   )}
                 </div>
