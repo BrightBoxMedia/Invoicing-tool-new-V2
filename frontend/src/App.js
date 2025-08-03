@@ -2161,10 +2161,12 @@ const App = () => {
             <Route path="/invoices" element={<Invoices />} />
             <Route path="/clients" element={<Clients />} />
             {user.role === 'super_admin' && (
-              <Route path="/item-master" element={<ItemMaster />} />
-            )}
-            {user.role === 'super_admin' && (
-              <Route path="/logs" element={<ActivityLogs />} />
+              <>
+                <Route path="/item-master" element={<ItemMaster />} />
+                <Route path="/logs" element={<ActivityLogs />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/search" element={<SearchResults />} />
+              </>
             )}
           </Routes>
         </main>
