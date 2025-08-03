@@ -1804,16 +1804,34 @@ async def get_client_summary(client_id: str, current_user: dict = Depends(get_cu
         projects = await db.projects.find({"client_id": client_id}).to_list(1000)
         invoices = await db.invoices.find({"client_id": client_id}).to_list(1000)
         
+        # Clean up data to remove ObjectIds and ensure JSON serialization
+        def clean_data(data):
+            if isinstance(data, list):
+                return [clean_data(item) for item in data]
+            elif isinstance(data, dict):
+                cleaned = {}
+                for k, v in data.items():
+                    if k == '_id':  # Skip MongoDB ObjectId
+                        continue
+                    cleaned[k] = clean_data(v)
+                return cleaned
+            else:
+                return data
+        
+        clean_client = clean_data(client)
+        clean_projects = clean_data(projects)
+        clean_invoices = clean_data(invoices)
+        
         summary = {
-            "client_info": client,
-            "projects_count": len(projects),
-            "invoices_count": len(invoices),
-            "total_project_value": sum(p.get("total_project_value", 0) for p in projects),
-            "total_invoiced_value": sum(i.get("total_amount", 0) for i in invoices),
-            "total_advance_received": sum(p.get("advance_received", 0) for p in projects),
-            "pending_amount": sum(p.get("pending_payment", 0) for p in projects),
-            "projects": projects,
-            "recent_invoices": sorted(invoices, key=lambda x: x.get("created_at", datetime.min), reverse=True)[:5]
+            "client_info": clean_client,
+            "projects_count": len(clean_projects),
+            "invoices_count": len(clean_invoices),
+            "total_project_value": sum(p.get("total_project_value", 0) for p in clean_projects),
+            "total_invoiced_value": sum(i.get("total_amount", 0) for i in clean_invoices),
+            "total_advance_received": sum(p.get("advance_received", 0) for p in clean_projects),
+            "pending_amount": sum(p.get("pending_payment", 0) for p in clean_projects),
+            "projects": clean_projects,
+            "recent_invoices": sorted(clean_invoices, key=lambda x: x.get("created_at", datetime.min), reverse=True)[:5]
         }
         
         return summary
