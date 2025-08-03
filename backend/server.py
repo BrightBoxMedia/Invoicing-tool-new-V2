@@ -1595,6 +1595,231 @@ async def get_filtered_invoices(
         logger.error(f"Error filtering invoices: {str(e)}")
         return []
 
+# Reports and Insights
+@api_router.get("/reports/gst-summary")
+async def get_gst_summary(
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get GST summary report with tax breakdown"""
+    try:
+        query = {}
+        if date_from or date_to:
+            date_query = {}
+            if date_from:
+                date_query["$gte"] = datetime.fromisoformat(date_from.replace('Z', '+00:00'))
+            if date_to:
+                date_query["$lte"] = datetime.fromisoformat(date_to.replace('Z', '+00:00'))
+            query["created_at"] = date_query
+        
+        invoices = await db.invoices.find(query).to_list(1000)
+        
+        gst_summary = {
+            "total_invoices": len(invoices),
+            "total_taxable_amount": 0,
+            "total_gst_amount": 0,
+            "total_amount_with_gst": 0,
+            "gst_breakdown": {},
+            "monthly_breakdown": {},
+            "invoice_type_breakdown": {"proforma": 0, "tax_invoice": 0}
+        }
+        
+        for invoice in invoices:
+            subtotal = invoice.get("subtotal", 0)
+            gst_amount = invoice.get("total_gst_amount", invoice.get("gst_amount", 0))
+            total_amount = invoice.get("total_amount", 0)
+            invoice_type = invoice.get("invoice_type", "proforma")
+            
+            gst_summary["total_taxable_amount"] += subtotal
+            gst_summary["total_gst_amount"] += gst_amount
+            gst_summary["total_amount_with_gst"] += total_amount
+            gst_summary["invoice_type_breakdown"][invoice_type] += total_amount
+            
+            # Monthly breakdown
+            created_at = invoice.get("created_at", datetime.utcnow())
+            if isinstance(created_at, str):
+                created_at = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+            
+            month_key = created_at.strftime("%Y-%m")
+            if month_key not in gst_summary["monthly_breakdown"]:
+                gst_summary["monthly_breakdown"][month_key] = {
+                    "month": created_at.strftime("%B %Y"),
+                    "total_invoices": 0,
+                    "taxable_amount": 0,
+                    "gst_amount": 0,
+                    "total_amount": 0
+                }
+            
+            gst_summary["monthly_breakdown"][month_key]["total_invoices"] += 1
+            gst_summary["monthly_breakdown"][month_key]["taxable_amount"] += subtotal
+            gst_summary["monthly_breakdown"][month_key]["gst_amount"] += gst_amount
+            gst_summary["monthly_breakdown"][month_key]["total_amount"] += total_amount
+            
+            # GST rate breakdown
+            for item in invoice.get("items", []):
+                gst_rate = item.get("gst_rate", 18.0)
+                item_gst_amount = item.get("gst_amount", 0)
+                
+                if gst_rate not in gst_summary["gst_breakdown"]:
+                    gst_summary["gst_breakdown"][gst_rate] = {
+                        "rate": gst_rate,
+                        "taxable_amount": 0,
+                        "gst_amount": 0,
+                        "total_amount": 0
+                    }
+                
+                gst_summary["gst_breakdown"][gst_rate]["taxable_amount"] += item.get("amount", 0)
+                gst_summary["gst_breakdown"][gst_rate]["gst_amount"] += item_gst_amount
+                gst_summary["gst_breakdown"][gst_rate]["total_amount"] += item.get("total_with_gst", 0)
+        
+        # Convert dict to list for better frontend handling
+        gst_summary["monthly_breakdown"] = list(gst_summary["monthly_breakdown"].values())
+        gst_summary["gst_breakdown"] = list(gst_summary["gst_breakdown"].values())
+        
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "gst_report_generated", f"Generated GST summary report"
+        )
+        
+        return gst_summary
+        
+    except Exception as e:
+        logger.error(f"Error generating GST summary: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate GST summary: {str(e)}")
+
+@api_router.get("/reports/insights")
+async def get_insights(current_user: dict = Depends(get_current_user)):
+    """Get business insights and analytics"""
+    try:
+        # Get current date
+        now = datetime.utcnow()
+        current_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        last_month = (current_month - timedelta(days=1)).replace(day=1)
+        
+        # Basic counts
+        total_projects = await db.projects.count_documents({})
+        total_clients = await db.clients.count_documents({})
+        total_invoices = await db.invoices.count_documents({})
+        
+        # Financial data
+        projects = await db.projects.find().to_list(1000)
+        invoices = await db.invoices.find().to_list(1000)
+        
+        # Calculate project insights
+        total_project_value = sum(p.get("total_project_value", 0) for p in projects)
+        total_advance_received = sum(p.get("advance_received", 0) for p in projects)
+        total_pending_payment = sum(p.get("pending_payment", 0) for p in projects)
+        
+        # Calculate invoice insights
+        total_invoiced_value = sum(i.get("total_amount", 0) for i in invoices)
+        
+        # Monthly trends (last 6 months)
+        monthly_data = {}
+        for i in range(6):
+            month_start = (current_month - timedelta(days=i * 30)).replace(day=1)
+            month_end = (month_start + timedelta(days=31)).replace(day=1) - timedelta(seconds=1)
+            month_key = month_start.strftime("%Y-%m")
+            
+            monthly_invoices = [
+                inv for inv in invoices 
+                if month_start <= datetime.fromisoformat(str(inv.get("created_at", now)).replace('Z', '+00:00')) <= month_end
+            ]
+            
+            monthly_data[month_key] = {
+                "month": month_start.strftime("%B %Y"),
+                "invoices_count": len(monthly_invoices),
+                "invoices_value": sum(inv.get("total_amount", 0) for inv in monthly_invoices)
+            }
+        
+        # Top clients by value
+        client_values = {}
+        for project in projects:
+            client_name = project.get("client_name", "Unknown")
+            client_values[client_name] = client_values.get(client_name, 0) + project.get("total_project_value", 0)
+        
+        top_clients = sorted(
+            [{"name": k, "total_value": v} for k, v in client_values.items()],
+            key=lambda x: x["total_value"],
+            reverse=True
+        )[:5]
+        
+        # Active users (users who performed actions in last 30 days)
+        thirty_days_ago = now - timedelta(days=30)
+        recent_logs = await db.activity_logs.find({
+            "timestamp": {"$gte": thirty_days_ago}
+        }).to_list(1000)
+        
+        active_users = len(set(log.get("user_email") for log in recent_logs))
+        
+        insights = {
+            "overview": {
+                "total_projects": total_projects,
+                "total_clients": total_clients,
+                "total_invoices": total_invoices,
+                "active_users": active_users
+            },
+            "financial": {
+                "total_project_value": total_project_value,
+                "total_advance_received": total_advance_received,
+                "total_pending_payment": total_pending_payment,
+                "total_invoiced_value": total_invoiced_value,
+                "collection_percentage": (total_advance_received / total_project_value * 100) if total_project_value > 0 else 0
+            },
+            "trends": {
+                "monthly_data": list(monthly_data.values()),
+                "top_clients": top_clients
+            },
+            "performance": {
+                "avg_project_value": total_project_value / total_projects if total_projects > 0 else 0,
+                "avg_invoice_value": total_invoiced_value / total_invoices if total_invoices > 0 else 0,
+                "projects_per_client": total_projects / total_clients if total_clients > 0 else 0
+            }
+        }
+        
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "insights_report_generated", f"Generated business insights report"
+        )
+        
+        return insights
+        
+    except Exception as e:
+        logger.error(f"Error generating insights: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate insights: {str(e)}")
+
+@api_router.get("/reports/client-summary/{client_id}")
+async def get_client_summary(client_id: str, current_user: dict = Depends(get_current_user)):
+    """Get detailed summary for a specific client"""
+    try:
+        client = await db.clients.find_one({"id": client_id})
+        if not client:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        # Get client's projects and invoices
+        projects = await db.projects.find({"client_id": client_id}).to_list(1000)
+        invoices = await db.invoices.find({"client_id": client_id}).to_list(1000)
+        
+        summary = {
+            "client_info": client,
+            "projects_count": len(projects),
+            "invoices_count": len(invoices),
+            "total_project_value": sum(p.get("total_project_value", 0) for p in projects),
+            "total_invoiced_value": sum(i.get("total_amount", 0) for i in invoices),
+            "total_advance_received": sum(p.get("advance_received", 0) for p in projects),
+            "pending_amount": sum(p.get("pending_payment", 0) for p in projects),
+            "projects": projects,
+            "recent_invoices": sorted(invoices, key=lambda x: x.get("created_at", datetime.min), reverse=True)[:5]
+        }
+        
+        return summary
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating client summary: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate client summary: {str(e)}")
+
 # Include router
 app.include_router(api_router)
 
