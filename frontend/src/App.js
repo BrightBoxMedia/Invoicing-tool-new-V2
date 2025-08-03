@@ -1332,7 +1332,7 @@ const Invoices = () => {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center space-x-4">
-          <h2 className="text-2xl font-bold text-gray-900">Invoices Management</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Invoices Management v2.0</h2>
           {loading && (
             <div className="flex items-center text-blue-600">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
