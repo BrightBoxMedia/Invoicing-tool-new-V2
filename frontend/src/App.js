@@ -2161,6 +2161,9 @@ const App = () => {
             <Route path="/invoices" element={<Invoices />} />
             <Route path="/clients" element={<Clients />} />
             {user.role === 'super_admin' && (
+              <Route path="/item-master" element={<ItemMaster />} />
+            )}
+            {user.role === 'super_admin' && (
               <Route path="/logs" element={<ActivityLogs />} />
             )}
           </Routes>
