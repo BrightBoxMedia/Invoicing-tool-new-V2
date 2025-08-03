@@ -67,6 +67,19 @@ class UserRole(str, Enum):
     REVIEWER = "reviewer"
     APPROVER = "approver"
     CLIENT = "client"
+    VENDOR = "vendor"
+
+class MasterItem(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    description: str
+    unit: str
+    standard_rate: float
+    category: Optional[str] = None
+    last_used_date: Optional[datetime] = None
+    usage_count: int = 0
+    created_by: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 class InvoiceType(str, Enum):
     PROFORMA = "proforma"
