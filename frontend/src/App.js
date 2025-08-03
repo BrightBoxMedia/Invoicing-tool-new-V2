@@ -547,9 +547,17 @@ const Projects = () => {
                 </button>
                 <button
                   onClick={createProjectFromBOQ}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  disabled={!editableMetadata.project_name || !editableMetadata.client || !editableMetadata.architect}
+                  className={`px-6 py-2 rounded font-medium ${
+                    editableMetadata.project_name && editableMetadata.client && editableMetadata.architect
+                      ? 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
                 >
                   Create Project
+                  {(!editableMetadata.project_name || !editableMetadata.client || !editableMetadata.architect) && 
+                    <span className="ml-2 text-xs">(Fill required fields)</span>
+                  }
                 </button>
               </div>
             </div>
