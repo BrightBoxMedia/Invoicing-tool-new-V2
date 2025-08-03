@@ -245,6 +245,12 @@ const Projects = () => {
   const [itemGSTRates, setItemGSTRates] = useState({});
   const [invoiceType, setInvoiceType] = useState('proforma');
   const [projectInvoices, setProjectInvoices] = useState([]);
+  const [editableMetadata, setEditableMetadata] = useState({
+    project_name: '',
+    client: '',
+    architect: '',
+    location: ''
+  });
 
   useEffect(() => {
     fetchProjects();
