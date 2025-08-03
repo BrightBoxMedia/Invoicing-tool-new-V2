@@ -1292,8 +1292,10 @@ async def auto_populate_master_items(current_user: dict = Depends(get_current_us
             avg_rate = sum(valid_rates) / len(valid_rates) if valid_rates else 0
             
             # Check if item already exists
+            import re as regex_module
+            escaped_description = regex_module.escape(item_data['description'])
             existing = await db.master_items.find_one({
-                "description": {"$regex": f"^{item_data['description']}$", "$options": "i"},
+                "description": {"$regex": f"^{escaped_description}$", "$options": "i"},
                 "unit": item_data["unit"]
             })
             
