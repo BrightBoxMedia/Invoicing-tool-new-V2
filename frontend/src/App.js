@@ -515,8 +515,8 @@ const Projects = () => {
           ...editableMetadata,
           date: new Date().toISOString()
         },
-        boq_items: parsedData.items,
-        total_project_value: parsedData.total_value,
+        boq_items: parsedData?.items || [],
+        total_project_value: parsedData?.total_value || 0,
         advance_received: 0
       };
 
