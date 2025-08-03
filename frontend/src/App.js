@@ -2644,6 +2644,8 @@ const UserManagement = () => {
     </div>
   );
 };
+
+const SearchResults = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState({ projects: [], clients: [], invoices: [], total_count: 0 });
   const [entityType, setEntityType] = useState('all');
