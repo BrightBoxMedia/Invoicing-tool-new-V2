@@ -322,13 +322,31 @@ class ExcelParser:
         # Must have at least description and one numeric field
         numeric_fields = ['quantity', 'rate', 'amount']
         has_numeric = any(
-            row_data.get(field) is not None and 
-            (isinstance(row_data.get(field), (int, float)) or 
-             (isinstance(row_data.get(field), str) and row_data.get(field).replace('.', '').replace(',', '').isdigit()))
+            self._safe_float_conversion(row_data.get(field)) is not None
             for field in numeric_fields
         )
         
         return has_numeric
+    
+    def _safe_float_conversion(self, value) -> Optional[float]:
+        """Safely convert value to float, handling None and invalid values"""
+        if value is None:
+            return None
+        
+        if isinstance(value, (int, float)):
+            return float(value)
+        
+        if isinstance(value, str):
+            # Remove common formatting characters
+            cleaned = value.strip().replace(',', '').replace('₹', '').replace('Rs.', '').replace('Rs', '')
+            if not cleaned:
+                return None
+            try:
+                return float(cleaned)
+            except ValueError:
+                return None
+        
+        return None
 
 # PDF Generator Class
 class PDFGenerator:
