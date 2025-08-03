@@ -531,7 +531,7 @@ class PDFGenerator:
         # Totals
         totals_data = [
             ['Subtotal:', f"₹{invoice.subtotal:,.2f}"],
-            ['GST (18%):', f"₹{invoice.gst_amount:,.2f}"],
+            ['GST (18%):', f"₹{invoice.total_gst_amount:,.2f}"],
             ['Total Amount:', f"₹{invoice.total_amount:,.2f}"]
         ]
         
