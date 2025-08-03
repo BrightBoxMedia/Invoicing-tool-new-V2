@@ -1281,6 +1281,21 @@ const Invoices = () => {
     }
   };
 
+  const handleViewInvoice = async (invoiceId, invoiceNumber) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/invoices/${invoiceId}/pdf`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      window.open(url, '_blank');
+    } catch (error) {
+      alert('Error viewing PDF: ' + error.message);
+    }
+  };
+
   if (loading) return <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>;
 
   return (
