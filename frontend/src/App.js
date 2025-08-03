@@ -642,6 +642,11 @@ const Invoices = () => {
       const token = localStorage.getItem('token');
       const project = projects.find(p => p.id === selectedProject);
       
+      // Calculate totals
+      const subtotal = selectedItems.reduce((sum, item) => sum + item.amount, 0);
+      const gstAmount = subtotal * 0.18; // 18% GST
+      const totalAmount = subtotal + gstAmount;
+      
       const invoiceData = {
         project_id: selectedProject,
         project_name: project.project_name,
@@ -649,10 +654,13 @@ const Invoices = () => {
         client_name: project.client_name,
         invoice_type: invoiceType,
         items: selectedItems,
+        subtotal: subtotal,
+        gst_amount: gstAmount,
+        total_amount: totalAmount,
         status: 'draft'
       };
 
-      await axios.post(`${API}/invoices`, invoiceData, {
+      const response = await axios.post(`${API}/invoices`, invoiceData, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -660,9 +668,21 @@ const Invoices = () => {
       setShowModal(false);
       setSelectedProject('');
       setSelectedItems([]);
+      setInvoiceType('proforma');
       fetchInvoices();
     } catch (error) {
-      alert('Error creating invoice: ' + (error.response?.data?.detail || error.message));
+      console.error('Invoice creation error:', error);
+      let errorMessage = 'Unknown error occurred';
+      
+      if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert('Error creating invoice: ' + errorMessage);
     }
   };
 
