@@ -263,25 +263,12 @@ const Projects = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // Filter out null or invalid projects and ensure required fields
-      const validProjects = (response.data || []).filter(project => 
-        project && 
-        project.id && 
-        typeof project === 'object'
-      ).map(project => ({
-        ...project,
-        total_project_value: project.total_project_value || 0,
-        pending_payment: project.pending_payment || 0,
-        project_name: project.project_name || 'Untitled Project',
-        client_name: project.client_name || 'Unknown Client',
-        architect: project.architect || 'Unknown Architect',
-        created_at: project.created_at || new Date().toISOString()
-      }));
-      
+      // Ensure we have valid data
+      const validProjects = Array.isArray(response.data) ? response.data : [];
       setProjects(validProjects);
     } catch (error) {
       console.error('Error fetching projects:', error);
-      setProjects([]); // Set empty array on error
+      setProjects([]);
     } finally {
       setLoading(false);
     }
