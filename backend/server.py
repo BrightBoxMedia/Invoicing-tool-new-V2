@@ -969,8 +969,72 @@ async def create_invoice(invoice_data: Invoice, current_user: dict = Depends(get
 
 @api_router.get("/invoices", response_model=List[Invoice])
 async def get_invoices(current_user: dict = Depends(get_current_user)):
-    invoices = await db.invoices.find().to_list(1000)
-    return [Invoice(**invoice) for invoice in invoices]
+    try:
+        invoices = await db.invoices.find().to_list(1000)
+        
+        # Filter and validate invoices to prevent validation errors
+        valid_invoices = []
+        for invoice in invoices:
+            if not invoice or not isinstance(invoice, dict):
+                continue
+                
+            try:
+                # Ensure required fields exist with defaults
+                cleaned_invoice = {
+                    "id": invoice.get("id", str(uuid.uuid4())),
+                    "invoice_number": invoice.get("invoice_number", ""),
+                    "ra_number": invoice.get("ra_number", ""),
+                    "project_id": invoice.get("project_id", ""),
+                    "project_name": invoice.get("project_name", ""),
+                    "client_id": invoice.get("client_id", ""),
+                    "client_name": invoice.get("client_name", ""),
+                    "invoice_type": invoice.get("invoice_type", "proforma"),
+                    "items": [],
+                    "subtotal": float(invoice.get("subtotal", 0)),
+                    "total_gst_amount": float(invoice.get("total_gst_amount", invoice.get("gst_amount", 0))),
+                    "total_amount": float(invoice.get("total_amount", 0)),
+                    "is_partial": invoice.get("is_partial", True),
+                    "billing_percentage": invoice.get("billing_percentage"),
+                    "cumulative_billed": invoice.get("cumulative_billed"),
+                    "status": invoice.get("status", "draft"),
+                    "created_by": invoice.get("created_by"),
+                    "reviewed_by": invoice.get("reviewed_by"),
+                    "approved_by": invoice.get("approved_by"),
+                    "invoice_date": invoice.get("invoice_date", datetime.utcnow()),
+                    "due_date": invoice.get("due_date"),
+                    "created_at": invoice.get("created_at", datetime.utcnow()),
+                    "updated_at": invoice.get("updated_at", datetime.utcnow())
+                }
+                
+                # Clean up items to match InvoiceItem model
+                for item in invoice.get("items", []):
+                    if isinstance(item, dict):
+                        cleaned_item = {
+                            "boq_item_id": item.get("boq_item_id", item.get("serial_number", str(uuid.uuid4()))),
+                            "serial_number": str(item.get("serial_number", "")),
+                            "description": str(item.get("description", "")),
+                            "unit": str(item.get("unit", "nos")),
+                            "quantity": float(item.get("quantity", 0)),
+                            "rate": float(item.get("rate", 0)),
+                            "amount": float(item.get("amount", 0)),
+                            "gst_rate": float(item.get("gst_rate", 18.0)),
+                            "gst_amount": float(item.get("gst_amount", 0)),
+                            "total_with_gst": float(item.get("total_with_gst", item.get("amount", 0) * 1.18))
+                        }
+                        cleaned_invoice["items"].append(cleaned_item)
+                
+                valid_invoice = Invoice(**cleaned_invoice)
+                valid_invoices.append(valid_invoice)
+                
+            except Exception as e:
+                logger.warning(f"Skipping invalid invoice {invoice.get('id', 'unknown')}: {e}")
+                continue
+        
+        return valid_invoices
+        
+    except Exception as e:
+        logger.error(f"Error fetching invoices: {str(e)}")
+        return []
 
 @api_router.get("/invoices/{invoice_id}/pdf")
 async def download_invoice_pdf(invoice_id: str, current_user: dict = Depends(get_current_user)):
