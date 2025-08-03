@@ -439,12 +439,71 @@ const Projects = () => {
               <h3 className="text-lg font-bold text-gray-900 mb-4">Review BOQ Data</h3>
               
               <div className="mb-6">
-                <h4 className="font-semibold mb-2">Project Information:</h4>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div><strong>Project Name:</strong> {parsedData.metadata.project_name || 'Not found'}</div>
-                  <div><strong>Client:</strong> {parsedData.metadata.client || 'Not found'}</div>
-                  <div><strong>Architect:</strong> {parsedData.metadata.architect || 'Not found'}</div>
-                  <div><strong>Total Value:</strong> ₹{parsedData.total_value?.toLocaleString()}</div>
+                <h4 className="font-semibold mb-4">Project Information (Edit if needed):</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Project Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={editableMetadata.project_name}
+                      onChange={(e) => setEditableMetadata({...editableMetadata, project_name: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter project name"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Client Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={editableMetadata.client}
+                      onChange={(e) => setEditableMetadata({...editableMetadata, client: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter client name"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Architect *
+                    </label>
+                    <input
+                      type="text"
+                      value={editableMetadata.architect}
+                      onChange={(e) => setEditableMetadata({...editableMetadata, architect: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter architect name"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Location
+                    </label>
+                    <input
+                      type="text"
+                      value={editableMetadata.location}
+                      onChange={(e) => setEditableMetadata({...editableMetadata, location: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter project location"
+                    />
+                  </div>
+                </div>
+                
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    <strong>Total Project Value:</strong> ₹{parsedData.total_value?.toLocaleString()}
+                  </p>
+                  <p className="text-sm text-blue-600 mt-1">
+                    Fields marked with * are required. Auto-filled data from Excel can be edited above.
+                  </p>
                 </div>
               </div>
 
