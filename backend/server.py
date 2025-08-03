@@ -608,19 +608,54 @@ async def upload_boq(
     file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user)
 ):
-    if file.content_type not in ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel']:
-        raise HTTPException(status_code=400, detail="Please upload an Excel file")
+    # Validate file type
+    allowed_content_types = [
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-excel',
+        'application/vnd.ms-excel.sheet.macroEnabled.12'
+    ]
     
+    allowed_extensions = ['.xlsx', '.xlsm', '.xls']
+    
+    if file.content_type not in allowed_content_types:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid file type. Please upload an Excel file (.xlsx, .xls, .xlsm). Received: {file.content_type}"
+        )
+    
+    if not any(file.filename.lower().endswith(ext) for ext in allowed_extensions):
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid file extension. Please upload an Excel file with .xlsx, .xls, or .xlsm extension"
+        )
+    
+    # Check file size (max 10MB)
     file_content = await file.read()
-    parser = ExcelParser()
-    parsed_data = await parser.parse_excel_file(file_content, file.filename)
+    if len(file_content) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File too large. Maximum size is 10MB")
     
-    await log_activity(
-        current_user["id"], current_user["email"], current_user["role"],
-        "boq_uploaded", f"Uploaded BOQ file: {file.filename}"
-    )
+    if len(file_content) == 0:
+        raise HTTPException(status_code=400, detail="Empty file uploaded")
     
-    return parsed_data
+    try:
+        parser = ExcelParser()
+        parsed_data = await parser.parse_excel_file(file_content, file.filename)
+        
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "boq_uploaded", f"Successfully uploaded and parsed BOQ file: {file.filename}"
+        )
+        
+        return parsed_data
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"BOQ parsing error for file {file.filename}: {str(e)}")
+        raise HTTPException(
+            status_code=422, 
+            detail=f"Failed to parse Excel file. Please ensure it's a valid BOQ format. Error: {str(e)}"
+        )
 
 @api_router.post("/clients", response_model=dict)
 async def create_client(client_data: ClientInfo, current_user: dict = Depends(get_current_user)):
