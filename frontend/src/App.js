@@ -454,13 +454,6 @@ const Projects = () => {
     }
   };
 
-  const [editableMetadata, setEditableMetadata] = useState({
-    project_name: '',
-    client: '',
-    architect: '',
-    location: ''
-  });
-
   const createProjectFromBOQ = async () => {
     if (!parsedData) return;
 
