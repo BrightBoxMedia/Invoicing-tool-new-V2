@@ -2663,5 +2663,7 @@ const Reports = () => {
         </div>
       )}
     </div>
+  );
+};
 
 export default App;
