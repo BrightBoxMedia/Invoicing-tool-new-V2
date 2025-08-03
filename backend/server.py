@@ -1131,6 +1131,201 @@ async def get_activity_logs(
     logs = await db.activity_logs.find().skip(skip).limit(limit).sort("timestamp", -1).to_list(limit)
     return [ActivityLog(**log) for log in logs]
 
+# Item Master Management
+@api_router.post("/item-master", response_model=dict)
+async def create_master_item(item_data: MasterItem, current_user: dict = Depends(get_current_user)):
+    """Create a new master item"""
+    try:
+        item_data.created_by = current_user["id"]
+        item_data.updated_at = datetime.utcnow()
+        
+        # Check if similar item already exists
+        existing_item = await db.master_items.find_one({
+            "description": {"$regex": f"^{item_data.description}$", "$options": "i"},
+            "unit": item_data.unit
+        })
+        
+        if existing_item:
+            raise HTTPException(status_code=400, detail="Similar item already exists in master")
+        
+        await db.master_items.insert_one(item_data.dict())
+        
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "master_item_created", f"Created master item: {item_data.description} ({item_data.unit})"
+        )
+        
+        return {"message": "Master item created successfully", "item_id": item_data.id}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating master item: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create master item: {str(e)}")
+
+@api_router.get("/item-master", response_model=List[MasterItem])
+async def get_master_items(
+    category: Optional[str] = None,
+    search: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all master items with optional filtering"""
+    try:
+        query = {}
+        
+        if category:
+            query["category"] = category
+            
+        if search:
+            query["$or"] = [
+                {"description": {"$regex": search, "$options": "i"}},
+                {"category": {"$regex": search, "$options": "i"}}
+            ]
+        
+        items = await db.master_items.find(query).sort("description", 1).to_list(1000)
+        return [MasterItem(**item) for item in items]
+        
+    except Exception as e:
+        logger.error(f"Error fetching master items: {str(e)}")
+        return []
+
+@api_router.put("/item-master/{item_id}", response_model=dict)
+async def update_master_item(
+    item_id: str, 
+    updated_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update a master item"""
+    try:
+        if not item_id:
+            raise HTTPException(status_code=400, detail="Item ID is required")
+        
+        item = await db.master_items.find_one({"id": item_id})
+        if not item:
+            raise HTTPException(status_code=404, detail="Master item not found")
+        
+        # Update only allowed fields
+        allowed_fields = ["description", "unit", "standard_rate", "category"]
+        update_data = {k: v for k, v in updated_data.items() if k in allowed_fields}
+        update_data["updated_at"] = datetime.utcnow()
+        
+        await db.master_items.update_one(
+            {"id": item_id},
+            {"$set": update_data}
+        )
+        
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "master_item_updated", f"Updated master item: {item['description']}"
+        )
+        
+        return {"message": "Master item updated successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating master item: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to update master item: {str(e)}")
+
+@api_router.delete("/item-master/{item_id}")
+async def delete_master_item(item_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a master item"""
+    try:
+        if current_user["role"] not in [UserRole.SUPER_ADMIN, UserRole.INVOICE_CREATOR]:
+            raise HTTPException(status_code=403, detail="Insufficient permissions")
+        
+        item = await db.master_items.find_one({"id": item_id})
+        if not item:
+            raise HTTPException(status_code=404, detail="Master item not found")
+        
+        await db.master_items.delete_one({"id": item_id})
+        
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "master_item_deleted", f"Deleted master item: {item['description']}"
+        )
+        
+        return {"message": "Master item deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting master item: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete master item: {str(e)}")
+
+@api_router.post("/item-master/auto-populate")
+async def auto_populate_master_items(current_user: dict = Depends(get_current_user)):
+    """Auto-populate master items from existing BOQ items across all projects"""
+    try:
+        if current_user["role"] not in [UserRole.SUPER_ADMIN, UserRole.INVOICE_CREATOR]:
+            raise HTTPException(status_code=403, detail="Insufficient permissions")
+        
+        # Get all projects and extract unique BOQ items
+        projects = await db.projects.find().to_list(1000)
+        unique_items = {}
+        
+        for project in projects:
+            for boq_item in project.get("boq_items", []):
+                description = boq_item.get("description", "").strip()
+                unit = boq_item.get("unit", "nos").strip()
+                rate = boq_item.get("rate", 0)
+                
+                if description and len(description) > 3:
+                    key = f"{description.lower()}_{unit.lower()}"
+                    
+                    if key not in unique_items:
+                        unique_items[key] = {
+                            "description": description,
+                            "unit": unit,
+                            "rates": [rate],
+                            "count": 1
+                        }
+                    else:
+                        unique_items[key]["rates"].append(rate)
+                        unique_items[key]["count"] += 1
+        
+        # Create master items
+        created_count = 0
+        for item_data in unique_items.values():
+            # Calculate average rate
+            valid_rates = [r for r in item_data["rates"] if r > 0]
+            avg_rate = sum(valid_rates) / len(valid_rates) if valid_rates else 0
+            
+            # Check if item already exists
+            existing = await db.master_items.find_one({
+                "description": {"$regex": f"^{item_data['description']}$", "$options": "i"},
+                "unit": item_data["unit"]
+            })
+            
+            if not existing:
+                master_item = MasterItem(
+                    description=item_data["description"],
+                    unit=item_data["unit"],
+                    standard_rate=avg_rate,
+                    usage_count=item_data["count"],
+                    created_by=current_user["id"]
+                )
+                
+                await db.master_items.insert_one(master_item.dict())
+                created_count += 1
+        
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "master_items_auto_populated", f"Auto-populated {created_count} master items from existing BOQ data"
+        )
+        
+        return {
+            "message": f"Successfully created {created_count} master items",
+            "created_count": created_count,
+            "total_unique_items": len(unique_items)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error auto-populating master items: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to auto-populate master items: {str(e)}")
+
 # Include router
 app.include_router(api_router)
 
