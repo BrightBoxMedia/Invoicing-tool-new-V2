@@ -672,6 +672,159 @@ async def register(user_data: UserCreate, current_user: dict = Depends(get_curre
     
     return {"message": "User created successfully", "user_id": new_user.id}
 
+# User Management APIs
+@api_router.get("/users", response_model=List[dict])
+async def get_users(current_user: dict = Depends(get_current_user)):
+    """Get all users (super admin only)"""
+    if current_user["role"] != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Only super admin can view users")
+    
+    try:
+        users = await db.users.find().to_list(1000)
+        
+        # Clean user data (remove password hash)
+        clean_users = []
+        for user in users:
+            clean_user = {
+                "id": user.get("id"),
+                "email": user.get("email"),
+                "role": user.get("role"),
+                "company_name": user.get("company_name"),
+                "is_active": user.get("is_active", True),
+                "created_at": user.get("created_at"),
+                "last_login": user.get("last_login")
+            }
+            clean_users.append(clean_user)
+        
+        return clean_users
+        
+    except Exception as e:
+        logger.error(f"Error fetching users: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch users: {str(e)}")
+
+@api_router.put("/users/{user_id}", response_model=dict)
+async def update_user(
+    user_id: str,
+    update_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update user details (super admin only)"""
+    if current_user["role"] != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Only super admin can update users")
+    
+    try:
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID is required")
+        
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Only allow updating specific fields
+        allowed_fields = ["role", "company_name", "is_active"]
+        filtered_data = {k: v for k, v in update_data.items() if k in allowed_fields}
+        
+        if not filtered_data:
+            raise HTTPException(status_code=400, detail="No valid fields to update")
+        
+        filtered_data["updated_at"] = datetime.utcnow()
+        
+        await db.users.update_one(
+            {"id": user_id},
+            {"$set": filtered_data}
+        )
+        
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "user_updated", f"Updated user: {user['email']}"
+        )
+        
+        return {"message": "User updated successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating user: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to update user: {str(e)}")
+
+@api_router.delete("/users/{user_id}")
+async def deactivate_user(user_id: str, current_user: dict = Depends(get_current_user)):
+    """Deactivate a user (super admin only)"""
+    if current_user["role"] != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Only super admin can deactivate users")
+    
+    try:
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID is required")
+        
+        # Prevent super admin from deactivating themselves
+        if user_id == current_user["id"]:
+            raise HTTPException(status_code=400, detail="Cannot deactivate your own account")
+        
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        await db.users.update_one(
+            {"id": user_id},
+            {"$set": {"is_active": False, "updated_at": datetime.utcnow()}}
+        )
+        
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "user_deactivated", f"Deactivated user: {user['email']}"
+        )
+        
+        return {"message": "User deactivated successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deactivating user: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to deactivate user: {str(e)}")
+
+@api_router.post("/users/{user_id}/reset-password")
+async def reset_user_password(
+    user_id: str,
+    password_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Reset user password (super admin only)"""
+    if current_user["role"] != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Only super admin can reset passwords")
+    
+    try:
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID is required")
+        
+        new_password = password_data.get("new_password")
+        if not new_password or len(new_password) < 6:
+            raise HTTPException(status_code=400, detail="Password must be at least 6 characters long")
+        
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        password_hash = await hash_password(new_password)
+        
+        await db.users.update_one(
+            {"id": user_id},
+            {"$set": {"password_hash": password_hash, "updated_at": datetime.utcnow()}}
+        )
+        
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "password_reset", f"Reset password for user: {user['email']}"
+        )
+        
+        return {"message": "Password reset successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error resetting password: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to reset password: {str(e)}")
+
 @api_router.post("/upload-boq")
 async def upload_boq(
     file: UploadFile = File(...),
