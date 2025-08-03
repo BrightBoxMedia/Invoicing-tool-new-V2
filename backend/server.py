@@ -790,34 +790,45 @@ async def get_invoices(current_user: dict = Depends(get_current_user)):
 
 @api_router.get("/invoices/{invoice_id}/pdf")
 async def download_invoice_pdf(invoice_id: str, current_user: dict = Depends(get_current_user)):
-    invoice = await db.invoices.find_one({"id": invoice_id})
-    if not invoice:
-        raise HTTPException(status_code=404, detail="Invoice not found")
-    
-    project = await db.projects.find_one({"id": invoice["project_id"]})
-    client = await db.clients.find_one({"id": invoice["client_id"]})
-    
-    if not project or not client:
-        raise HTTPException(status_code=404, detail="Related data not found")
-    
-    pdf_generator = PDFGenerator()
-    pdf_buffer = await pdf_generator.generate_invoice_pdf(
-        Invoice(**invoice),
-        Project(**project),
-        ClientInfo(**client)
-    )
-    
-    await log_activity(
-        current_user["id"], current_user["email"], current_user["role"],
-        "invoice_downloaded", f"Downloaded PDF for invoice: {invoice['invoice_number']}",
-        invoice_id=invoice_id
-    )
-    
-    return StreamingResponse(
-        io.BytesIO(pdf_buffer.read()),
-        media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename=invoice_{invoice['invoice_number']}.pdf"}
-    )
+    try:
+        if not invoice_id or len(invoice_id.strip()) == 0:
+            raise HTTPException(status_code=400, detail="Invoice ID is required")
+        
+        invoice = await db.invoices.find_one({"id": invoice_id})
+        if not invoice:
+            raise HTTPException(status_code=404, detail=f"Invoice with ID {invoice_id} not found")
+        
+        project = await db.projects.find_one({"id": invoice["project_id"]})
+        if not project:
+            raise HTTPException(status_code=404, detail="Related project not found")
+            
+        client = await db.clients.find_one({"id": invoice["client_id"]})
+        if not client:
+            raise HTTPException(status_code=404, detail="Related client not found")
+        
+        pdf_generator = PDFGenerator()
+        pdf_buffer = await pdf_generator.generate_invoice_pdf(
+            Invoice(**invoice),
+            Project(**project),
+            ClientInfo(**client)
+        )
+        
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "invoice_downloaded", f"Downloaded PDF for invoice: {invoice['invoice_number']}",
+            invoice_id=invoice_id
+        )
+        
+        return StreamingResponse(
+            io.BytesIO(pdf_buffer.read()),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename=invoice_{invoice['invoice_number']}.pdf"}
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error downloading invoice PDF {invoice_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate PDF")
 
 @api_router.get("/dashboard/stats")
 async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
