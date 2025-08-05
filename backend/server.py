@@ -1227,87 +1227,101 @@ async def get_project_boq_status(project_id: str, current_user: dict = Depends(g
         raise HTTPException(status_code=500, detail="Failed to get BOQ status")
 
 @api_router.post("/invoices", response_model=dict)
-async def create_invoice(invoice_data: Invoice, current_user: dict = Depends(get_current_user)):
+async def create_invoice(invoice_data: dict, current_user: dict = Depends(get_current_user)):
     try:
-        # Get existing invoices for this project to determine RA number
-        existing_invoices = await db.invoices.find({"project_id": invoice_data.project_id}).to_list(1000)
-        ra_count = len(existing_invoices) + 1
+        # Get project and client information
+        project = await db.projects.find_one({"id": invoice_data["project_id"]})
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+        
+        client = await db.clients.find_one({"id": invoice_data["client_id"]})
+        if not client:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        # Determine GST type based on client location
+        gst_info = determine_gst_type(client.get("bill_to_address", ""))
+        
+        # Process invoice items
+        processed_items = []
+        basic_total = 0.0
+        total_gst_amount = 0.0
+        
+        for item_data in invoice_data["items"]:
+            # Validate GST rate
+            gst_rate = float(item_data.get("gst_rate", 18.0))
+            if gst_rate not in STANDARD_GST_RATES:
+                gst_rate = 18.0  # Default to 18% if invalid rate
+            
+            quantity = float(item_data["quantity"])
+            rate = float(item_data["rate"])
+            amount = quantity * rate
+            
+            # Calculate GST
+            gst_amount = (amount * gst_rate) / 100
+            total_with_gst = amount + gst_amount
+            
+            processed_item = {
+                "boq_item_id": item_data.get("boq_item_id", item_data.get("serial_number", str(len(processed_items) + 1))),
+                "serial_number": len(processed_items) + 1,
+                "description": item_data["description"],
+                "unit": item_data["unit"],
+                "quantity": quantity,
+                "rate": rate,
+                "amount": amount,
+                "gst_rate": gst_rate,
+                "gst_amount": gst_amount,
+                "total_with_gst": total_with_gst,
+                "gst_type": gst_info["gst_type"]
+            }
+            
+            processed_items.append(processed_item)
+            basic_total += amount
+            total_gst_amount += gst_amount
+        
+        # Calculate totals
+        grand_total = basic_total + total_gst_amount
         
         # Generate invoice and RA numbers
-        invoice_count = await db.invoices.count_documents({})
-        invoice_data.invoice_number = f"INV-{datetime.now().year}-{invoice_count + 1:04d}"
-        invoice_data.ra_number = f"RA{ra_count}"
-        invoice_data.created_by = current_user["id"]
+        invoice_count = await db.invoices.count_documents({}) + 1
+        invoice_number = f"INV-{datetime.now().year}-{invoice_count:04d}"
+        ra_number = f"RA-{invoice_count}"
         
-        # Calculate totals and GST
-        invoice_data.subtotal = sum(item.amount for item in invoice_data.items)
-        invoice_data.total_gst_amount = sum(item.gst_amount for item in invoice_data.items)
-        invoice_data.total_amount = invoice_data.subtotal + invoice_data.total_gst_amount
+        # Create invoice
+        new_invoice = {
+            "id": str(uuid.uuid4()),
+            "invoice_number": invoice_number,
+            "ra_number": ra_number,
+            "project_id": invoice_data["project_id"],
+            "project_name": project["project_name"],
+            "client_id": invoice_data["client_id"],
+            "client_name": client["name"],
+            "invoice_type": invoice_data["invoice_type"],
+            "items": processed_items,
+            "subtotal": basic_total,  # Basic total before GST
+            "total_gst_amount": total_gst_amount,  # Total GST
+            "total_amount": grand_total,  # Grand total
+            "gst_info": gst_info,
+            "is_partial": invoice_data.get("is_partial", True),
+            "billing_percentage": invoice_data.get("billing_percentage"),
+            "cumulative_billed": invoice_data.get("cumulative_billed"),
+            "status": "draft",
+            "created_by": current_user["id"],
+            "invoice_date": datetime.utcnow(),
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
         
-        # Calculate billing percentage and cumulative billed
-        project = await db.projects.find_one({"id": invoice_data.project_id})
-        if project:
-            project_total = project.get("total_project_value", 0)
-            if project_total > 0:
-                invoice_data.billing_percentage = (invoice_data.subtotal / project_total) * 100
-                
-                # Calculate cumulative billed amount
-                previous_invoices_total = sum(inv.get("subtotal", 0) for inv in existing_invoices)
-                invoice_data.cumulative_billed = previous_invoices_total + invoice_data.subtotal
+        # Save to database
+        await db.invoices.insert_one(new_invoice)
         
-        # For RA2+ invoices, lock GST rates for previously billed items
-        if ra_count > 1:
-            # Get all previously billed BOQ item IDs
-            previously_billed_items = set()
-            for prev_invoice in existing_invoices:
-                for item in prev_invoice.get("items", []):
-                    previously_billed_items.add(item.get("boq_item_id"))
-            
-            # Lock GST for items that were previously billed
-            for item in invoice_data.items:
-                if item.boq_item_id in previously_billed_items:
-                    # Find the GST rate from the first invoice
-                    for prev_invoice in existing_invoices:
-                        for prev_item in prev_invoice.get("items", []):
-                            if prev_item.get("boq_item_id") == item.boq_item_id:
-                                item.gst_rate = prev_item.get("gst_rate", 18.0)
-                                break
-                        break
-        
-        # Update BOQ items in project with billed quantities
-        if project:
-            updated_boq_items = []
-            for boq_item in project.get("boq_items", []):
-                # Find corresponding invoice item
-                invoice_item = next((item for item in invoice_data.items 
-                                   if item.boq_item_id == boq_item.get("id", boq_item.get("serial_number"))), None)
-                
-                if invoice_item:
-                    boq_item["billed_quantity"] = boq_item.get("billed_quantity", 0) + invoice_item.quantity
-                    boq_item["remaining_quantity"] = boq_item.get("quantity", 0) - boq_item["billed_quantity"]
-                
-                updated_boq_items.append(boq_item)
-            
-            # Update project with new billed quantities
-            await db.projects.update_one(
-                {"id": invoice_data.project_id},
-                {"$set": {"boq_items": updated_boq_items, "updated_at": datetime.utcnow()}}
-            )
-        
-        await db.invoices.insert_one(invoice_data.dict())
-        
+        # Log activity
         await log_activity(
             current_user["id"], current_user["email"], current_user["role"],
-            "invoice_created", f"Created {invoice_data.ra_number} {invoice_data.invoice_type} invoice: {invoice_data.invoice_number}",
-            project_id=invoice_data.project_id, invoice_id=invoice_data.id
+            "invoice_created", 
+            f"Created {invoice_data['invoice_type']} invoice {invoice_number} for project {project['project_name']}"
         )
         
-        return {
-            "message": f"Invoice {invoice_data.ra_number} created successfully", 
-            "invoice_id": invoice_data.id,
-            "ra_number": invoice_data.ra_number,
-            "billing_percentage": invoice_data.billing_percentage
-        }
+        return {"message": "Invoice created successfully", "invoice_id": new_invoice["id"], "invoice_number": invoice_number}
         
     except HTTPException:
         raise
