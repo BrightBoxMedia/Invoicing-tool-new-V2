@@ -2360,6 +2360,230 @@ const App = () => {
   );
 };
 
+const ProjectDetails = () => {
+  const { pathname } = useLocation();
+  const projectId = pathname.split('/')[2]; // Extract project ID from URL
+  const [projectDetails, setProjectDetails] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProjectDetails();
+  }, [projectId]);
+
+  const fetchProjectDetails = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/projects/${projectId}/details`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProjectDetails(response.data);
+    } catch (error) {
+      console.error('Error fetching project details:', error);
+      alert('Error loading project details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDownloadInvoice = async (invoiceId, invoiceNumber) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API}/invoices/${invoiceId}/pdf`, {
+        method: 'GET',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/pdf'
+        }
+      });
+
+      if (!response.ok) throw new Error(`Failed to download: ${response.status}`);
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Invoice_${invoiceNumber}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      alert('Error downloading invoice: ' + error.message);
+    }
+  };
+
+  if (loading) return <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>;
+
+  if (!projectDetails) return <div className="p-6"><div className="text-center text-gray-500">Project not found</div></div>;
+
+  return (
+    <div className="p-6 space-y-6">
+      {/* Project Header */}
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{projectDetails.project_info.project_name}</h1>
+            <p className="text-gray-600 mt-1">Architect: {projectDetails.project_info.architect}</p>
+            <p className="text-gray-600">Location: {projectDetails.project_info.location}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-sm text-gray-500">Project ID: {projectDetails.project_info.id}</p>
+            <p className="text-sm text-gray-500">Created: {new Date(projectDetails.project_info.created_at).toLocaleDateString()}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Client Information */}
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Client Information</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <p className="text-sm font-medium text-gray-500">Client Name</p>
+            <p className="text-gray-900">{projectDetails.client_info.name}</p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-500">GST Number</p>
+            <p className="text-gray-900">{projectDetails.client_info.gst_no || 'Not Available'}</p>
+          </div>
+          <div className="md:col-span-2">
+            <p className="text-sm font-medium text-gray-500">Address</p>
+            <p className="text-gray-900">{projectDetails.client_info.bill_to_address}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Financial Summary */}
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Financial Summary</h2>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="text-center">
+            <p className="text-2xl font-bold text-blue-600">₹{projectDetails.financial_summary.total_project_value.toLocaleString()}</p>
+            <p className="text-sm text-gray-500">Total Project Value</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-green-600">₹{projectDetails.financial_summary.total_invoiced.toLocaleString()}</p>
+            <p className="text-sm text-gray-500">Total Billed</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-orange-600">₹{projectDetails.financial_summary.balance_value.toLocaleString()}</p>
+            <p className="text-sm text-gray-500">Balance Amount</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-purple-600">{projectDetails.financial_summary.percentage_billed.toFixed(1)}%</p>
+            <p className="text-sm text-gray-500">Percentage Billed</p>
+          </div>
+        </div>
+        
+        {/* Progress Bar */}
+        <div className="mt-6">
+          <div className="flex justify-between text-sm text-gray-600 mb-2">
+            <span>Progress</span>
+            <span>{projectDetails.financial_summary.percentage_billed.toFixed(1)}% Complete</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-3">
+            <div 
+              className="bg-blue-600 h-3 rounded-full transition-all duration-300"
+              style={{ width: `${Math.min(projectDetails.financial_summary.percentage_billed, 100)}%` }}
+            ></div>
+          </div>
+        </div>
+      </div>
+
+      {/* BOQ Summary */}
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">BOQ Summary</h2>
+        <p className="text-gray-600 mb-4">Total Items: {projectDetails.boq_summary.total_items}</p>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SL No</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">UOM</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rate</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {projectDetails.boq_summary.items.slice(0, 10).map((item, index) => (
+                <tr key={index}>
+                  <td className="px-6 py-4 text-sm">{item.serial_number}</td>
+                  <td className="px-6 py-4 text-sm max-w-xs">
+                    <div className="break-words">{item.description}</div>
+                  </td>
+                  <td className="px-6 py-4 text-sm">{item.unit}</td>
+                  <td className="px-6 py-4 text-sm">{item.quantity}</td>
+                  <td className="px-6 py-4 text-sm">₹{item.rate.toLocaleString()}</td>
+                  <td className="px-6 py-4 text-sm">₹{item.amount.toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {projectDetails.boq_summary.items.length > 10 && (
+            <p className="text-center text-gray-500 py-4">
+              Showing 10 of {projectDetails.boq_summary.items.length} items
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Related Invoices */}
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          Related Invoices ({projectDetails.invoices.length})
+        </h2>
+        
+        {projectDetails.invoices.length === 0 ? (
+          <p className="text-gray-500 text-center py-8">No invoices created yet</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Invoice No</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">RA No</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Basic Amount</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">GST Amount</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Amount</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {projectDetails.invoices.map((invoice) => (
+                  <tr key={invoice.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm font-medium">{invoice.invoice_number}</td>
+                    <td className="px-6 py-4 text-sm text-blue-600 font-medium">{invoice.ra_number}</td>
+                    <td className="px-6 py-4 text-sm">
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        invoice.invoice_type === 'tax_invoice' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {invoice.invoice_type === 'tax_invoice' ? 'Tax Invoice' : 'Proforma'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm">₹{invoice.subtotal.toLocaleString()}</td>
+                    <td className="px-6 py-4 text-sm">₹{invoice.total_gst_amount.toLocaleString()}</td>
+                    <td className="px-6 py-4 text-sm font-medium">₹{invoice.total_amount.toLocaleString()}</td>
+                    <td className="px-6 py-4 text-sm">{new Date(invoice.invoice_date).toLocaleDateString()}</td>
+                    <td className="px-6 py-4 text-sm">
+                      <button
+                        onClick={() => handleDownloadInvoice(invoice.id, invoice.invoice_number)}
+                        className="text-blue-600 hover:text-blue-900 font-medium"
+                      >
+                        Download PDF
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
