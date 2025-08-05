@@ -599,9 +599,8 @@ class PDFGenerator:
         elements.append(Paragraph("One Stop Solution for Industrial Projects", subtitle_style))
         
         # Invoice Title
-        invoice_type_display = "TAX_INVOICE" if invoice.invoice_type.value == "tax_invoice" else "PROFORMA"
-        invoice_title = f"{invoice_type_display} INVOICE"
-        elements.append(Paragraph(invoice_title, header_style))
+        invoice_type_display = "TAX INVOICE" if invoice.invoice_type.value == "tax_invoice" else "PROFORMA INVOICE"
+        elements.append(Paragraph(invoice_type_display, header_style))
         elements.append(Spacer(1, 20))
         
         # Invoice Details Table
@@ -611,7 +610,7 @@ class PDFGenerator:
             ['Architect:', project.architect, '', '']
         ]
         
-        details_table = Table(details_data, colWidths=[80, 180, 80, 100])
+        details_table = Table(details_data, colWidths=[80, 200, 60, 120])
         details_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, -1), light_bg_color),
             ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
@@ -632,37 +631,64 @@ class PDFGenerator:
         # Bill To Section
         elements.append(Paragraph("Bill To:", header_style))
         bill_to_text = f"""
-        {client.name}<br/>
+        <b>{client.name}</b><br/>
         {client.bill_to_address}<br/>
-        GST No: {client.gst_no if client.gst_no else 'Not Available'}
+        <b>GST No:</b> {client.gst_no if client.gst_no else 'Not Available'}
         """
         elements.append(Paragraph(bill_to_text, styles['Normal']))
         elements.append(Spacer(1, 20))
         
-        # Items Table
+        # Items Table with proper text wrapping
         table_data = [
-            ['S.No', 'Description', 'Unit', 'Qty', 'Rate', 'Amount']
+            ['S.No', 'Description', 'Unit', 'Qty', 'Rate (Rs)', 'Amount (Rs)']
         ]
         
         for idx, item in enumerate(invoice.items, 1):
-            # Format currency properly without black squares
-            rate_formatted = f"₹{item.rate:,.2f}"
-            amount_formatted = f"₹{item.amount:,.2f}"
+            # Format currency properly - use Rs instead of ₹ symbol
+            rate_formatted = f"Rs {item.rate:,.2f}"
+            amount_formatted = f"Rs {item.amount:,.2f}"
+            
+            # Wrap long descriptions
+            description_wrapped = item.description
+            if len(description_wrapped) > 60:
+                # Break into multiple lines for long descriptions
+                words = description_wrapped.split(' ')
+                lines = []
+                current_line = []
+                current_length = 0
+                
+                for word in words:
+                    if current_length + len(word) > 60:
+                        if current_line:
+                            lines.append(' '.join(current_line))
+                            current_line = [word]
+                            current_length = len(word)
+                        else:
+                            lines.append(word)
+                            current_length = 0
+                    else:
+                        current_line.append(word)
+                        current_length += len(word) + 1
+                
+                if current_line:
+                    lines.append(' '.join(current_line))
+                
+                description_wrapped = '<br/>'.join(lines)
             
             table_data.append([
                 str(idx),
-                item.description,
+                Paragraph(description_wrapped, styles['Normal']),
                 item.unit,
                 f"{item.quantity:,.1f}",
                 rate_formatted,
                 amount_formatted
             ])
         
-        # Create table
-        col_widths = [40, 200, 60, 60, 80, 100]
+        # Create table with fixed column widths
+        col_widths = [30, 240, 50, 50, 80, 90]  # Total: 540
         items_table = Table(table_data, colWidths=col_widths)
         
-        # Table styling
+        # Enhanced table styling
         items_table.setStyle(TableStyle([
             # Header styling
             ('BACKGROUND', (0, 0), (-1, 0), company_color),
@@ -674,31 +700,49 @@ class PDFGenerator:
             # Data rows styling
             ('BACKGROUND', (0, 1), (-1, -1), colors.white),
             ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
-            ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
-            ('ALIGN', (2, 1), (-1, -1), 'CENTER'), # Center align Unit, Qty, Rate, Amount
-            ('ALIGN', (4, 1), (-1, -1), 'RIGHT'),  # Right align Rate and Amount
-            ('ALIGN', (5, 1), (-1, -1), 'RIGHT'),
+            ('ALIGN', (0, 1), (0, -1), 'CENTER'),  # S.No center
+            ('ALIGN', (1, 1), (1, -1), 'LEFT'),    # Description left
+            ('ALIGN', (2, 1), (2, -1), 'CENTER'),  # Unit center
+            ('ALIGN', (3, 1), (3, -1), 'CENTER'),  # Qty center
+            ('ALIGN', (4, 1), (-1, -1), 'RIGHT'),  # Rate and Amount right
             ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
             
             # Grid and padding
-            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#cccccc')),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 6),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 1.5, colors.HexColor('#cccccc')),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+            
+            # Special styling for description column
+            ('LEFTPADDING', (1, 1), (1, -1), 6),
+            ('RIGHTPADDING', (1, 1), (1, -1), 6),
         ]))
         
         elements.append(items_table)
         elements.append(Spacer(1, 20))
         
-        # Totals Table
-        totals_data = [
-            ['', '', '', '', 'Subtotal:', f"₹{invoice.subtotal:,.2f}"],
-            ['', '', '', '', f'GST (18%):', f"₹{invoice.total_gst_amount:,.2f}"],
-            ['', '', '', '', 'Total Amount:', f"₹{invoice.total_amount:,.2f}"]
-        ]
+        # Determine GST breakdown
+        gst_info = invoice.gst_info if hasattr(invoice, 'gst_info') else {"gst_type": "IGST"}
+        
+        # Totals Table with proper GST display
+        if gst_info.get("gst_type") == "CGST+SGST":
+            totals_data = [
+                ['', '', '', '', 'Subtotal:', f"Rs {invoice.subtotal:,.2f}"],
+                ['', '', '', '', 'CGST (9%):', f"Rs {invoice.total_gst_amount/2:,.2f}"],
+                ['', '', '', '', 'SGST (9%):', f"Rs {invoice.total_gst_amount/2:,.2f}"],
+                ['', '', '', '', 'Total Amount:', f"Rs {invoice.total_amount:,.2f}"]
+            ]
+        else:
+            # IGST
+            gst_rate = 18  # Default, could be calculated from items
+            totals_data = [
+                ['', '', '', '', 'Subtotal:', f"Rs {invoice.subtotal:,.2f}"],
+                ['', '', '', '', f'IGST ({gst_rate}%):', f"Rs {invoice.total_gst_amount:,.2f}"],
+                ['', '', '', '', 'Total Amount:', f"Rs {invoice.total_amount:,.2f}"]
+            ]
         
         totals_table = Table(totals_data, colWidths=col_widths)
         totals_table.setStyle(TableStyle([
