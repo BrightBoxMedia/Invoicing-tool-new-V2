@@ -425,6 +425,12 @@ class ExcelParser:
         
         return None
 
+    def _safe_string_conversion(self, value):
+        """Safely convert value to string, handling None and empty values"""
+        if value is None or value == "":
+            return ""
+        return str(value).strip()
+
 # PDF Generator Class
 class PDFGenerator:
     def __init__(self):
