@@ -433,6 +433,9 @@ const Projects = () => {
         client_id: selectedProject.client_id,
         client_name: selectedProject.client_name,
         invoice_type: invoiceType,
+        include_tax: includeTax,
+        payment_terms: paymentTerms,
+        advance_received: parseFloat(advanceReceived) || 0,
         items: invoiceItems,
         is_partial: true
       };
