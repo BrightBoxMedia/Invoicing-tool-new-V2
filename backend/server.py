@@ -424,25 +424,28 @@ class ExcelParser:
         
         return has_numeric
     
-    def _safe_float_conversion(self, value) -> Optional[float]:
-        """Safely convert value to float, handling None and invalid values"""
-        if value is None:
-            return None
+    def _safe_float_conversion(self, value):
+        """Safely convert various data types to float, handling currency symbols and empty values"""
+        if value is None or value == "":
+            return 0.0
         
         if isinstance(value, (int, float)):
             return float(value)
         
         if isinstance(value, str):
-            # Remove common formatting characters
-            cleaned = value.strip().replace(',', '').replace('₹', '').replace('Rs.', '').replace('Rs', '')
-            if not cleaned:
-                return None
+            # Remove common currency symbols and whitespace
+            cleaned_value = str(value).replace('₹', '').replace('Rs', '').replace(',', '').strip()
+            if cleaned_value == "" or cleaned_value.lower() == "none":
+                return 0.0
             try:
-                return float(cleaned)
-            except ValueError:
-                return None
+                return float(cleaned_value)
+            except (ValueError, TypeError):
+                return 0.0
         
-        return None
+        try:
+            return float(value)
+        except (ValueError, TypeError):
+            return 0.0
 
     def _safe_string_conversion(self, value):
         """Safely convert value to string, handling None and empty values"""
