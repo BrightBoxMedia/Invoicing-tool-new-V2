@@ -13,7 +13,7 @@ from datetime import datetime
 from pathlib import Path
 
 class PDFGenerationTester:
-    def __init__(self, base_url="https://8aea94e1-2e18-444c-b499-642bffd4fba3.preview.emergentagent.com"):
+    def __init__(self, base_url="https://bff9c4e2-6aac-4648-bb2b-036eb1fa14e5.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.token = None
