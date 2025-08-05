@@ -330,8 +330,10 @@
 
 ## test_plan:
   current_focus:
-    - "Projects Page Error Fix"
-    - "Activity Logs Backend and Frontend"
+    - "Proforma Invoice Tax Options"
+    - "Payment Terms Integration"
+    - "Advance Received Against Invoice"
+    - "Bank Guarantee Frontend Component"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
