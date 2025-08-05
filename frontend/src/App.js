@@ -938,14 +938,18 @@ const Projects = () => {
                         <div>
                           <span className="text-green-600">Total GST:</span>
                           <div className="font-bold text-lg">
-                            ₹{boqStatus.boq_items.reduce((sum, item) => {
-                              const itemId = item.id || item.serial_number;
-                              const qty = partialQuantities[itemId] || 0;
-                              const gstRate = itemGSTRates[itemId] || 18.0;
-                              const amount = qty * item.rate;
-                              const gstAmount = (amount * gstRate) / 100;
-                              return sum + gstAmount;
-                            }, 0).toLocaleString()}
+                            {(invoiceType === 'proforma' && !includeTax) ? (
+                              <span className="text-gray-500">No Tax</span>
+                            ) : (
+                              <>₹{boqStatus.boq_items.reduce((sum, item) => {
+                                const itemId = item.id || item.serial_number;
+                                const qty = partialQuantities[itemId] || 0;
+                                const gstRate = itemGSTRates[itemId] || 18.0;
+                                const amount = qty * item.rate;
+                                const gstAmount = (amount * gstRate) / 100;
+                                return sum + gstAmount;
+                              }, 0).toLocaleString()}</>
+                            )}
                           </div>
                         </div>
                         <div>
@@ -956,7 +960,7 @@ const Projects = () => {
                               const qty = partialQuantities[itemId] || 0;
                               const gstRate = itemGSTRates[itemId] || 18.0;
                               const amount = qty * item.rate;
-                              const gstAmount = (amount * gstRate) / 100;
+                              const gstAmount = (invoiceType === 'proforma' && !includeTax) ? 0 : (amount * gstRate) / 100;
                               return sum + amount + gstAmount;
                             }, 0).toLocaleString()}
                           </div>
