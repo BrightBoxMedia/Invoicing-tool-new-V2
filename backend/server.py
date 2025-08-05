@@ -1220,6 +1220,87 @@ async def get_project(project_id: str, current_user: dict = Depends(get_current_
         logger.error(f"Error retrieving project {project_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
+@api_router.get("/projects/{project_id}/details")
+async def get_project_details(project_id: str, current_user: dict = Depends(get_current_user)):
+    """Get detailed project information with financial summary and related invoices"""
+    try:
+        # Get project
+        project = await db.projects.find_one({"id": project_id})
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+        
+        # Get related invoices
+        invoices = await db.invoices.find({"project_id": project_id}).sort("created_at", -1).to_list(1000)
+        
+        # Calculate financial summary
+        total_project_value = project.get("total_project_value", 0)
+        total_invoiced = sum(invoice.get("total_amount", 0) for invoice in invoices)
+        balance_value = total_project_value - total_invoiced
+        
+        # Get client details
+        client = await db.clients.find_one({"id": project.get("client_id")}) if project.get("client_id") else None
+        
+        # Clean up invoice data for frontend
+        cleaned_invoices = []
+        for invoice in invoices:
+            cleaned_invoice = {
+                "id": invoice.get("id"),
+                "invoice_number": invoice.get("invoice_number"),
+                "ra_number": invoice.get("ra_number"), 
+                "invoice_type": invoice.get("invoice_type"),
+                "total_amount": invoice.get("total_amount", 0),
+                "subtotal": invoice.get("subtotal", 0),
+                "total_gst_amount": invoice.get("total_gst_amount", 0),
+                "status": invoice.get("status", "draft"),
+                "invoice_date": invoice.get("invoice_date"),
+                "created_at": invoice.get("created_at"),
+                "gst_info": invoice.get("gst_info", {})
+            }
+            cleaned_invoices.append(cleaned_invoice)
+        
+        # Prepare detailed response
+        project_details = {
+            "project_info": {
+                "id": project.get("id"),
+                "project_name": project.get("project_name"),
+                "architect": project.get("architect"),
+                "location": project.get("location"),
+                "created_at": project.get("created_at"),
+                "updated_at": project.get("updated_at")
+            },
+            "client_info": {
+                "id": client.get("id") if client else None,
+                "name": client.get("name") if client else project.get("client_name", "Unknown Client"),
+                "bill_to_address": client.get("bill_to_address") if client else "",
+                "gst_no": client.get("gst_no") if client else ""
+            },
+            "financial_summary": {
+                "total_project_value": total_project_value,
+                "total_invoiced": total_invoiced,
+                "balance_value": balance_value,
+                "percentage_billed": (total_invoiced / total_project_value * 100) if total_project_value > 0 else 0,
+                "total_invoices": len(invoices)
+            },
+            "boq_summary": {
+                "total_items": len(project.get("boq_items", [])),
+                "items": project.get("boq_items", [])
+            },
+            "invoices": cleaned_invoices
+        }
+        
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "project_details_viewed", f"Viewed detailed information for project: {project.get('project_name')}"
+        )
+        
+        return project_details
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting project details: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get project details: {str(e)}")
+
 @api_router.get("/projects/{project_id}/boq-status")
 async def get_project_boq_status(project_id: str, current_user: dict = Depends(get_current_user)):
     """Get BOQ items with billing status for partial invoicing"""
