@@ -322,27 +322,46 @@ class ExcelParser:
             return items
         
         column_mapping = self._map_columns(worksheet, header_row)
+        serial_number = 1
         
         for row_idx in range(header_row + 1, worksheet.max_row + 1):
             row_data = self._extract_row_data(worksheet, row_idx, column_mapping)
             
             if self._is_valid_item_row(row_data):
-                quantity = self._safe_float_conversion(row_data.get('quantity')) or 0.0
-                rate = self._safe_float_conversion(row_data.get('rate')) or 0.0
-                amount = self._safe_float_conversion(row_data.get('amount'))
+                # Extract description using safe string conversion
+                description = self._safe_string_conversion(row_data.get('description'))
+                if len(description) < 3:  # Skip very short descriptions
+                    continue
                 
-                # Calculate amount if not provided
+                # Extract other fields with better handling
+                unit = "nos"  # default unit
+                unit_value = row_data.get('unit')
+                if unit_value and str(unit_value).strip():
+                    unit = self._safe_string_conversion(unit_value)
+                
+                quantity = self._safe_float_conversion(row_data.get('quantity'))
+                if quantity is None:
+                    quantity = 1.0  # default quantity
+                
+                rate = self._safe_float_conversion(row_data.get('rate'))
+                if rate is None:
+                    rate = 0.0
+                
+                amount = self._safe_float_conversion(row_data.get('amount'))
                 if amount is None or amount == 0:
-                    amount = quantity * rate
+                    amount = quantity * rate if rate > 0 else 0.0
                 
                 items.append({
-                    'serial_number': str(row_data.get('serial', row_idx - header_row)),
-                    'description': str(row_data.get('description', '')).strip(),
-                    'unit': str(row_data.get('unit', 'nos')).strip() or 'nos',
+                    'serial_number': serial_number,
+                    'description': description,
+                    'unit': unit,
                     'quantity': quantity,
                     'rate': rate,
-                    'amount': amount
+                    'amount': amount,
+                    'gst_rate': 18.0  # Default GST rate
                 })
+                
+                serial_number += 1
         
         return items
     
