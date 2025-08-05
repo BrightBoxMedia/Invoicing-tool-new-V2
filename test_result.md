@@ -337,7 +337,7 @@
   test_priority: "high_first"
 
   - task: "Proforma Invoice Tax Options"
-    implemented: false
+    implemented: true
     working: "NA"
     file: "/app/frontend/src/App.js"
     stuck_count: 0
@@ -346,10 +346,10 @@
     status_history:
         - working: "NA"
         - agent: "main"
-        - comment: "Need to add frontend UI for tax/without tax option selection for proforma invoices. Backend already supports include_tax parameter."
+        - comment: "COMPLETED: Added frontend UI for tax/without tax option selection for proforma invoices. Backend already supports include_tax parameter."
 
   - task: "Payment Terms Integration"
-    implemented: false
+    implemented: true
     working: "NA"
     file: "/app/frontend/src/App.js"
     stuck_count: 0
@@ -358,10 +358,10 @@
     status_history:
         - working: "NA"
         - agent: "main"
-        - comment: "Need to add payment terms input field in invoice creation modal. Backend already supports payment_terms parameter."
+        - comment: "COMPLETED: Added payment terms input field in invoice creation modal. Backend already supports payment_terms parameter."
 
   - task: "Advance Received Against Invoice"
-    implemented: false
+    implemented: true
     working: "NA"
     file: "/app/frontend/src/App.js"
     stuck_count: 0
@@ -370,7 +370,7 @@
     status_history:
         - working: "NA"
         - agent: "main"
-        - comment: "Need to add advance received input field in invoice creation modal. Backend already supports advance_received parameter."
+        - comment: "COMPLETED: Added advance received input field in invoice creation modal. Backend already supports advance_received parameter. Also shows net amount due calculation."
 
   - task: "Bank Guarantee Frontend Component"
     implemented: false
