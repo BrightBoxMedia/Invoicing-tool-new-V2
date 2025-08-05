@@ -158,14 +158,35 @@ class Project(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     project_name: str
     architect: str
-    client_id: str
+    client_id: Optional[str] = None
     client_name: str
-    metadata: ProjectMetadata
-    boq_items: List[BOQItem]
-    total_project_value: float
+    location: Optional[str] = None
+    metadata: Optional[dict] = Field(default_factory=dict)
+    boq_items: List[dict] = Field(default_factory=list)
+    total_project_value: float = 0.0
     advance_received: float = 0.0
     pending_payment: float = 0.0
     created_by: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class BankGuarantee(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    project_id: str
+    project_name: str
+    guarantee_type: str  # Performance, Advance Payment, Retention, etc.
+    guarantee_amount: float
+    guarantee_percentage: float
+    issuing_bank: str
+    guarantee_number: str
+    issue_date: datetime
+    validity_date: datetime
+    beneficiary: str
+    applicant: str
+    guarantee_details: str
+    document_path: Optional[str] = None  # Path to uploaded document
+    status: str = "active"  # active, expired, claimed, released
+    created_by: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
