@@ -290,6 +290,9 @@ const Projects = () => {
   const [partialQuantities, setPartialQuantities] = useState({});
   const [itemGSTRates, setItemGSTRates] = useState({});
   const [invoiceType, setInvoiceType] = useState('proforma');
+  const [includeTax, setIncludeTax] = useState(true);
+  const [paymentTerms, setPaymentTerms] = useState('Payment due within 30 days from invoice date');
+  const [advanceReceived, setAdvanceReceived] = useState(0);
   const [projectInvoices, setProjectInvoices] = useState([]);
   const [editableMetadata, setEditableMetadata] = useState({
     project_name: '',
