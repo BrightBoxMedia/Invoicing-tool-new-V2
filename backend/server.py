@@ -1216,48 +1216,98 @@ async def download_invoice_pdf(invoice_id: str, current_user: dict = Depends(get
         # Get related project data
         project_data = await db.projects.find_one({"id": invoice_data.get("project_id")})
         if not project_data:
-            raise HTTPException(status_code=404, detail="Related project not found")
+            # Create minimal project data if not found
+            project_data = {
+                "id": invoice_data.get("project_id", "unknown"),
+                "project_name": invoice_data.get("project_name", "Unknown Project"),
+                "architect": "Unknown Architect",
+                "location": "Unknown Location",
+                "client_id": invoice_data.get("client_id"),
+                "boq_items": [],
+                "total_project_value": 0,
+                "advance_received": 0,
+                "pending_payment": 0,
+                "created_by": current_user["id"],
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }
             
         # Get related client data
         client_data = await db.clients.find_one({"id": invoice_data.get("client_id")})
         if not client_data:
-            raise HTTPException(status_code=404, detail="Related client not found")
+            # Create minimal client data if not found
+            client_data = {
+                "id": invoice_data.get("client_id", "unknown"),
+                "name": invoice_data.get("client_name", "Unknown Client"),
+                "bill_to_address": "Unknown Address",
+                "ship_to_address": "Unknown Address",
+                "gst_no": "",
+                "contact_person": "",
+                "phone": "",
+                "email": "",
+                "created_at": datetime.utcnow()
+            }
         
         # Clean and validate data before PDF generation
         try:
-            # Ensure required fields exist
-            invoice_data["total_gst_amount"] = invoice_data.get("total_gst_amount", 0)
-            invoice_data["subtotal"] = invoice_data.get("subtotal", 0)
-            invoice_data["total_amount"] = invoice_data.get("total_amount", 0)
-            invoice_data["items"] = invoice_data.get("items", [])
+            # Ensure required fields exist with defaults
+            cleaned_invoice = {
+                "id": invoice_data.get("id", invoice_id),
+                "invoice_number": invoice_data.get("invoice_number", "Unknown"),
+                "ra_number": invoice_data.get("ra_number", "Unknown"),
+                "project_id": invoice_data.get("project_id", ""),
+                "project_name": invoice_data.get("project_name", "Unknown Project"),
+                "client_id": invoice_data.get("client_id", ""),
+                "client_name": invoice_data.get("client_name", "Unknown Client"),
+                "invoice_type": invoice_data.get("invoice_type", "proforma"),
+                "items": [],
+                "subtotal": float(invoice_data.get("subtotal", 0)),
+                "total_gst_amount": float(invoice_data.get("total_gst_amount", 0)),
+                "total_amount": float(invoice_data.get("total_amount", 0)),
+                "is_partial": invoice_data.get("is_partial", True),
+                "billing_percentage": invoice_data.get("billing_percentage"),
+                "cumulative_billed": invoice_data.get("cumulative_billed"),
+                "status": invoice_data.get("status", "draft"),
+                "created_by": invoice_data.get("created_by"),
+                "reviewed_by": invoice_data.get("reviewed_by"),
+                "approved_by": invoice_data.get("approved_by"),
+                "invoice_date": invoice_data.get("invoice_date", datetime.utcnow()),
+                "due_date": invoice_data.get("due_date"),
+                "created_at": invoice_data.get("created_at", datetime.utcnow()),
+                "updated_at": invoice_data.get("updated_at", datetime.utcnow())
+            }
             
             # Clean items data
-            cleaned_items = []
             for item in invoice_data.get("items", []):
-                cleaned_item = {
-                    "boq_item_id": item.get("boq_item_id", item.get("serial_number", "")),
-                    "serial_number": str(item.get("serial_number", "")),
-                    "description": str(item.get("description", "Unknown Item")),
-                    "unit": str(item.get("unit", "nos")),
-                    "quantity": float(item.get("quantity", 0)),
-                    "rate": float(item.get("rate", 0)),
-                    "amount": float(item.get("amount", 0)),
-                    "gst_rate": float(item.get("gst_rate", 18.0)),
-                    "gst_amount": float(item.get("gst_amount", 0)),
-                    "total_with_gst": float(item.get("total_with_gst", 0))
-                }
-                cleaned_items.append(cleaned_item)
+                if isinstance(item, dict):
+                    cleaned_item = {
+                        "boq_item_id": item.get("boq_item_id", item.get("serial_number", str(len(cleaned_invoice["items"]) + 1))),
+                        "serial_number": str(item.get("serial_number", len(cleaned_invoice["items"]) + 1)),
+                        "description": str(item.get("description", "Unknown Item")),
+                        "unit": str(item.get("unit", "nos")),
+                        "quantity": float(item.get("quantity", 0)),
+                        "rate": float(item.get("rate", 0)),
+                        "amount": float(item.get("amount", 0)),
+                        "gst_rate": float(item.get("gst_rate", 18.0)),
+                        "gst_amount": float(item.get("gst_amount", 0)),
+                        "total_with_gst": float(item.get("total_with_gst", 0))
+                    }
+                    cleaned_invoice["items"].append(cleaned_item)
             
-            invoice_data["items"] = cleaned_items
-            
-            # Create model instances
-            invoice = Invoice(**invoice_data)
+            # Create model instances with error handling
+            invoice = Invoice(**cleaned_invoice)
             project = Project(**project_data)
             client = ClientInfo(**client_data)
             
         except Exception as validation_error:
             logger.error(f"Data validation error for invoice {invoice_id}: {str(validation_error)}")
-            raise HTTPException(status_code=500, detail=f"Invoice data validation failed: {str(validation_error)}")
+            # Return a simple error PDF instead of failing
+            error_pdf = create_error_pdf(f"Invoice {invoice_data.get('invoice_number', 'Unknown')}", str(validation_error))
+            return Response(
+                content=error_pdf,
+                media_type="application/pdf",
+                headers={"Content-Disposition": f"inline; filename=invoice_error_{invoice_id}.pdf"}
+            )
         
         # Generate PDF
         try:
@@ -1276,25 +1326,88 @@ async def download_invoice_pdf(invoice_id: str, current_user: dict = Depends(get
                 invoice_id=invoice_id
             )
             
-            # Return as streaming response
-            return StreamingResponse(
-                io.BytesIO(pdf_content),
+            # Return as inline response for viewing
+            return Response(
+                content=pdf_content,
                 media_type="application/pdf",
                 headers={
-                    "Content-Disposition": f"attachment; filename=invoice_{invoice.invoice_number}.pdf",
+                    "Content-Disposition": f"inline; filename=invoice_{invoice.invoice_number}.pdf",
                     "Content-Length": str(len(pdf_content))
                 }
             )
             
         except Exception as pdf_error:
             logger.error(f"PDF generation error for invoice {invoice_id}: {str(pdf_error)}")
-            raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(pdf_error)}")
+            # Return a simple error PDF
+            error_pdf = create_error_pdf(f"Invoice {invoice_data.get('invoice_number', 'Unknown')}", f"PDF generation failed: {str(pdf_error)}")
+            return Response(
+                content=error_pdf,
+                media_type="application/pdf",
+                headers={"Content-Disposition": f"inline; filename=invoice_error_{invoice_id}.pdf"}
+            )
             
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Unexpected error downloading invoice PDF {invoice_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to generate PDF: {str(e)}")
+        # Return error PDF instead of HTTP error
+        try:
+            error_pdf = create_error_pdf("Invoice Error", f"Failed to generate PDF: {str(e)}")
+            return Response(
+                content=error_pdf,
+                media_type="application/pdf", 
+                headers={"Content-Disposition": f"inline; filename=invoice_error_{invoice_id}.pdf"}
+            )
+        except:
+            raise HTTPException(status_code=500, detail=f"Critical error: {str(e)}")
+
+def create_error_pdf(title: str, error_message: str) -> bytes:
+    """Create a simple error PDF when regular PDF generation fails"""
+    try:
+        from reportlab.lib.pagesizes import letter
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+        from reportlab.lib.units import inch
+        from reportlab.lib import colors
+        import io
+        
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter, 
+                              rightMargin=inch, leftMargin=inch, 
+                              topMargin=inch, bottomMargin=inch)
+        
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Title'],
+            fontSize=24,
+            spaceAfter=30,
+            textColor=colors.red,
+            alignment=1  # Center alignment
+        )
+        
+        error_style = ParagraphStyle(
+            'ErrorStyle',
+            parent=styles['Normal'],
+            fontSize=12,
+            spaceAfter=20,
+            textColor=colors.black
+        )
+        
+        content = []
+        content.append(Paragraph(f"Error: {title}", title_style))
+        content.append(Spacer(1, 20))
+        content.append(Paragraph(f"Details: {error_message}", error_style))
+        content.append(Spacer(1, 20))
+        content.append(Paragraph("Please contact support for assistance.", error_style))
+        
+        doc.build(content)
+        buffer.seek(0)
+        return buffer.read()
+        
+    except Exception as e:
+        # If even error PDF creation fails, return minimal PDF
+        return b"%PDF-1.4\n1 0 obj\n<<\n/Type /Catalog\n/Pages 2 0 R\n>>\nendobj\n2 0 obj\n<<\n/Type /Pages\n/Kids [3 0 R]\n/Count 1\n>>\nendobj\n3 0 obj\n<<\n/Type /Page\n/Parent 2 0 R\n/Resources <<\n/Font <<\n/F1 4 0 R\n>>\n>>\n/MediaBox [0 0 612 792]\n/Contents 5 0 R\n>>\nendobj\n4 0 obj\n<<\n/Type /Font\n/Subtype /Type1\n/BaseFont /Times-Roman\n>>\nendobj\n5 0 obj\n<<\n/Length 44\n>>\nstream\nBT\n/F1 12 Tf\n72 720 Td\n(PDF Generation Error) Tj\nET\nendstream\nendobj\nxref\n0 6\n0000000000 65535 f \n0000000010 00000 n \n0000000079 00000 n \n0000000173 00000 n \n0000000301 00000 n \n0000000380 00000 n \ntrailer\n<<\n/Size 6\n/Root 1 0 R\n>>\nstartxref\n492\n%%EOF"
 
 @api_router.get("/dashboard/stats")
 async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
