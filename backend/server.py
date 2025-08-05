@@ -1171,7 +1171,8 @@ async def create_project(project_data: Project, current_user: dict = Depends(get
         # Log activity
         await log_activity(
             current_user["id"], current_user["email"], current_user["role"],
-            "project_created", f"Created project: {project_data.project_name}",
+            "project_created", 
+            f"Created project: {project_data.project_name} (Value: ₹{project_data.total_project_value:,.2f}, Advance: ₹{project_data.advance_received:,.2f})",
             project_id=project_data.id
         )
         
