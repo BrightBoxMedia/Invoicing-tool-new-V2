@@ -1380,34 +1380,34 @@ const Invoices = () => {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">₹{invoice.total_amount.toLocaleString()}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-center">
-                  <div className="flex justify-center space-x-2">
-                    <button
-                      onClick={() => handleViewInvoice(invoice.id, invoice.invoice_number)}
-                      disabled={loading}
-                      className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
-                      title="View PDF"
-                    >
-                      📄 View
-                    </button>
-                    <button
-                      onClick={() => handleDownloadInvoice(invoice.id, invoice.invoice_number)}
-                      disabled={loading}
-                      className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
-                      title="Download PDF"
-                    >
-                      ⬇️ Download
-                    </button>
-                    <button
-                      onClick={() => handlePrintInvoice(invoice.id)}
-                      disabled={loading}
-                      className="px-3 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700 transition-colors"
-                      title="Print"
-                    >
-                      🖨️ Print
-                    </button>
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-medium text-gray-900">₹{invoice.total_amount.toLocaleString()}</div>
+                    <div className="flex space-x-1 ml-4">
+                      <button
+                        onClick={() => handleViewInvoice(invoice.id, invoice.invoice_number)}
+                        disabled={loading}
+                        className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
+                        title="View PDF"
+                      >
+                        👀
+                      </button>
+                      <button
+                        onClick={() => handleDownloadInvoice(invoice.id, invoice.invoice_number)}
+                        disabled={loading}
+                        className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
+                        title="Download PDF"
+                      >
+                        📥
+                      </button>
+                      <button
+                        onClick={() => handlePrintInvoice(invoice.id)}
+                        disabled={loading}
+                        className="px-2 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700 transition-colors"
+                        title="Print"
+                      >
+                        🖨️
+                      </button>
+                    </div>
                   </div>
                 </td>
               </tr>
