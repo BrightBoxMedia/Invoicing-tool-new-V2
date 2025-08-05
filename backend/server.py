@@ -1399,6 +1399,10 @@ async def create_invoice(invoice_data: dict, current_user: dict = Depends(get_cu
         # Determine GST type based on client location
         gst_info = determine_gst_type(client.get("bill_to_address", ""))
         
+        # Check if proforma without tax option
+        include_tax = invoice_data.get("include_tax", True)
+        is_proforma = invoice_data["invoice_type"] == "proforma"
+        
         # Process invoice items
         processed_items = []
         basic_total = 0.0
@@ -1414,8 +1418,13 @@ async def create_invoice(invoice_data: dict, current_user: dict = Depends(get_cu
             rate = float(item_data["rate"])
             amount = quantity * rate
             
-            # Calculate GST
-            gst_amount = (amount * gst_rate) / 100
+            # Calculate GST (zero for proforma without tax)
+            if include_tax:
+                gst_amount = (amount * gst_rate) / 100
+            else:
+                gst_amount = 0.0
+                gst_rate = 0.0  # Set to 0 for display purposes
+            
             total_with_gst = amount + gst_amount
             
             processed_item = {
@@ -1429,7 +1438,7 @@ async def create_invoice(invoice_data: dict, current_user: dict = Depends(get_cu
                 "gst_rate": gst_rate,
                 "gst_amount": gst_amount,
                 "total_with_gst": total_with_gst,
-                "gst_type": gst_info["gst_type"]
+                "gst_type": gst_info["gst_type"] if include_tax else "No Tax"
             }
             
             processed_items.append(processed_item)
@@ -1444,6 +1453,13 @@ async def create_invoice(invoice_data: dict, current_user: dict = Depends(get_cu
         invoice_number = f"INV-{datetime.now().year}-{invoice_count:04d}"
         ra_number = f"RA-{invoice_count}"
         
+        # Payment terms
+        payment_terms = invoice_data.get("payment_terms", "Payment due within 30 days from invoice date")
+        
+        # Advance against invoice
+        advance_received_invoice = float(invoice_data.get("advance_received", 0))
+        net_amount = grand_total - advance_received_invoice
+        
         # Create invoice
         new_invoice = {
             "id": str(uuid.uuid4()),
@@ -1454,10 +1470,14 @@ async def create_invoice(invoice_data: dict, current_user: dict = Depends(get_cu
             "client_id": invoice_data["client_id"],
             "client_name": client["name"],
             "invoice_type": invoice_data["invoice_type"],
+            "include_tax": include_tax,
             "items": processed_items,
             "subtotal": basic_total,  # Basic total before GST
             "total_gst_amount": total_gst_amount,  # Total GST
             "total_amount": grand_total,  # Grand total
+            "advance_received": advance_received_invoice,  # Advance against this invoice
+            "net_amount": net_amount,  # Amount due after advance
+            "payment_terms": payment_terms,
             "gst_info": gst_info,
             "is_partial": invoice_data.get("is_partial", True),
             "billing_percentage": invoice_data.get("billing_percentage"),
@@ -1472,14 +1492,28 @@ async def create_invoice(invoice_data: dict, current_user: dict = Depends(get_cu
         # Save to database
         await db.invoices.insert_one(new_invoice)
         
+        # Update project advance if advance received against invoice
+        if advance_received_invoice > 0:
+            await db.projects.update_one(
+                {"id": invoice_data["project_id"]},
+                {"$inc": {"advance_received": advance_received_invoice}}
+            )
+        
         # Log activity
+        tax_status = "with Tax" if include_tax else "without Tax"
         await log_activity(
             current_user["id"], current_user["email"], current_user["role"],
             "invoice_created", 
-            f"Created {invoice_data['invoice_type']} invoice {invoice_number} for project {project['project_name']}"
+            f"Created {invoice_data['invoice_type']} invoice {invoice_number} ({tax_status}) for project {project['project_name']} - ₹{grand_total:,.2f}"
         )
         
-        return {"message": "Invoice created successfully", "invoice_id": new_invoice["id"], "invoice_number": invoice_number}
+        return {
+            "message": "Invoice created successfully", 
+            "invoice_id": new_invoice["id"], 
+            "invoice_number": invoice_number,
+            "total_amount": grand_total,
+            "net_amount": net_amount
+        }
         
     except HTTPException:
         raise
