@@ -451,6 +451,9 @@ const Projects = () => {
       setPartialQuantities({});
       setItemGSTRates({});
       setInvoiceType('proforma');
+      setIncludeTax(true);
+      setPaymentTerms('Payment due within 30 days from invoice date');
+      setAdvanceReceived(0);
       fetchProjects(); // Refresh projects
     } catch (error) {
       console.error('Invoice creation error:', error);
