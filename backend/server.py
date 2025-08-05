@@ -1306,7 +1306,11 @@ async def download_invoice_pdf(invoice_id: str, current_user: dict = Depends(get
             return Response(
                 content=error_pdf,
                 media_type="application/pdf",
-                headers={"Content-Disposition": f"inline; filename=invoice_error_{invoice_id}.pdf"}
+                headers={
+                    "Content-Type": "application/pdf",
+                    "Content-Disposition": f"inline; filename=invoice_error_{invoice_id}.pdf",
+                    "Cache-Control": "no-cache"
+                }
             )
         
         # Generate PDF
