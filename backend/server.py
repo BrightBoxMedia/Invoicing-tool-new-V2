@@ -206,6 +206,95 @@ class ActivityLog(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
 # Excel Parser Class
+# GST State mapping for India
+GST_STATE_CODES = {
+    "andhra pradesh": "AP",
+    "arunachal pradesh": "AR", 
+    "assam": "AS",
+    "bihar": "BR",
+    "chhattisgarh": "CG",
+    "goa": "GA",
+    "gujarat": "GJ",
+    "haryana": "HR",
+    "himachal pradesh": "HP",
+    "jharkhand": "JH",
+    "karnataka": "KA",  # Activus base state
+    "kerala": "KL",
+    "madhya pradesh": "MP",
+    "maharashtra": "MH",
+    "manipur": "MN",
+    "meghalaya": "ML",
+    "mizoram": "MZ",
+    "nagaland": "NL",
+    "odisha": "OR",
+    "punjab": "PB",
+    "rajasthan": "RJ",
+    "sikkim": "SK",
+    "tamil nadu": "TN",
+    "telangana": "TS",
+    "tripura": "TR",
+    "uttar pradesh": "UP",
+    "uttarakhand": "UK",
+    "west bengal": "WB",
+    "delhi": "DL",
+    "jammu and kashmir": "JK",
+    "ladakh": "LA",
+    "puducherry": "PY",
+    "chandigarh": "CH",
+    "andaman and nicobar islands": "AN",
+    "dadra and nagar haveli and daman and diu": "DN",
+    "lakshadweep": "LD"
+}
+
+# Standard GST rates in India
+STANDARD_GST_RATES = [5.0, 12.0, 18.0, 28.0]
+
+def determine_gst_type(client_address: str, company_state: str = "karnataka") -> dict:
+    """
+    Determine GST type (IGST vs CGST+SGST) based on client and company location
+    Activus is based in Bangalore, Karnataka
+    """
+    try:
+        # Clean and normalize addresses
+        client_address_lower = client_address.lower() if client_address else ""
+        company_state_lower = company_state.lower()
+        
+        # Extract state from client address
+        client_state = None
+        for state_name, state_code in GST_STATE_CODES.items():
+            if state_name in client_address_lower or state_code.lower() in client_address_lower:
+                client_state = state_name
+                break
+        
+        # If client state not identified from address, assume different state (IGST)
+        if not client_state:
+            return {
+                "gst_type": "IGST",
+                "is_interstate": True,
+                "client_state": "Unknown",
+                "company_state": "Karnataka"
+            }
+        
+        # Check if same state or different state
+        is_same_state = client_state == company_state_lower
+        
+        return {
+            "gst_type": "CGST+SGST" if is_same_state else "IGST",
+            "is_interstate": not is_same_state,
+            "client_state": client_state.title(),
+            "company_state": company_state_lower.title()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error determining GST type: {str(e)}")
+        # Default to IGST for safety
+        return {
+            "gst_type": "IGST", 
+            "is_interstate": True,
+            "client_state": "Unknown",
+            "company_state": "Karnataka"
+        }
+
 class ExcelParser:
     def __init__(self):
         self.metadata_patterns = {
