@@ -340,15 +340,13 @@ class ExcelParser:
                     unit = self._safe_string_conversion(unit_value)
                 
                 quantity = self._safe_float_conversion(row_data.get('quantity'))
-                if quantity is None:
+                if quantity == 0.0:
                     quantity = 1.0  # default quantity
                 
                 rate = self._safe_float_conversion(row_data.get('rate'))
-                if rate is None:
-                    rate = 0.0
                 
                 amount = self._safe_float_conversion(row_data.get('amount'))
-                if amount is None or amount == 0:
+                if amount == 0.0:
                     amount = quantity * rate if rate > 0 else 0.0
                 
                 items.append({
