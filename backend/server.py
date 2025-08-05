@@ -388,9 +388,9 @@ class ExcelParser:
                 
                 if any(h in cell_lower for h in ['s.no', 'sr.no', 'serial', 'sl']):
                     column_mapping['serial'] = col_idx
-                elif any(h in cell_lower for h in ['description', 'item', 'particular']):
+                elif any(h in cell_lower for h in ['description', 'item', 'particular', 'work', 'scope']):
                     column_mapping['description'] = col_idx
-                elif any(h in cell_lower for h in ['unit', 'uom']):
+                elif any(h in cell_lower for h in ['unit', 'uom', 'u.o.m']):
                     column_mapping['unit'] = col_idx
                 elif any(h in cell_lower for h in ['quantity', 'qty']):
                     column_mapping['quantity'] = col_idx
