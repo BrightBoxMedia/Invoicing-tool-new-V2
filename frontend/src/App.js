@@ -2337,6 +2337,7 @@ const App = () => {
                   <Route path="/" element={<Navigate to="/dashboard" />} />
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/projects" element={<Projects />} />
+                  <Route path="/projects/:id" element={<ProjectDetails />} />
                   <Route path="/invoices" element={<Invoices />} />
                   <Route path="/clients" element={<Clients />} />
                   {user.role === 'super_admin' && (
