@@ -413,10 +413,10 @@ class ExcelParser:
         if not description or not isinstance(description, str) or len(description.strip()) < 3:
             return False
         
-        # Must have at least description and one numeric field
+        # Must have at least description and one numeric field with a value > 0
         numeric_fields = ['quantity', 'rate', 'amount']
         has_numeric = any(
-            self._safe_float_conversion(row_data.get(field)) is not None
+            self._safe_float_conversion(row_data.get(field)) > 0
             for field in numeric_fields
         )
         
