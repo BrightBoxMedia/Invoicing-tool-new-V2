@@ -1406,14 +1406,16 @@ const Invoices = () => {
                     {invoice.invoice_type === 'tax_invoice' ? 'Tax Invoice' : 'Proforma'}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm font-medium text-gray-900">₹{invoice.total_amount.toLocaleString()}</div>
-                    <div className="flex space-x-1 ml-4">
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <div className="flex items-center justify-between min-w-0">
+                    <div className="text-sm font-medium text-gray-900 mr-2">
+                      ₹{invoice.total_amount.toLocaleString()}
+                    </div>
+                    <div className="flex space-x-1 flex-shrink-0">
                       <button
                         onClick={() => handleViewInvoice(invoice.id, invoice.invoice_number)}
                         disabled={loading}
-                        className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
+                        className="w-8 h-8 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors flex items-center justify-center"
                         title="View PDF"
                       >
                         👀
@@ -1421,7 +1423,7 @@ const Invoices = () => {
                       <button
                         onClick={() => handleDownloadInvoice(invoice.id, invoice.invoice_number)}
                         disabled={loading}
-                        className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
+                        className="w-8 h-8 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors flex items-center justify-center"
                         title="Download PDF"
                       >
                         📥
@@ -1429,7 +1431,7 @@ const Invoices = () => {
                       <button
                         onClick={() => handlePrintInvoice(invoice.id)}
                         disabled={loading}
-                        className="px-2 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700 transition-colors"
+                        className="w-8 h-8 bg-gray-600 text-white text-xs rounded hover:bg-gray-700 transition-colors flex items-center justify-center"
                         title="Print"
                       >
                         🖨️
