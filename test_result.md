@@ -336,6 +336,54 @@
   test_all: false
   test_priority: "high_first"
 
+  - task: "Proforma Invoice Tax Options"
+    implemented: false
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "Need to add frontend UI for tax/without tax option selection for proforma invoices. Backend already supports include_tax parameter."
+
+  - task: "Payment Terms Integration"
+    implemented: false
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "Need to add payment terms input field in invoice creation modal. Backend already supports payment_terms parameter."
+
+  - task: "Advance Received Against Invoice"
+    implemented: false
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "Need to add advance received input field in invoice creation modal. Backend already supports advance_received parameter."
+
+  - task: "Bank Guarantee Frontend Component"
+    implemented: false
+    working: "NA"
+    file: ""
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "Need to create Bank Guarantee management component. Backend APIs already implemented."
+
 ## agent_communication:
     - agent: "main"
     - message: "Starting comprehensive implementation of all pending features. First verifying Projects page fix, then implementing Activity Logs, Item Master, and other features systematically."
@@ -349,3 +397,5 @@
     - message: "🎯 FINAL PDF VALIDATION COMPLETED: Performed comprehensive final test of PDF generation functionality as requested by user. OUTSTANDING RESULTS: ✅ 100% success rate for all 9 existing invoices, ✅ Complete workflow (client→project→invoice→PDF) working perfectly, ✅ All PDFs properly formatted with valid headers and reasonable sizes (2877-8130 bytes), ✅ Quality score: 100%, ✅ No errors found. PDF download functionality is fully working and ready for production. Backend testing shows 86.8% success rate with all core features functional. Created specialized test suite for ongoing PDF validation."
     - agent: "testing"
     - message: "🎉 INVOICE DOWNLOAD BUTTONS TESTING COMPLETED: Successfully verified that ALL download and print buttons are present and visible in the invoice management system. RESULTS: ✅ Table structure correct with all expected columns (Invoice # / RA#, Project, Client, Type, Amount, Status, Download), ✅ All three buttons present in Download column: Blue 'View' button with eye icon, Green 'Download' button with download icon, Gray 'Print' button with print icon, ✅ 12 invoice records displayed properly, ✅ All buttons are visible and functional, ✅ Login and navigation working correctly. The user's reported issue about missing download/print buttons appears to be resolved - all buttons are now visible and working as expected."
+    - agent: "main"
+    - message: "Starting Phase 1 implementation: Adding frontend UI for Proforma invoice tax options, Payment terms, and Advance received fields to the invoice creation modal. Backend support for all these features is already implemented."
