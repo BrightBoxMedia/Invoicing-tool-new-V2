@@ -2288,27 +2288,35 @@ const App = () => {
 
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50">
-        <Navbar user={user} onLogout={handleLogout} />
-        
-        <main className="max-w-7xl mx-auto">
-          <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/projects" element={<Projects />} />
-            <Route path="/invoices" element={<Invoices />} />
-            <Route path="/clients" element={<Clients />} />
-            {user.role === 'super_admin' && (
-              <>
-                <Route path="/item-master" element={<ItemMaster />} />
-                <Route path="/logs" element={<ActivityLogs />} />
-                <Route path="/users" element={<UserManagement />} />
-                <Route path="/reports" element={<Reports />} />
-                <Route path="/search" element={<SearchResults />} />
-              </>
-            )}
-          </Routes>
-        </main>
+      <div className="min-h-screen bg-gray-100">
+        {user ? (
+          <>
+            <Navbar user={user} onLogout={handleLogout} />
+            <div className="flex">
+              <Sidebar user={user} />
+              <main className="flex-1 p-6">
+                <Routes>
+                  <Route path="/" element={<Navigate to="/dashboard" />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/projects" element={<Projects />} />
+                  <Route path="/invoices" element={<Invoices />} />
+                  <Route path="/clients" element={<Clients />} />
+                  {user.role === 'super_admin' && (
+                    <>
+                      <Route path="/item-master" element={<ItemMaster />} />
+                      <Route path="/logs" element={<ActivityLogs />} />
+                      <Route path="/users" element={<UserManagement />} />
+                      <Route path="/reports" element={<Reports />} />
+                      <Route path="/search" element={<SearchResults />} />
+                    </>
+                  )}
+                </Routes>
+              </main>
+            </div>
+          </>
+        ) : (
+          <Login onLogin={handleLogin} />
+        )}
       </div>
     </Router>
   );
