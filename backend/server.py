@@ -2528,6 +2528,164 @@ async def get_client_summary(client_id: str, current_user: dict = Depends(get_cu
         logger.error(f"Error generating client summary: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to generate client summary: {str(e)}")
 
+# Bank Guarantee Management
+@api_router.post("/bank-guarantees", response_model=dict)
+async def create_bank_guarantee(guarantee_data: BankGuarantee, current_user: dict = Depends(get_current_user)):
+    """Create a new bank guarantee"""
+    try:
+        # Validate project exists
+        project = await db.projects.find_one({"id": guarantee_data.project_id})
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+        
+        guarantee_data.created_by = current_user["id"]
+        guarantee_data.updated_at = datetime.utcnow()
+        
+        await db.bank_guarantees.insert_one(guarantee_data.dict())
+        
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "bank_guarantee_created", 
+            f"Created {guarantee_data.guarantee_type} bank guarantee for {guarantee_data.project_name} - ₹{guarantee_data.guarantee_amount:,.2f}"
+        )
+        
+        return {"message": "Bank guarantee created successfully", "guarantee_id": guarantee_data.id}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating bank guarantee: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create bank guarantee: {str(e)}")
+
+@api_router.get("/bank-guarantees", response_model=List[dict])
+async def get_bank_guarantees(
+    project_id: Optional[str] = None,
+    status: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get bank guarantees with optional filtering"""
+    try:
+        query = {}
+        
+        if project_id:
+            query["project_id"] = project_id
+            
+        if status:
+            query["status"] = status
+        
+        guarantees = await db.bank_guarantees.find(query).sort("created_at", -1).to_list(1000)
+        
+        # Add expiry status
+        current_date = datetime.utcnow()
+        for guarantee in guarantees:
+            validity_date = guarantee.get("validity_date")
+            if isinstance(validity_date, str):
+                validity_date = datetime.fromisoformat(validity_date.replace('Z', '+00:00'))
+            
+            if validity_date and validity_date < current_date and guarantee.get("status") == "active":
+                # Update status to expired
+                await db.bank_guarantees.update_one(
+                    {"id": guarantee["id"]},
+                    {"$set": {"status": "expired", "updated_at": datetime.utcnow()}}
+                )
+                guarantee["status"] = "expired"
+        
+        return guarantees
+        
+    except Exception as e:
+        logger.error(f"Error fetching bank guarantees: {str(e)}")
+        return []
+
+@api_router.put("/bank-guarantees/{guarantee_id}", response_model=dict)
+async def update_bank_guarantee(
+    guarantee_id: str,
+    update_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update bank guarantee"""
+    try:
+        guarantee = await db.bank_guarantees.find_one({"id": guarantee_id})
+        if not guarantee:
+            raise HTTPException(status_code=404, detail="Bank guarantee not found")
+        
+        # Update allowed fields
+        allowed_fields = ["guarantee_amount", "guarantee_percentage", "validity_date", "status", "guarantee_details"]
+        update_fields = {k: v for k, v in update_data.items() if k in allowed_fields}
+        update_fields["updated_at"] = datetime.utcnow()
+        
+        await db.bank_guarantees.update_one(
+            {"id": guarantee_id},
+            {"$set": update_fields}
+        )
+        
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "bank_guarantee_updated", 
+            f"Updated bank guarantee {guarantee['guarantee_number']} for {guarantee['project_name']}"
+        )
+        
+        return {"message": "Bank guarantee updated successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating bank guarantee: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to update bank guarantee: {str(e)}")
+
+@api_router.get("/bank-guarantees/summary")
+async def get_bank_guarantees_summary(current_user: dict = Depends(get_current_user)):
+    """Get bank guarantees summary"""
+    try:
+        guarantees = await db.bank_guarantees.find().to_list(1000)
+        
+        summary = {
+            "total_guarantees": len(guarantees),
+            "active_guarantees": len([g for g in guarantees if g.get("status") == "active"]),
+            "expired_guarantees": len([g for g in guarantees if g.get("status") == "expired"]),
+            "total_guarantee_amount": sum(g.get("guarantee_amount", 0) for g in guarantees if g.get("status") == "active"),
+            "guarantees_by_type": {},
+            "expiring_soon": []
+        }
+        
+        # Group by guarantee type
+        for guarantee in guarantees:
+            gtype = guarantee.get("guarantee_type", "Unknown")
+            if gtype not in summary["guarantees_by_type"]:
+                summary["guarantees_by_type"][gtype] = {
+                    "count": 0,
+                    "total_amount": 0
+                }
+            summary["guarantees_by_type"][gtype]["count"] += 1
+            summary["guarantees_by_type"][gtype]["total_amount"] += guarantee.get("guarantee_amount", 0)
+        
+        # Find guarantees expiring in next 30 days
+        current_date = datetime.utcnow()
+        thirty_days_later = current_date + timedelta(days=30)
+        
+        for guarantee in guarantees:
+            if guarantee.get("status") != "active":
+                continue
+                
+            validity_date = guarantee.get("validity_date")
+            if isinstance(validity_date, str):
+                validity_date = datetime.fromisoformat(validity_date.replace('Z', '+00:00'))
+            
+            if validity_date and current_date < validity_date < thirty_days_later:
+                summary["expiring_soon"].append({
+                    "id": guarantee["id"],
+                    "project_name": guarantee["project_name"],
+                    "guarantee_number": guarantee["guarantee_number"],
+                    "guarantee_amount": guarantee["guarantee_amount"],
+                    "validity_date": validity_date,
+                    "days_remaining": (validity_date - current_date).days
+                })
+        
+        return summary
+        
+    except Exception as e:
+        logger.error(f"Error generating bank guarantees summary: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate summary: {str(e)}")
+
 # Include router
 app.include_router(api_router)
 
