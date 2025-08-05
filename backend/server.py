@@ -748,25 +748,36 @@ class PDFGenerator:
         totals_table.setStyle(TableStyle([
             ('ALIGN', (4, 0), (-1, -1), 'RIGHT'),
             ('FONTNAME', (4, 0), (-1, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (4, 0), (-1, -1), 10),
+            ('FONTSIZE', (4, 0), (-1, -1), 11),
             ('TEXTCOLOR', (4, 0), (-1, -1), colors.black),
-            ('BOX', (4, 0), (-1, -1), 1, colors.HexColor('#cccccc')),
+            ('BOX', (4, 0), (-1, -1), 1.5, colors.HexColor('#cccccc')),
             ('INNERGRID', (4, 0), (-1, -1), 1, colors.HexColor('#cccccc')),
-            ('BACKGROUND', (4, 2), (-1, 2), colors.HexColor('#e8f4f8')),
+            ('BACKGROUND', (4, -1), (-1, -1), colors.HexColor('#e8f4f8')),  # Highlight total row
             ('LEFTPADDING', (4, 0), (-1, -1), 8),
             ('RIGHTPADDING', (4, 0), (-1, -1), 8),
-            ('TOPPADDING', (4, 0), (-1, -1), 6),
-            ('BOTTOMPADDING', (4, 0), (-1, -1), 6),
+            ('TOPPADDING', (4, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (4, 0), (-1, -1), 8),
         ]))
         
         elements.append(totals_table)
         elements.append(Spacer(1, 30))
         
+        # Terms and Conditions
+        terms_text = """
+        <b>Terms & Conditions:</b><br/>
+        1. Payment to be made within 30 days from the date of invoice.<br/>
+        2. All disputes subject to Bangalore jurisdiction.<br/>
+        3. Goods once sold will not be taken back.<br/>
+        """
+        elements.append(Paragraph(terms_text, styles['Normal']))
+        elements.append(Spacer(1, 20))
+        
         # Footer
-        footer_text = f"""
+        footer_text = """
         <para alignment="center">
         <b>Thank you for your business!</b><br/>
-        For any queries, please contact us at info@activusdesign.com
+        <b>ACTIVUS INDUSTRIAL DESIGN & BUILD LLP</b><br/>
+        For any queries, please contact us at info@activusdesign.com | +91-XXXXXXXXXX
         </para>
         """
         elements.append(Paragraph(footer_text, styles['Normal']))
