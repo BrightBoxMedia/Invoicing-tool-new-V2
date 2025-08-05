@@ -446,12 +446,26 @@ class PDFGenerator:
         elements = []
         styles = getSampleStyleSheet()
         
+        # Company brand color
+        company_color = colors.HexColor('#127285')
+        light_bg_color = colors.HexColor('#f8f9fa')
+        
         # Add custom styles
         title_style = ParagraphStyle(
             'CustomTitle',
             parent=styles['Heading1'],
-            fontSize=18,
-            textColor=colors.HexColor('#1f4e79'),
+            fontSize=20,
+            textColor=company_color,
+            alignment=TA_CENTER,
+            spaceAfter=12,
+            fontName='Helvetica-Bold'
+        )
+        
+        subtitle_style = ParagraphStyle(
+            'CustomSubtitle',
+            parent=styles['Normal'],
+            fontSize=12,
+            textColor=colors.HexColor('#666666'),
             alignment=TA_CENTER,
             spaceAfter=20
         )
@@ -459,91 +473,144 @@ class PDFGenerator:
         header_style = ParagraphStyle(
             'CustomHeader',
             parent=styles['Heading2'],
-            fontSize=14,
-            textColor=colors.HexColor('#1f4e79'),
-            spaceAfter=10
+            fontSize=16,
+            textColor=company_color,
+            spaceAfter=10,
+            fontName='Helvetica-Bold'
         )
         
-        # Company Header
+        # Company Header with Logo Space
         elements.append(Paragraph("ACTIVUS INDUSTRIAL DESIGN & BUILD LLP", title_style))
-        elements.append(Paragraph("One Stop Solution for Industrial Projects", styles['Normal']))
-        elements.append(Spacer(1, 20))
+        elements.append(Paragraph("One Stop Solution for Industrial Projects", subtitle_style))
         
         # Invoice Title
-        invoice_title = f"{invoice.invoice_type.value.upper()} INVOICE"
-        elements.append(Paragraph(invoice_title, title_style))
+        invoice_type_display = "TAX_INVOICE" if invoice.invoice_type.value == "tax_invoice" else "PROFORMA"
+        invoice_title = f"{invoice_type_display} INVOICE"
+        elements.append(Paragraph(invoice_title, header_style))
         elements.append(Spacer(1, 20))
         
-        # Invoice Details
+        # Invoice Details Table
         details_data = [
             ['Invoice Number:', invoice.invoice_number, 'Date:', invoice.invoice_date.strftime('%d/%m/%Y')],
             ['Project:', project.project_name, 'Client:', client.name],
             ['Architect:', project.architect, '', '']
         ]
         
-        details_table = Table(details_data, colWidths=[40*mm, 60*mm, 30*mm, 50*mm])
+        details_table = Table(details_data, colWidths=[80, 180, 80, 100])
         details_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), light_bg_color),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#dddddd')),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
         ]))
         
         elements.append(details_table)
         elements.append(Spacer(1, 20))
         
-        # Client Information
+        # Bill To Section
         elements.append(Paragraph("Bill To:", header_style))
-        elements.append(Paragraph(client.name, styles['Normal']))
-        elements.append(Paragraph(client.bill_to_address, styles['Normal']))
-        if client.gst_no:
-            elements.append(Paragraph(f"GST No: {client.gst_no}", styles['Normal']))
+        bill_to_text = f"""
+        {client.name}<br/>
+        {client.bill_to_address}<br/>
+        GST No: {client.gst_no if client.gst_no else 'Not Available'}
+        """
+        elements.append(Paragraph(bill_to_text, styles['Normal']))
         elements.append(Spacer(1, 20))
         
         # Items Table
-        items_data = [['S.No', 'Description', 'Unit', 'Qty', 'Rate', 'Amount']]
+        table_data = [
+            ['S.No', 'Description', 'Unit', 'Qty', 'Rate', 'Amount']
+        ]
         
-        for item in invoice.items:
-            items_data.append([
-                item.serial_number,
+        for idx, item in enumerate(invoice.items, 1):
+            # Format currency properly without black squares
+            rate_formatted = f"₹{item.rate:,.2f}"
+            amount_formatted = f"₹{item.amount:,.2f}"
+            
+            table_data.append([
+                str(idx),
                 item.description,
                 item.unit,
-                str(item.quantity),
-                f"₹{item.rate:,.2f}",
-                f"₹{item.amount:,.2f}"
+                f"{item.quantity:,.1f}",
+                rate_formatted,
+                amount_formatted
             ])
         
-        items_table = Table(items_data, colWidths=[15*mm, 80*mm, 20*mm, 20*mm, 30*mm, 35*mm])
+        # Create table
+        col_widths = [40, 200, 60, 60, 80, 100]
+        items_table = Table(table_data, colWidths=col_widths)
+        
+        # Table styling
         items_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1f4e79')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            # Header styling
+            ('BACKGROUND', (0, 0), (-1, 0), company_color),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 0), (-1, 0), 11),
+            
+            # Data rows styling
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+            ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
+            ('ALIGN', (2, 1), (-1, -1), 'CENTER'), # Center align Unit, Qty, Rate, Amount
+            ('ALIGN', (4, 1), (-1, -1), 'RIGHT'),  # Right align Rate and Amount
+            ('ALIGN', (5, 1), (-1, -1), 'RIGHT'),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 9),
+            
+            # Grid and padding
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#cccccc')),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
         ]))
         
         elements.append(items_table)
         elements.append(Spacer(1, 20))
         
-        # Totals
+        # Totals Table
         totals_data = [
-            ['Subtotal:', f"₹{invoice.subtotal:,.2f}"],
-            ['GST (18%):', f"₹{invoice.total_gst_amount:,.2f}"],
-            ['Total Amount:', f"₹{invoice.total_amount:,.2f}"]
+            ['', '', '', '', 'Subtotal:', f"₹{invoice.subtotal:,.2f}"],
+            ['', '', '', '', f'GST (18%):', f"₹{invoice.total_gst_amount:,.2f}"],
+            ['', '', '', '', 'Total Amount:', f"₹{invoice.total_amount:,.2f}"]
         ]
         
-        totals_table = Table(totals_data, colWidths=[50*mm, 50*mm])
+        totals_table = Table(totals_data, colWidths=col_widths)
         totals_table.setStyle(TableStyle([
-            ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
-            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('ALIGN', (4, 0), (-1, -1), 'RIGHT'),
+            ('FONTNAME', (4, 0), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (4, 0), (-1, -1), 10),
+            ('TEXTCOLOR', (4, 0), (-1, -1), colors.black),
+            ('BOX', (4, 0), (-1, -1), 1, colors.HexColor('#cccccc')),
+            ('INNERGRID', (4, 0), (-1, -1), 1, colors.HexColor('#cccccc')),
+            ('BACKGROUND', (4, 2), (-1, 2), colors.HexColor('#e8f4f8')),
+            ('LEFTPADDING', (4, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (4, 0), (-1, -1), 8),
+            ('TOPPADDING', (4, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (4, 0), (-1, -1), 6),
         ]))
         
         elements.append(totals_table)
+        elements.append(Spacer(1, 30))
+        
+        # Footer
+        footer_text = f"""
+        <para alignment="center">
+        <b>Thank you for your business!</b><br/>
+        For any queries, please contact us at info@activusdesign.com
+        </para>
+        """
+        elements.append(Paragraph(footer_text, styles['Normal']))
         
         # Build PDF
         doc.build(elements)
