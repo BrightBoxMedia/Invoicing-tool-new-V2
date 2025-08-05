@@ -1331,8 +1331,10 @@ async def download_invoice_pdf(invoice_id: str, current_user: dict = Depends(get
                 content=pdf_content,
                 media_type="application/pdf",
                 headers={
+                    "Content-Type": "application/pdf",
                     "Content-Disposition": f"inline; filename=invoice_{invoice.invoice_number}.pdf",
-                    "Content-Length": str(len(pdf_content))
+                    "Content-Length": str(len(pdf_content)),
+                    "Cache-Control": "no-cache"
                 }
             )
             
