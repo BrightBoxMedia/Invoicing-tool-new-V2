@@ -918,7 +918,7 @@ const Projects = () => {
                   {Object.values(partialQuantities).some(qty => qty > 0) && (
                     <div className="bg-green-50 p-4 rounded-lg mb-4 border border-green-200">
                       <h4 className="font-semibold text-green-900 mb-3">Invoice Summary ({boqStatus.next_ra_number})</h4>
-                      <div className="grid grid-cols-4 gap-4 text-sm">
+                      <div className="grid grid-cols-4 gap-4 text-sm mb-4">
                         <div>
                           <span className="text-green-600">Items Selected:</span>
                           <div className="font-bold text-lg">
@@ -966,6 +966,41 @@ const Projects = () => {
                           </div>
                         </div>
                       </div>
+                      
+                      {/* Additional Invoice Details */}
+                      {(parseFloat(advanceReceived) > 0 || paymentTerms !== 'Payment due within 30 days from invoice date') && (
+                        <div className="border-t pt-3">
+                          <div className="grid grid-cols-3 gap-4 text-sm">
+                            {parseFloat(advanceReceived) > 0 && (
+                              <>
+                                <div>
+                                  <span className="text-green-600">Advance Received:</span>
+                                  <div className="font-bold">₹{parseFloat(advanceReceived).toLocaleString()}</div>
+                                </div>
+                                <div>
+                                  <span className="text-green-600">Net Amount Due:</span>
+                                  <div className="font-bold text-green-800">
+                                    ₹{Math.max(0, boqStatus.boq_items.reduce((sum, item) => {
+                                      const itemId = item.id || item.serial_number;
+                                      const qty = partialQuantities[itemId] || 0;
+                                      const gstRate = itemGSTRates[itemId] || 18.0;
+                                      const amount = qty * item.rate;
+                                      const gstAmount = (invoiceType === 'proforma' && !includeTax) ? 0 : (amount * gstRate) / 100;
+                                      return sum + amount + gstAmount;
+                                    }, 0) - parseFloat(advanceReceived)).toLocaleString()}
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                            {paymentTerms !== 'Payment due within 30 days from invoice date' && (
+                              <div className={parseFloat(advanceReceived) > 0 ? '' : 'col-span-2'}>
+                                <span className="text-green-600">Payment Terms:</span>
+                                <div className="font-medium text-xs">{paymentTerms}</div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </>
