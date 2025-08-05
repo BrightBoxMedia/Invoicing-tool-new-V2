@@ -93,6 +93,77 @@ const Login = ({ onLogin }) => {
   );
 };
 
+const Sidebar = ({ user }) => {
+  const location = useLocation();
+  
+  const isActive = (path) => location.pathname === path;
+  
+  const menuItems = [
+    { path: '/dashboard', icon: '📊', label: 'Dashboard' },
+    { path: '/projects', icon: '🏗️', label: 'Projects' },
+    { path: '/invoices', icon: '🧾', label: 'Invoices' },
+    { path: '/clients', icon: '👥', label: 'Clients' },
+  ];
+  
+  const adminItems = [
+    { path: '/item-master', icon: '📋', label: 'Item Master' },
+    { path: '/users', icon: '👤', label: 'User Management' },
+    { path: '/logs', icon: '📝', label: 'Activity Logs' },
+    { path: '/reports', icon: '📈', label: 'Reports' },
+    { path: '/search', icon: '🔍', label: 'Search' },
+  ];
+  
+  return (
+    <div className="bg-gray-50 w-64 min-h-screen border-r border-gray-200">
+      <div className="p-4">
+        <h2 className="text-lg font-semibold text-gray-800 mb-6">Navigation</h2>
+        
+        {/* Main Menu Items */}
+        <div className="space-y-2">
+          {menuItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`flex items-center px-4 py-3 rounded-lg transition-colors ${
+                isActive(item.path)
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <span className="mr-3">{item.icon}</span>
+              {item.label}
+            </Link>
+          ))}
+        </div>
+        
+        {/* Admin Menu Items */}
+        {user.role === 'super_admin' && (
+          <>
+            <hr className="my-6 border-gray-300" />
+            <h3 className="text-sm font-semibold text-gray-600 mb-4 px-2">ADMIN</h3>
+            <div className="space-y-2">
+              {adminItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center px-4 py-3 rounded-lg transition-colors ${
+                    isActive(item.path)
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <span className="mr-3">{item.icon}</span>
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const Navbar = ({ user, onLogout }) => {
   return (
     <nav className="bg-white shadow-lg border-b border-gray-200">
