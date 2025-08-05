@@ -709,6 +709,66 @@ const Projects = () => {
                 </div>
               </div>
 
+              {/* Invoice Configuration */}
+              <div className="bg-blue-50 p-4 rounded-lg mb-6">
+                <h4 className="font-semibold text-blue-900 mb-3">Invoice Configuration</h4>
+                <div className="grid grid-cols-3 gap-4">
+                  {/* Tax Option for Proforma */}
+                  {invoiceType === 'proforma' && (
+                    <div>
+                      <label className="block text-sm font-medium text-blue-700 mb-2">
+                        Tax Option
+                      </label>
+                      <select
+                        value={includeTax}
+                        onChange={(e) => setIncludeTax(e.target.value === 'true')}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="true">With Tax</option>
+                        <option value="false">Without Tax</option>
+                      </select>
+                    </div>
+                  )}
+                  
+                  {/* Payment Terms */}
+                  <div className={invoiceType === 'proforma' ? '' : 'col-span-2'}>
+                    <label className="block text-sm font-medium text-blue-700 mb-2">
+                      Payment Terms
+                    </label>
+                    <input
+                      type="text"
+                      value={paymentTerms}
+                      onChange={(e) => setPaymentTerms(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Payment due within 30 days from invoice date"
+                    />
+                  </div>
+                  
+                  {/* Advance Received */}
+                  <div>
+                    <label className="block text-sm font-medium text-blue-700 mb-2">
+                      Advance Received (₹)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={advanceReceived}
+                      onChange={(e) => setAdvanceReceived(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+                
+                {/* Tax Option Note */}
+                {invoiceType === 'proforma' && !includeTax && (
+                  <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
+                    <strong>Note:</strong> Proforma invoice will be generated without tax calculations.
+                  </div>
+                )}
+              </div>
+
               {boqStatus && (
                 <>
                   {/* Billing Status Summary */}
