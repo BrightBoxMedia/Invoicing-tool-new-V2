@@ -103,57 +103,13 @@ const Navbar = ({ user, onLogout }) => {
           </div>
           
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-6">
-              <Link to="/dashboard" className="text-gray-700 hover:text-blue-600 font-medium">
-                Dashboard
-              </Link>
-              <Link to="/projects" className="text-gray-700 hover:text-blue-600 font-medium">
-                Projects
-              </Link>
-              <Link to="/invoices" className="text-gray-700 hover:text-blue-600 font-medium">
-                Invoices
-              </Link>
-              <Link to="/clients" className="text-gray-700 hover:text-blue-600 font-medium">
-                Clients
-              </Link>
-              {user.role === 'super_admin' && (
-                <Link to="/item-master" className="text-gray-700 hover:text-blue-600 font-medium">
-                  Item Master
-                </Link>
-              )}
-              {user.role === 'super_admin' && (
-                <Link to="/logs" className="text-gray-700 hover:text-blue-600 font-medium">
-                  Activity Logs
-                </Link>
-              )}
-              {user.role === 'super_admin' && (
-                <Link to="/users" className="text-gray-700 hover:text-blue-600 font-medium">
-                  User Management
-                </Link>
-              )}
-              {user.role === 'super_admin' && (
-                <Link to="/reports" className="text-gray-700 hover:text-blue-600 font-medium">
-                  Reports
-                </Link>
-              )}
-              {user.role === 'super_admin' && (
-                <Link to="/search" className="text-gray-700 hover:text-blue-600 font-medium">
-                  Search
-                </Link>
-              )}
-            </div>
-            
-            <div className="flex items-center space-x-3">
-              <span className="text-sm text-gray-600">
-                {user.email} ({user.role.replace('_', ' ')})
-              </span>
-              <button
-                onClick={onLogout}
-                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 text-sm"
-              >
-                Logout
-              </button>
-            </div>
+            <span className="text-sm text-gray-600">Welcome, {user.email}</span>
+            <button
+              onClick={onLogout}
+              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
+            >
+              Logout
+            </button>
           </div>
         </div>
       </div>
