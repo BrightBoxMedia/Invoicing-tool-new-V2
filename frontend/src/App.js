@@ -783,7 +783,7 @@ const Projects = () => {
             </div>
             <div className="ml-4">
               <div className="text-sm font-medium text-blue-600">Total Projects</div>
-              <div className="text-2xl font-bold text-blue-900">{projects.length}</div>
+              <div className="text-2xl font-bold text-blue-900">{filteredProjects.length}</div>
             </div>
           </div>
         </div>
