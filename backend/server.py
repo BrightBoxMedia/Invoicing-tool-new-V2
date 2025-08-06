@@ -447,7 +447,34 @@ class ExcelParser:
                 unit = "nos"  # default unit
                 unit_value = row_data.get('unit')
                 if unit_value and str(unit_value).strip():
-                    unit = self._safe_string_conversion(unit_value)
+                    unit_text = str(unit_value).strip()
+                    # Handle common unit patterns
+                    if unit_text.lower() in ['cum', 'cu.m', 'cubic meter', 'cubicmeter']:
+                        unit = 'Cum'
+                    elif unit_text.lower() in ['sqm', 'sq.m', 'square meter', 'squaremeter']:
+                        unit = 'Sqm'
+                    elif unit_text.lower() in ['rmt', 'rm', 'running meter']:
+                        unit = 'Rmt'
+                    elif unit_text.lower() in ['nos', 'no', 'number', 'each']:
+                        unit = 'Nos'
+                    elif unit_text.lower() in ['kg', 'kilogram']:
+                        unit = 'Kg'
+                    elif unit_text.lower() in ['ton', 'tonne', 'mt']:
+                        unit = 'Ton'
+                    elif unit_text.lower() in ['ltr', 'litre', 'liter']:
+                        unit = 'Ltr'
+                    else:
+                        # If it's not a common numeric value, keep as is
+                        try:
+                            float_val = float(unit_text)
+                            # If it converts to float successfully and is a large number, it's probably wrong data
+                            if float_val > 100:
+                                unit = 'Nos'  # fallback
+                            else:
+                                unit = unit_text
+                        except ValueError:
+                            # If it can't be converted to float, it's likely the correct unit text
+                            unit = unit_text
                 
                 quantity = self._safe_float_conversion(row_data.get('quantity'))
                 if quantity == 0.0:
