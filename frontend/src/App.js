@@ -103,6 +103,7 @@ const Sidebar = ({ user }) => {
     { path: '/projects', icon: '🏗️', label: 'Projects' },
     { path: '/invoices', icon: '🧾', label: 'Invoices' },
     { path: '/clients', icon: '👥', label: 'Clients' },
+    { path: '/bank-guarantees', icon: '🏦', label: 'Bank Guarantees' },
   ];
   
   const adminItems = [
