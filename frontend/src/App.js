@@ -700,6 +700,78 @@ const Projects = () => {
         </div>
       </div>
 
+      {/* Search and Filters */}
+      <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Search Projects</label>
+            <input
+              type="text"
+              placeholder="Search by project, client, or architect..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Architect</label>
+            <select
+              value={architectFilter}
+              onChange={(e) => setArchitectFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            >
+              <option value="">All Architects</option>
+              {uniqueArchitects.map(architect => (
+                <option key={architect} value={architect}>{architect}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+            <input
+              type="date"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            >
+              <option value="">All Projects</option>
+              <option value="active">Active (Pending Payment)</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+        </div>
+        
+        {(searchTerm || architectFilter || dateFilter || statusFilter) && (
+          <div className="mt-3 flex items-center justify-between">
+            <div className="text-sm text-gray-600">
+              Showing {filteredProjects.length} of {projects.length} projects
+            </div>
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setArchitectFilter('');
+                setDateFilter('');
+                setStatusFilter('');
+              }}
+              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+            >
+              Clear Filters
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* Project Summary Dashboard */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
