@@ -651,6 +651,36 @@ const Projects = () => {
     }
   };
 
+  // Filter and search logic
+  const filteredProjects = projects.filter(project => {
+    if (!project || !project.id) return false;
+    
+    const matchesSearch = !searchTerm || 
+      project.project_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.client_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.architect?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesArchitect = !architectFilter || 
+      project.architect?.toLowerCase().includes(architectFilter.toLowerCase());
+    
+    const matchesDate = !dateFilter || (() => {
+      const projectDate = new Date(project.created_at);
+      const filterDate = new Date(dateFilter);
+      return projectDate >= filterDate;
+    })();
+    
+    const matchesStatus = !statusFilter || statusFilter === 'all' || (() => {
+      if (statusFilter === 'active') return (project.pending_payment || 0) > 0;
+      if (statusFilter === 'completed') return (project.pending_payment || 0) === 0;
+      return true;
+    })();
+    
+    return matchesSearch && matchesArchitect && matchesDate && matchesStatus;
+  });
+
+  // Get unique architects for filter dropdown
+  const uniqueArchitects = [...new Set(projects.map(p => p.architect).filter(Boolean))];
+
   if (loading) return <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>;
 
   return (
