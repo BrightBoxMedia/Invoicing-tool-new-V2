@@ -294,6 +294,8 @@ const Projects = () => {
   const [paymentTerms, setPaymentTerms] = useState('Payment due within 30 days from invoice date');
   const [advanceReceived, setAdvanceReceived] = useState(0);
   const [projectInvoices, setProjectInvoices] = useState([]);
+  const [expandedProjects, setExpandedProjects] = useState(new Set());
+  const [projectDetails, setProjectDetails] = useState({});
   const [editableMetadata, setEditableMetadata] = useState({
     project_name: '',
     client: '',
