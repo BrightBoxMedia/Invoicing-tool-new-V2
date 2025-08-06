@@ -121,3 +121,84 @@ code {
     display: none !important;
   }
 }
+
+/* Text wrapping and alignment improvements */
+.text-wrap {
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.text-wrap-anywhere {
+  overflow-wrap: anywhere;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+/* Better table cell content wrapping */
+.table-cell-wrap {
+  white-space: normal !important;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 0;
+}
+
+/* Project name and long text handling */
+.project-text {
+  @apply text-wrap leading-relaxed;
+  min-width: 0; /* Allows flex items to shrink below their content size */
+}
+
+/* BOQ item descriptions */
+.boq-description {
+  @apply text-wrap text-sm leading-tight;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Architect and client names */
+.name-wrap {
+  @apply text-wrap break-words;
+  max-width: 200px;
+}
+
+/* Enhanced table styling for better readability */
+.enhanced-table td {
+  @apply align-top;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+.enhanced-table th {
+  @apply text-left font-medium text-gray-700;
+  white-space: nowrap;
+}
+
+/* Card content wrapping */
+.card-text {
+  @apply text-wrap leading-relaxed;
+  overflow-wrap: break-word;
+}
+
+/* Address wrapping */
+.address-wrap {
+  @apply text-wrap text-sm;
+  max-width: 250px;
+  line-height: 1.4;
+}
+
+/* Button text wrapping for small screens */
+@media (max-width: 768px) {
+  .btn-wrap {
+    white-space: normal;
+    text-align: center;
+    line-height: 1.2;
+    padding: 0.5rem;
+  }
+}
