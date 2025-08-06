@@ -598,7 +598,9 @@ class ExcelParser:
             cell = worksheet.cell(row=row_idx, column=col_idx)
             cell_value = cell.value
             
-            # Special handling for unit field to preserve text
+            print(f"Row {row_idx}, Column {col_idx} ({field}): '{cell_value}' (type: {type(cell_value)})")
+            
+            # Special handling for different field types
             if field == 'unit':
                 if cell_value is not None:
                     # Convert to string and clean up
@@ -606,9 +608,20 @@ class ExcelParser:
                     # Remove any trailing decimals from numeric strings that should be text
                     if unit_str.endswith('.0'):
                         unit_str = unit_str[:-2]
-                    row_data[field] = unit_str
+                    # Check if it looks like a unit (contains letters or common unit abbreviations)
+                    if any(c.isalpha() for c in unit_str) or unit_str.lower() in ['cum', 'sqm', 'nos', 'rmt', 'kg', 'ltr']:
+                        row_data[field] = unit_str
+                    else:
+                        # If it's purely numeric and doesn't look like a unit, set default
+                        row_data[field] = 'Nos'
+                        print(f"Warning: Column {col_idx} has numeric value '{unit_str}' for unit, using default 'Nos'")
                 else:
-                    row_data[field] = 'nos'  # default unit
+                    row_data[field] = 'Nos'  # default unit
+                    
+            elif field in ['quantity', 'rate', 'amount']:
+                # Ensure numeric fields are properly converted
+                row_data[field] = self._safe_float_conversion(cell_value)
+                
             else:
                 row_data[field] = cell_value
         
