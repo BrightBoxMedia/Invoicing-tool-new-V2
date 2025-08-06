@@ -518,25 +518,75 @@ class ExcelParser:
         
         print(f"Mapping columns from header row {header_row}")
         
+        # First pass: collect all headers and their positions
+        headers = []
         for col_idx in range(1, worksheet.max_column + 1):
             cell_value = worksheet.cell(row=header_row, column=col_idx).value
             if cell_value:
                 cell_lower = str(cell_value).lower().strip()
+                headers.append((col_idx, cell_lower, str(cell_value)))
                 print(f"Column {col_idx}: '{cell_value}' -> '{cell_lower}'")
+        
+        # Second pass: map columns with priority and exclusions
+        for col_idx, cell_lower, original_value in headers:
+            
+            # Serial Number - must be first
+            if col_idx <= 2 and any(h in cell_lower for h in ['s.no', 'sr.no', 'serial', 'sl', 'sno']):
+                column_mapping['serial'] = col_idx
+                print(f"Serial column mapped to {col_idx}")
                 
-                if any(h in cell_lower for h in ['s.no', 'sr.no', 'serial', 'sl']):
-                    column_mapping['serial'] = col_idx
-                elif any(h in cell_lower for h in ['description', 'item', 'particular', 'work', 'scope']):
-                    column_mapping['description'] = col_idx
-                elif any(h in cell_lower for h in ['unit', 'uom', 'u.o.m']) and 'rate' not in cell_lower:
-                    column_mapping['unit'] = col_idx
-                    print(f"Unit column mapped to {col_idx}")
-                elif any(h in cell_lower for h in ['qty', 'quantity']) and 'rate' not in cell_lower:
-                    column_mapping['quantity'] = col_idx
-                elif any(h in cell_lower for h in ['rate', 'price']) and ('unit' in cell_lower or 'per' in cell_lower):
+            # Description - usually first text column after serial
+            elif any(h in cell_lower for h in ['description', 'item', 'particular', 'work', 'scope']) and 'unit' not in cell_lower and 'rate' not in cell_lower:
+                column_mapping['description'] = col_idx
+                print(f"Description column mapped to {col_idx}")
+                
+            # Unit - specific keywords, exclude rate-related terms
+            elif any(h in cell_lower for h in ['unit', 'uom', 'u.o.m']) and 'rate' not in cell_lower and 'price' not in cell_lower and 'amount' not in cell_lower:
+                column_mapping['unit'] = col_idx
+                print(f"Unit column mapped to {col_idx}")
+                
+            # Quantity - before rate column
+            elif any(h in cell_lower for h in ['qty', 'quantity']) and 'rate' not in cell_lower and 'unit' not in cell_lower:
+                column_mapping['quantity'] = col_idx
+                print(f"Quantity column mapped to {col_idx}")
+                
+            # Rate - must have rate/price but not be amount/total
+            elif any(h in cell_lower for h in ['rate', 'price']) and 'amount' not in cell_lower and 'total' not in cell_lower:
+                if 'unit' in cell_lower:
                     column_mapping['rate'] = col_idx
-                elif any(h in cell_lower for h in ['amount', 'total']) and 'rate' not in cell_lower:
-                    column_mapping['amount'] = col_idx
+                    print(f"Rate column mapped to {col_idx} (unit rate)")
+                elif not column_mapping.get('rate'):  # Only if rate not already mapped
+                    column_mapping['rate'] = col_idx
+                    print(f"Rate column mapped to {col_idx}")
+                    
+            # Amount - must have amount/total but not be rate
+            elif any(h in cell_lower for h in ['amount', 'total']) and 'rate' not in cell_lower and 'unit' not in cell_lower:
+                column_mapping['amount'] = col_idx
+                print(f"Amount column mapped to {col_idx}")
+        
+        # Validation: ensure we have essential columns
+        if not column_mapping.get('description'):
+            # Fallback: find first text-heavy column
+            for col_idx in range(1, min(6, worksheet.max_column + 1)):
+                if col_idx not in column_mapping.values():
+                    column_mapping['description'] = col_idx
+                    print(f"Fallback: Description mapped to column {col_idx}")
+                    break
+                    
+        if not column_mapping.get('unit'):
+            # Look for column that typically has text values, not numbers
+            for col_idx in range(2, min(7, worksheet.max_column + 1)):
+                if col_idx not in column_mapping.values():
+                    # Check if this column has text values in the next few rows
+                    text_count = 0
+                    for row in range(header_row + 1, min(header_row + 6, worksheet.max_row + 1)):
+                        cell_val = worksheet.cell(row=row, column=col_idx).value
+                        if cell_val and isinstance(cell_val, str) and not cell_val.replace('.', '').isdigit():
+                            text_count += 1
+                    if text_count > 0:
+                        column_mapping['unit'] = col_idx
+                        print(f"Fallback: Unit mapped to column {col_idx} based on text content")
+                        break
         
         print(f"Final column mapping: {column_mapping}")
         return column_mapping
