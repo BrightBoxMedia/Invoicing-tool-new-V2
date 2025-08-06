@@ -388,17 +388,29 @@
         - agent: "main"
         - comment: "COMPLETED: Added advance received input field in invoice creation modal. Backend already supports advance_received parameter. Also shows net amount due calculation."
 
-  - task: "Bank Guarantee Frontend Component"
-    implemented: false
-    working: "NA"
-    file: ""
+  - task: "BOQ Unit/UOM Column Extraction Fix"
+    implemented: true
+    working: "YES" 
+    file: "/app/backend/server.py"
     stuck_count: 0
-    priority: "medium"
+    priority: "high"
     needs_retesting: true
     status_history:
-        - working: "NA"
+        - working: "YES"
         - agent: "main"
-        - comment: "Need to create Bank Guarantee management component. Backend APIs already implemented."
+        - comment: "FIXED: Enhanced column mapping logic to correctly identify Unit columns and preserve text values instead of numbers. Added smart unit parsing to handle common formats like 'Cum', 'Sqm', 'Nos', etc."
+
+  - task: "GST Dropdown Visibility Enhancement"  
+    implemented: true
+    working: "YES"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "YES"
+        - agent: "main" 
+        - comment: "FIXED: Replaced GST input field with proper dropdown showing standard GST rates (0%, 5%, 12%, 18%, 28%). Improved styling and user experience with better width and visibility."
 
 ## agent_communication:
     - agent: "main"
