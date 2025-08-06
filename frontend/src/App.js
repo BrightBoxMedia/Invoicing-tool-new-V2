@@ -665,6 +665,71 @@ const Projects = () => {
         </div>
       </div>
 
+      {/* Project Summary Dashboard */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path>
+              </svg>
+            </div>
+            <div className="ml-4">
+              <div className="text-sm font-medium text-blue-600">Total Projects</div>
+              <div className="text-2xl font-bold text-blue-900">{projects.length}</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"></path>
+              </svg>
+            </div>
+            <div className="ml-4">
+              <div className="text-sm font-medium text-green-600">Total Project Value</div>
+              <div className="text-2xl font-bold text-green-900">
+                ₹{projects.reduce((sum, p) => sum + (p.total_project_value || 0), 0).toLocaleString()}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <svg className="w-6 h-6 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"></path>
+              </svg>
+            </div>
+            <div className="ml-4">
+              <div className="text-sm font-medium text-purple-600">Total Received</div>
+              <div className="text-2xl font-bold text-purple-900">
+                ₹{projects.reduce((sum, p) => sum + (p.advance_received || 0), 0).toLocaleString()}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <div className="p-2 bg-orange-100 rounded-lg">
+              <svg className="w-6 h-6 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"></path>
+              </svg>
+            </div>
+            <div className="ml-4">
+              <div className="text-sm font-medium text-orange-600">Pending Amount</div>
+              <div className="text-2xl font-bold text-orange-900">
+                ₹{projects.reduce((sum, p) => sum + (p.pending_payment || 0), 0).toLocaleString()}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
