@@ -1781,6 +1781,7 @@ const Projects = () => {
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-4 py-2 text-left">Description</th>
+                        <th className="px-4 py-2 text-left">Unit</th>
                         <th className="px-4 py-2 text-left">Qty</th>
                         <th className="px-4 py-2 text-left">Rate</th>
                         <th className="px-4 py-2 text-left">Amount</th>
@@ -1789,7 +1790,8 @@ const Projects = () => {
                     <tbody>
                       {(parsedData?.items || []).slice(0, 10).map((item, index) => (
                         <tr key={index} className="border-t">
-                          <td className="px-4 py-2">{item.description}</td>
+                          <td className="px-4 py-2 text-wrap">{item.description}</td>
+                          <td className="px-4 py-2 font-medium text-blue-600">{item.unit}</td>
                           <td className="px-4 py-2">{item.quantity}</td>
                           <td className="px-4 py-2">₹{item.rate}</td>
                           <td className="px-4 py-2">₹{item.amount}</td>
