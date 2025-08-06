@@ -2650,6 +2650,382 @@ const ItemMaster = () => {
   );
 };
 
+const BankGuarantees = () => {
+  const [guarantees, setGuarantees] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState({
+    project_id: '',
+    project_name: '',
+    guarantee_type: 'Performance',
+    guarantee_amount: '',
+    guarantee_percentage: '',
+    issuing_bank: '',
+    guarantee_number: '',
+    issue_date: '',
+    validity_date: '',
+    beneficiary: '',
+    applicant: '',
+    guarantee_details: '',
+    document_path: ''
+  });
+
+  useEffect(() => {
+    fetchGuarantees();
+    fetchProjects();
+  }, []);
+
+  const fetchGuarantees = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/bank-guarantees`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setGuarantees(response.data);
+    } catch (error) {
+      console.error('Error fetching bank guarantees:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchProjects = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/projects`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProjects(response.data);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem('token');
+      const selectedProject = projects.find(p => p.id === formData.project_id);
+      
+      const submitData = {
+        ...formData,
+        project_name: selectedProject ? selectedProject.project_name : '',
+        guarantee_amount: parseFloat(formData.guarantee_amount),
+        guarantee_percentage: parseFloat(formData.guarantee_percentage),
+        issue_date: new Date(formData.issue_date).toISOString(),
+        validity_date: new Date(formData.validity_date).toISOString()
+      };
+
+      await axios.post(`${API}/bank-guarantees`, submitData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      alert('Bank Guarantee created successfully!');
+      setShowModal(false);
+      setFormData({
+        project_id: '',
+        project_name: '',
+        guarantee_type: 'Performance',
+        guarantee_amount: '',
+        guarantee_percentage: '',
+        issuing_bank: '',
+        guarantee_number: '',
+        issue_date: '',
+        validity_date: '',
+        beneficiary: '',
+        applicant: '',
+        guarantee_details: '',
+        document_path: ''
+      });
+      fetchGuarantees();
+    } catch (error) {
+      alert('Error creating bank guarantee: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const getStatusColor = (guarantee) => {
+    const validityDate = new Date(guarantee.validity_date);
+    const now = new Date();
+    const thirtyDaysFromNow = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000));
+    
+    if (validityDate < now) return 'bg-red-100 text-red-800';
+    if (validityDate < thirtyDaysFromNow) return 'bg-yellow-100 text-yellow-800';
+    return 'bg-green-100 text-green-800';
+  };
+
+  const getStatusText = (guarantee) => {
+    const validityDate = new Date(guarantee.validity_date);
+    const now = new Date();
+    const thirtyDaysFromNow = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000));
+    
+    if (validityDate < now) return 'Expired';
+    if (validityDate < thirtyDaysFromNow) return 'Expiring Soon';
+    return 'Active';
+  };
+
+  if (loading) return <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>;
+
+  return (
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-900">🏦 Bank Guarantees</h2>
+        <button
+          onClick={() => setShowModal(true)}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+        >
+          Add Bank Guarantee
+        </button>
+      </div>
+
+      {/* Alerts for expiring guarantees */}
+      {guarantees.filter(g => {
+        const validityDate = new Date(g.validity_date);
+        const thirtyDaysFromNow = new Date(Date.now() + (30 * 24 * 60 * 60 * 1000));
+        return validityDate < thirtyDaysFromNow && validityDate > new Date();
+      }).length > 0 && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-yellow-700">
+                <strong>Warning:</strong> {guarantees.filter(g => {
+                  const validityDate = new Date(g.validity_date);
+                  const thirtyDaysFromNow = new Date(Date.now() + (30 * 24 * 60 * 60 * 1000));
+                  return validityDate < thirtyDaysFromNow && validityDate > new Date();
+                }).length} bank guarantee(s) expiring in the next 30 days.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Name</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">BG Number</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Issuing Bank</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Issue Date</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expiry Date</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {guarantees.map((guarantee) => (
+              <tr key={guarantee.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4">
+                  <div className="text-sm font-medium text-gray-900 break-words">{guarantee.project_name}</div>
+                  <div className="text-sm text-gray-500">{guarantee.guarantee_type}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm font-medium text-gray-900">{guarantee.guarantee_number}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm font-medium text-gray-900">₹{guarantee.guarantee_amount.toLocaleString()}</div>
+                  <div className="text-sm text-gray-500">{guarantee.guarantee_percentage}%</div>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="text-sm text-gray-900 break-words">{guarantee.issuing_bank}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">{new Date(guarantee.issue_date).toLocaleDateString()}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">{new Date(guarantee.validity_date).toLocaleDateString()}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(guarantee)}`}>
+                    {getStatusText(guarantee)}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <div className="flex space-x-2">
+                    <button className="text-blue-600 hover:text-blue-900 bg-blue-50 px-2 py-1 rounded text-xs">
+                      📄 View
+                    </button>
+                    <button className="text-green-600 hover:text-green-900 bg-green-50 px-2 py-1 rounded text-xs">
+                      📥 Download
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Add Bank Guarantee Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Add Bank Guarantee</h3>
+            
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Project *</label>
+                  <select
+                    value={formData.project_id}
+                    onChange={(e) => setFormData({...formData, project_id: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  >
+                    <option value="">Select Project</option>
+                    {projects.map(project => (
+                      <option key={project.id} value={project.id}>
+                        {project.project_name} - {project.client_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Guarantee Type *</label>
+                  <select
+                    value={formData.guarantee_type}
+                    onChange={(e) => setFormData({...formData, guarantee_type: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  >
+                    <option value="Performance">Performance Guarantee</option>
+                    <option value="Advance Payment">Advance Payment Guarantee</option>
+                    <option value="Retention">Retention Guarantee</option>
+                    <option value="Warranty">Warranty Guarantee</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Guarantee Amount *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.guarantee_amount}
+                    onChange={(e) => setFormData({...formData, guarantee_amount: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Guarantee Percentage *</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={formData.guarantee_percentage}
+                    onChange={(e) => setFormData({...formData, guarantee_percentage: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Issuing Bank *</label>
+                  <input
+                    type="text"
+                    value={formData.issuing_bank}
+                    onChange={(e) => setFormData({...formData, issuing_bank: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Guarantee Number *</label>
+                  <input
+                    type="text"
+                    value={formData.guarantee_number}
+                    onChange={(e) => setFormData({...formData, guarantee_number: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Issue Date *</label>
+                  <input
+                    type="date"
+                    value={formData.issue_date}
+                    onChange={(e) => setFormData({...formData, issue_date: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Validity Date *</label>
+                  <input
+                    type="date"
+                    value={formData.validity_date}
+                    onChange={(e) => setFormData({...formData, validity_date: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Beneficiary *</label>
+                <input
+                  type="text"
+                  value={formData.beneficiary}
+                  onChange={(e) => setFormData({...formData, beneficiary: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Applicant *</label>
+                <input
+                  type="text"
+                  value={formData.applicant}
+                  onChange={(e) => setFormData({...formData, applicant: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Guarantee Details</label>
+                <textarea
+                  value={formData.guarantee_details}
+                  onChange={(e) => setFormData({...formData, guarantee_details: e.target.value})}
+                  rows="3"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              
+              <div className="flex justify-end space-x-4 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Add Bank Guarantee
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const App = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
