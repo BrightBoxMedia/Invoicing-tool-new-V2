@@ -1170,7 +1170,8 @@ const Projects = () => {
                     <div className="flex space-x-2">
                       <button
                         onClick={() => openInvoiceModal(project)}
-                        className="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-md text-xs"
+                        className="text-white hover:opacity-90 px-3 py-1 rounded-md text-xs transition-colors"
+                        style={{backgroundColor: '#127285'}}
                       >
                         Create Invoice
                       </button>
@@ -1179,7 +1180,8 @@ const Projects = () => {
                           setInvoiceType('proforma');
                           openInvoiceModal(project);
                         }}
-                        className="text-purple-600 hover:text-purple-900 bg-purple-50 hover:bg-purple-100 px-3 py-1 rounded-md text-xs"
+                        className="text-white hover:opacity-90 px-3 py-1 rounded-md text-xs transition-colors"
+                        style={{backgroundColor: '#9333ea'}}
                       >
                         Create Proforma
                       </button>
