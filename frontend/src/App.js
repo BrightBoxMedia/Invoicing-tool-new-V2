@@ -297,6 +297,10 @@ const Projects = () => {
   const [projectInvoices, setProjectInvoices] = useState([]);
   const [expandedProjects, setExpandedProjects] = useState(new Set());
   const [projectDetails, setProjectDetails] = useState({});
+  const [searchTerm, setSearchTerm] = useState('');
+  const [architectFilter, setArchitectFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [editableMetadata, setEditableMetadata] = useState({
     project_name: '',
     client: '',
