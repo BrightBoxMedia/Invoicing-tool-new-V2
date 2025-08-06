@@ -849,7 +849,7 @@ const Projects = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {projects.filter(project => project && project.id).map((project) => (
+            {filteredProjects.map((project) => (
               <React.Fragment key={project.id}>
                 {/* Main Project Row */}
                 <tr className="hover:bg-gray-50 cursor-pointer" onClick={() => toggleProjectExpansion(project.id)}>
