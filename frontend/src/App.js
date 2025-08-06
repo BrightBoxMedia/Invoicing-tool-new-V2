@@ -966,7 +966,7 @@ const Projects = () => {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Projects</h2>
         <div className="flex space-x-4">
-          <label className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 cursor-pointer">
+          <label className="text-white px-4 py-2 rounded-lg hover:opacity-90 cursor-pointer transition-colors" style={{backgroundColor: '#127285'}}>
             Upload BOQ Excel
             <input
               type="file"
