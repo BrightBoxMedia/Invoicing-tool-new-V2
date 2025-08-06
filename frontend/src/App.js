@@ -387,6 +387,58 @@ const Projects = () => {
     setShowInvoiceModal(true);
   };
 
+  const toggleProjectExpansion = async (projectId) => {
+    const newExpanded = new Set(expandedProjects);
+    
+    if (newExpanded.has(projectId)) {
+      newExpanded.delete(projectId);
+    } else {
+      newExpanded.add(projectId);
+      // Fetch detailed project data if not already loaded
+      if (!projectDetails[projectId]) {
+        await fetchProjectDetails(projectId);
+      }
+    }
+    setExpandedProjects(newExpanded);
+  };
+
+  const fetchProjectDetails = async (projectId) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Fetch project invoices
+      const invoicesResponse = await axios.get(`${API}/invoices`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const projectInvoices = invoicesResponse.data.filter(invoice => invoice.project_id === projectId);
+      
+      // Fetch BOQ status for financial calculations
+      const boqResponse = await axios.get(`${API}/projects/${projectId}/boq-status`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Calculate summary data
+      const totalInvoiced = projectInvoices.reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
+      const totalGST = projectInvoices.reduce((sum, inv) => sum + (inv.total_gst_amount || 0), 0);
+      const totalBasic = totalInvoiced - totalGST;
+      
+      setProjectDetails(prev => ({
+        ...prev,
+        [projectId]: {
+          invoices: projectInvoices,
+          boqStatus: boqResponse.data,
+          summary: {
+            totalInvoiced,
+            totalGST,
+            totalBasic
+          }
+        }
+      }));
+    } catch (error) {
+      console.error('Error fetching project details:', error);
+    }
+  };
+
   const handleCreateInvoice = async () => {
     if (!selectedProject || !boqStatus) {
       alert('Please select a project first');
