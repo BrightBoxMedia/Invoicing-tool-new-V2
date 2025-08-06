@@ -55,7 +55,28 @@ code {
 }
 
 .btn-primary {
-  @apply bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 font-medium transition-colors;
+  background-color: #127285;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-medium: true;
+  transition: opacity 0.2s;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.text-primary {
+  color: #127285;
+}
+
+.bg-primary {
+  background-color: #127285;
+}
+
+.border-primary {
+  border-color: #127285;
 }
 
 .btn-secondary {
