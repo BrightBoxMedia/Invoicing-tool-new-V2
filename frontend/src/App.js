@@ -798,7 +798,7 @@ const Projects = () => {
             <div className="ml-4">
               <div className="text-sm font-medium text-green-600">Total Project Value</div>
               <div className="text-2xl font-bold text-green-900">
-                ₹{projects.reduce((sum, p) => sum + (p.total_project_value || 0), 0).toLocaleString()}
+                ₹{filteredProjects.reduce((sum, p) => sum + (p.total_project_value || 0), 0).toLocaleString()}
               </div>
             </div>
           </div>
