@@ -669,45 +669,177 @@ const Projects = () => {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Architect</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Value</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pending Payment</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-8"></th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Details</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Financial Summary</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {projects.filter(project => project && project.id).map((project) => (
-              <tr key={project.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">{project.project_name || 'Untitled Project'}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{project.client_name || 'Unknown Client'}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{project.architect || 'Unknown Architect'}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">₹{(project.total_project_value || 0).toLocaleString()}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">₹{(project.pending_payment || 0).toLocaleString()}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500">{project.created_at ? new Date(project.created_at).toLocaleDateString() : 'N/A'}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button
-                    onClick={() => openInvoiceModal(project)}
-                    className="text-blue-600 hover:text-blue-900 mr-4 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-md"
-                  >
-                    Create Invoice
-                  </button>
-                </td>
-              </tr>
+              <React.Fragment key={project.id}>
+                {/* Main Project Row */}
+                <tr className="hover:bg-gray-50 cursor-pointer" onClick={() => toggleProjectExpansion(project.id)}>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <button className="text-gray-400 hover:text-gray-600">
+                      {expandedProjects.has(project.id) ? (
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </button>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col">
+                      <div className="text-sm font-semibold text-gray-900 break-words">{project.project_name || 'Untitled Project'}</div>
+                      <div className="text-xs text-gray-500 break-words">{project.client_name || 'Unknown Client'}</div>
+                      <div className="text-xs text-gray-500 break-words">Architect: {project.architect || 'Unknown'}</div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col space-y-1">
+                      <div className="text-sm font-semibold text-gray-900">₹{(project.total_project_value || 0).toLocaleString()}</div>
+                      <div className="text-xs text-green-600">Advance: ₹{(project.advance_received || 0).toLocaleString()}</div>
+                      <div className="text-xs text-orange-600">Pending: ₹{(project.pending_payment || 0).toLocaleString()}</div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Active
+                      </span>
+                      <div className="text-xs text-gray-500 mt-1">{project.created_at ? new Date(project.created_at).toLocaleDateString() : 'N/A'}</div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => openInvoiceModal(project)}
+                        className="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-md text-xs"
+                      >
+                        Create Invoice
+                      </button>
+                      <button
+                        onClick={() => {
+                          setInvoiceType('proforma');
+                          openInvoiceModal(project);
+                        }}
+                        className="text-purple-600 hover:text-purple-900 bg-purple-50 hover:bg-purple-100 px-3 py-1 rounded-md text-xs"
+                      >
+                        Create Proforma
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+
+                {/* Expanded Project Details Row */}
+                {expandedProjects.has(project.id) && (
+                  <tr className="bg-gray-50">
+                    <td colSpan="5" className="px-6 py-6">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Financial Summary */}
+                        <div className="bg-white rounded-lg p-4 shadow-sm">
+                          <h4 className="font-semibold text-gray-900 mb-3">📊 Financial Summary</h4>
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <span className="text-gray-600">Total Project Value:</span>
+                              <div className="font-bold text-lg text-green-600">₹{(project.total_project_value || 0).toLocaleString()}</div>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Advance Received:</span>
+                              <div className="font-bold text-lg text-blue-600">₹{(project.advance_received || 0).toLocaleString()}</div>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Balance Invoiceable:</span>
+                              <div className="font-bold text-lg text-orange-600">
+                                ₹{((project.total_project_value || 0) - (projectDetails[project.id]?.summary?.totalInvoiced || 0)).toLocaleString()}
+                              </div>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Total GST Applicable:</span>
+                              <div className="font-bold text-lg text-purple-600">
+                                ₹{(projectDetails[project.id]?.summary?.totalGST || 0).toLocaleString()}
+                              </div>
+                            </div>
+                            <div className="col-span-2 border-t pt-2 mt-2">
+                              <span className="text-gray-600">Grand Total (with GST):</span>
+                              <div className="font-bold text-xl text-gray-900">
+                                ₹{((project.total_project_value || 0) + (projectDetails[project.id]?.summary?.totalGST || 0)).toLocaleString()}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* RA Invoices List */}
+                        <div className="bg-white rounded-lg p-4 shadow-sm">
+                          <h4 className="font-semibold text-gray-900 mb-3">🧾 RA Invoices Raised</h4>
+                          <div className="max-h-64 overflow-y-auto">
+                            {projectDetails[project.id]?.invoices?.length > 0 ? (
+                              <div className="space-y-2">
+                                {projectDetails[project.id].invoices.map((invoice) => (
+                                  <div key={invoice.id} className="border rounded-lg p-3 text-sm">
+                                    <div className="flex justify-between items-start">
+                                      <div className="flex-1">
+                                        <div className="font-semibold text-blue-600">{invoice.ra_number || invoice.invoice_number}</div>
+                                        <div className="text-gray-600">₹{(invoice.total_amount || 0).toLocaleString()}</div>
+                                        <div className="text-xs text-gray-500">
+                                          {invoice.invoice_date ? new Date(invoice.invoice_date).toLocaleDateString() : 'N/A'}
+                                        </div>
+                                      </div>
+                                      <div className="text-right">
+                                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                          invoice.status === 'paid' ? 'bg-green-100 text-green-800' :
+                                          invoice.status === 'approved' ? 'bg-blue-100 text-blue-800' :
+                                          'bg-yellow-100 text-yellow-800'
+                                        }`}>
+                                          {invoice.status || 'Pending'}
+                                        </span>
+                                        <div className="mt-1">
+                                          <span className="text-xs text-green-600">✓ GST Confirmed</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="mt-2 flex space-x-2">
+                                      <button
+                                        onClick={() => window.open(`${API}/invoices/${invoice.id}/pdf`, '_blank')}
+                                        className="text-xs text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded"
+                                      >
+                                        📄 View
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          const link = document.createElement('a');
+                                          link.href = `${API}/invoices/${invoice.id}/pdf`;
+                                          link.download = `${invoice.ra_number || invoice.invoice_number}.pdf`;
+                                          link.click();
+                                        }}
+                                        className="text-xs text-green-600 hover:text-green-800 bg-green-50 px-2 py-1 rounded"
+                                      >
+                                        ⬇️ Download
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="text-center text-gray-500 py-8">
+                                <div className="text-2xl mb-2">📋</div>
+                                <div>No RA invoices raised yet</div>
+                                <div className="text-xs mt-1">Click "Create Invoice" to get started</div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
             ))}
           </tbody>
         </table>
