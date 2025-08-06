@@ -501,16 +501,32 @@ class ExcelParser:
         return items
     
     def _find_header_row(self, worksheet) -> Optional[int]:
-        header_keywords = ['description', 'quantity', 'rate', 'amount', 'item', 'particular']
+        # Look for rows that contain typical BOQ headers
+        header_keywords = ['description', 'quantity', 'rate', 'amount', 'item', 'particular', 'unit', 'uom']
         
         for row_idx in range(1, min(30, worksheet.max_row + 1)):
-            row_cells = [str(worksheet.cell(row=row_idx, column=col).value or '').lower() for col in range(1, min(20, worksheet.max_column + 1))]
-            row_text = ' '.join(row_cells)
+            row_cells = []
+            for col in range(1, min(20, worksheet.max_column + 1)):
+                cell_value = worksheet.cell(row=row_idx, column=col).value
+                if cell_value:
+                    row_cells.append(str(cell_value).lower().strip())
             
+            row_text = ' '.join(row_cells)
+            print(f"Checking row {row_idx}: {row_text[:100]}...")
+            
+            # Count matches and ensure we have essential columns
             matches = sum(1 for keyword in header_keywords if keyword in row_text)
-            if matches >= 3:
+            has_description = any(desc in row_text for desc in ['description', 'item', 'particular', 'work'])
+            has_quantity = any(qty in row_text for qty in ['quantity', 'qty'])
+            has_rate = any(rate in row_text for rate in ['rate', 'price'])
+            
+            print(f"Row {row_idx} matches: {matches}, has_desc: {has_description}, has_qty: {has_quantity}, has_rate: {has_rate}")
+            
+            if matches >= 3 and has_description and (has_quantity or has_rate):
+                print(f"Selected header row: {row_idx}")
                 return row_idx
         
+        print("No suitable header row found, using fallback")
         return None
     
     def _map_columns(self, worksheet, header_row: int) -> Dict[str, int]:
