@@ -330,10 +330,12 @@
 
 ## test_plan:
   current_focus:
-    - "Proforma Invoice Tax Options"
-    - "Payment Terms Integration"
-    - "Advance Received Against Invoice"
-    - "Bank Guarantee Frontend Component"
+    - "Expandable Project Dashboard"
+    - "Smart Invoice Creation System"
+    - "Enhanced Invoice Breakdown Display"
+    - "Project Summary & Filters"
+    - "Bank Guarantee Dashboard"
+    - "UI/UX Improvements"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
