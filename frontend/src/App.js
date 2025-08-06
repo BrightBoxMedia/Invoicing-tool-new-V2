@@ -1513,19 +1513,21 @@ const Projects = () => {
                                   />
                                 </td>
                                 <td className="px-3 py-3 text-center">
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    max="30"
-                                    step="0.1"
+                                  <select
                                     value={gstRate}
                                     onChange={(e) => updateGSTRate(itemId, e.target.value)}
-                                    className={`w-16 px-2 py-1 border rounded text-center ${
+                                    className={`w-20 px-2 py-1 border rounded text-center text-sm ${
                                       boqStatus.total_invoices > 0 ? 'bg-gray-100 text-gray-600 cursor-not-allowed' : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
                                     }`}
                                     disabled={boqStatus.total_invoices > 0 || !canBill}
-                                    title={boqStatus.total_invoices > 0 ? 'GST locked for RA2+ invoices' : 'Edit GST rate for RA1'}
-                                  />
+                                    title={boqStatus.total_invoices > 0 ? 'GST locked for RA2+ invoices' : 'Select GST rate for RA1'}
+                                  >
+                                    <option value="0">0%</option>
+                                    <option value="5">5%</option>
+                                    <option value="12">12%</option>
+                                    <option value="18">18%</option>
+                                    <option value="28">28%</option>
+                                  </select>
                                 </td>
                                 <td className="px-3 py-3 text-right">
                                   {billQty > 0 && (
