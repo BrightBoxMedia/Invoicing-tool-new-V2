@@ -489,24 +489,29 @@ class ExcelParser:
     def _map_columns(self, worksheet, header_row: int) -> Dict[str, int]:
         column_mapping = {}
         
+        print(f"Mapping columns from header row {header_row}")
+        
         for col_idx in range(1, worksheet.max_column + 1):
             cell_value = worksheet.cell(row=header_row, column=col_idx).value
             if cell_value:
                 cell_lower = str(cell_value).lower().strip()
+                print(f"Column {col_idx}: '{cell_value}' -> '{cell_lower}'")
                 
                 if any(h in cell_lower for h in ['s.no', 'sr.no', 'serial', 'sl']):
                     column_mapping['serial'] = col_idx
                 elif any(h in cell_lower for h in ['description', 'item', 'particular', 'work', 'scope']):
                     column_mapping['description'] = col_idx
-                elif any(h in cell_lower for h in ['unit', 'uom', 'u.o.m']):
+                elif any(h in cell_lower for h in ['unit', 'uom', 'u.o.m']) and 'rate' not in cell_lower:
                     column_mapping['unit'] = col_idx
-                elif any(h in cell_lower for h in ['quantity', 'qty']):
+                    print(f"Unit column mapped to {col_idx}")
+                elif any(h in cell_lower for h in ['qty', 'quantity']) and 'rate' not in cell_lower:
                     column_mapping['quantity'] = col_idx
-                elif any(h in cell_lower for h in ['rate', 'price', 'unit rate']):
+                elif any(h in cell_lower for h in ['rate', 'price']) and ('unit' in cell_lower or 'per' in cell_lower):
                     column_mapping['rate'] = col_idx
-                elif any(h in cell_lower for h in ['amount', 'total']):
+                elif any(h in cell_lower for h in ['amount', 'total']) and 'rate' not in cell_lower:
                     column_mapping['amount'] = col_idx
         
+        print(f"Final column mapping: {column_mapping}")
         return column_mapping
     
     def _extract_row_data(self, worksheet, row_idx: int, column_mapping: Dict[str, int]) -> Dict:
