@@ -151,9 +151,10 @@ const Sidebar = ({ user }) => {
                   to={item.path}
                   className={`flex items-center px-4 py-3 rounded-lg transition-colors ${
                     isActive(item.path)
-                      ? 'bg-blue-600 text-white'
+                      ? 'text-white'
                       : 'text-gray-700 hover:bg-gray-200'
                   }`}
+                  style={isActive(item.path) ? { backgroundColor: '#127285' } : {}}
                 >
                   <span className="mr-3">{item.icon}</span>
                   {item.label}
