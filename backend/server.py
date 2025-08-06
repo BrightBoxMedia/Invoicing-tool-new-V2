@@ -518,8 +518,22 @@ class ExcelParser:
         row_data = {}
         
         for field, col_idx in column_mapping.items():
-            cell_value = worksheet.cell(row=row_idx, column=col_idx).value
-            row_data[field] = cell_value
+            cell = worksheet.cell(row=row_idx, column=col_idx)
+            cell_value = cell.value
+            
+            # Special handling for unit field to preserve text
+            if field == 'unit':
+                if cell_value is not None:
+                    # Convert to string and clean up
+                    unit_str = str(cell_value).strip()
+                    # Remove any trailing decimals from numeric strings that should be text
+                    if unit_str.endswith('.0'):
+                        unit_str = unit_str[:-2]
+                    row_data[field] = unit_str
+                else:
+                    row_data[field] = 'nos'  # default unit
+            else:
+                row_data[field] = cell_value
         
         return row_data
     
