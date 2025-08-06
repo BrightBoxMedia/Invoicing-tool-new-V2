@@ -1166,72 +1166,99 @@ const Projects = () => {
                     )}
                   </div>
 
-                  {/* Invoice Summary */}
+                  {/* Enhanced Invoice Breakdown */}
                   {Object.values(partialQuantities).some(qty => qty > 0) && (
-                    <div className="bg-green-50 p-4 rounded-lg mb-4 border border-green-200">
-                      <h4 className="font-semibold text-green-900 mb-3">Invoice Summary ({boqStatus.next_ra_number})</h4>
-                      <div className="grid grid-cols-4 gap-4 text-sm mb-4">
-                        <div>
-                          <span className="text-green-600">Items Selected:</span>
-                          <div className="font-bold text-lg">
-                            {Object.values(partialQuantities).filter(qty => qty > 0).length}
+                    <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-lg mb-4 border-2 border-green-200">
+                      <h4 className="font-bold text-green-900 mb-4 text-lg">📊 Invoice Breakdown ({boqStatus.next_ra_number})</h4>
+                      
+                      {/* Main Financial Summary */}
+                      <div className="bg-white rounded-lg p-4 mb-4 shadow-sm">
+                        <div className="grid grid-cols-3 gap-6 text-center">
+                          <div className="border-r border-gray-200">
+                            <div className="text-sm text-gray-600 mb-1">Basic Amount</div>
+                            <div className="text-2xl font-bold text-blue-600">
+                              ₹{boqStatus.boq_items.reduce((sum, item) => {
+                                const itemId = item.id || item.serial_number;
+                                const qty = partialQuantities[itemId] || 0;
+                                return sum + (qty * item.rate);
+                              }, 0).toLocaleString()}
+                            </div>
                           </div>
-                        </div>
-                        <div>
-                          <span className="text-green-600">Subtotal:</span>
-                          <div className="font-bold text-lg">
-                            ₹{boqStatus.boq_items.reduce((sum, item) => {
-                              const itemId = item.id || item.serial_number;
-                              const qty = partialQuantities[itemId] || 0;
-                              return sum + (qty * item.rate);
-                            }, 0).toLocaleString()}
+                          
+                          <div className="border-r border-gray-200">
+                            <div className="text-sm text-gray-600 mb-1">Total GST Amount</div>
+                            <div className="text-2xl font-bold text-purple-600">
+                              {(invoiceType === 'proforma' && !includeTax) ? (
+                                <span className="text-gray-400">₹0 (No Tax)</span>
+                              ) : (
+                                <>₹{boqStatus.boq_items.reduce((sum, item) => {
+                                  const itemId = item.id || item.serial_number;
+                                  const qty = partialQuantities[itemId] || 0;
+                                  const gstRate = itemGSTRates[itemId] || 18.0;
+                                  const amount = qty * item.rate;
+                                  const gstAmount = (amount * gstRate) / 100;
+                                  return sum + gstAmount;
+                                }, 0).toLocaleString()}</>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                        <div>
-                          <span className="text-green-600">Total GST:</span>
-                          <div className="font-bold text-lg">
-                            {(invoiceType === 'proforma' && !includeTax) ? (
-                              <span className="text-gray-500">No Tax</span>
-                            ) : (
-                              <>₹{boqStatus.boq_items.reduce((sum, item) => {
+                          
+                          <div>
+                            <div className="text-sm text-gray-600 mb-1">Grand Total</div>
+                            <div className="text-3xl font-bold text-green-600">
+                              ₹{boqStatus.boq_items.reduce((sum, item) => {
                                 const itemId = item.id || item.serial_number;
                                 const qty = partialQuantities[itemId] || 0;
                                 const gstRate = itemGSTRates[itemId] || 18.0;
                                 const amount = qty * item.rate;
-                                const gstAmount = (amount * gstRate) / 100;
-                                return sum + gstAmount;
-                              }, 0).toLocaleString()}</>
-                            )}
+                                const gstAmount = (invoiceType === 'proforma' && !includeTax) ? 0 : (amount * gstRate) / 100;
+                                return sum + amount + gstAmount;
+                              }, 0).toLocaleString()}
+                            </div>
                           </div>
                         </div>
-                        <div>
-                          <span className="text-green-600">Total Amount:</span>
-                          <div className="font-bold text-xl text-green-800">
-                            ₹{boqStatus.boq_items.reduce((sum, item) => {
-                              const itemId = item.id || item.serial_number;
-                              const qty = partialQuantities[itemId] || 0;
-                              const gstRate = itemGSTRates[itemId] || 18.0;
-                              const amount = qty * item.rate;
-                              const gstAmount = (invoiceType === 'proforma' && !includeTax) ? 0 : (amount * gstRate) / 100;
-                              return sum + amount + gstAmount;
-                            }, 0).toLocaleString()}
+                        
+                        {/* Formula Display */}
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                          <div className="text-center text-sm text-gray-600">
+                            <span className="inline-flex items-center space-x-2">
+                              <span className="font-semibold text-blue-600">Basic Amount</span>
+                              <span>+</span>
+                              <span className="font-semibold text-purple-600">GST Amount</span>
+                              <span>=</span>
+                              <span className="font-bold text-green-600">Grand Total</span>
+                            </span>
                           </div>
+                        </div>
+                      </div>
+                      
+                      {/* Additional Details */}
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="bg-white rounded p-3">
+                          <span className="text-gray-600">Items Selected:</span>
+                          <div className="font-bold text-lg text-gray-900">
+                            {Object.values(partialQuantities).filter(qty => qty > 0).length} items
+                          </div>
+                        </div>
+                        <div className="bg-white rounded p-3">
+                          <span className="text-gray-600">RA Number:</span>
+                          <div className="font-bold text-lg text-blue-600">{boqStatus.next_ra_number}</div>
                         </div>
                       </div>
                       
                       {/* Additional Invoice Details */}
                       {(parseFloat(advanceReceived) > 0 || paymentTerms !== 'Payment due within 30 days from invoice date') && (
-                        <div className="border-t pt-3">
+                        <div className="mt-4 pt-4 border-t border-gray-300">
                           <div className="grid grid-cols-3 gap-4 text-sm">
                             {parseFloat(advanceReceived) > 0 && (
                               <>
-                                <div>
-                                  <span className="text-green-600">Advance Received:</span>
-                                  <div className="font-bold">₹{parseFloat(advanceReceived).toLocaleString()}</div>
+                                <div className="bg-white rounded p-3">
+                                  <span className="text-orange-600">Advance Received:</span>
+                                  <div className="font-bold text-lg text-orange-700">₹{parseFloat(advanceReceived).toLocaleString()}</div>
                                 </div>
-                                <div>
-                                  <span className="text-green-600">Net Amount Due:</span>
-                                  <div className="font-bold text-green-800">
+                                <div className="bg-white rounded p-3">
+                                  <span className="text-red-600">Net Amount Due:</span>
+                                  <div className="font-bold text-lg text-red-700">
                                     ₹{Math.max(0, boqStatus.boq_items.reduce((sum, item) => {
                                       const itemId = item.id || item.serial_number;
                                       const qty = partialQuantities[itemId] || 0;
@@ -1245,9 +1272,9 @@ const Projects = () => {
                               </>
                             )}
                             {paymentTerms !== 'Payment due within 30 days from invoice date' && (
-                              <div className={parseFloat(advanceReceived) > 0 ? '' : 'col-span-2'}>
-                                <span className="text-green-600">Payment Terms:</span>
-                                <div className="font-medium text-xs">{paymentTerms}</div>
+                              <div className={`bg-white rounded p-3 ${parseFloat(advanceReceived) > 0 ? '' : 'col-span-2'}`}>
+                                <span className="text-blue-600">Payment Terms:</span>
+                                <div className="font-medium text-xs text-gray-700 break-words">{paymentTerms}</div>
                               </div>
                             )}
                           </div>
