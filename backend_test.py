@@ -520,7 +520,7 @@ class ActivusAPITester:
 
     def create_sample_pdf_content(self):
         """Create a sample PDF-like content for testing"""
-        # This creates a simple text content that mimics a Purchase Order
+        # This creates a simple text content that mimics a Purchase Order with better structure
         pdf_content = """
         PURCHASE ORDER
         
@@ -531,10 +531,10 @@ class ActivusAPITester:
         Client: Activus Industrial Design & Build LLP
         
         ITEM DETAILS:
-        S.No | Description | Unit | Quantity | Rate | Amount
-        1 | Cement bags | Nos | 100 | 450 | 45000
-        2 | Steel bars | Kg | 500 | 65 | 32500
-        3 | Sand | Cum | 10 | 1200 | 12000
+        Description                 Unit    Quantity    Rate        Amount
+        Cement bags                 Nos     100         450         45000
+        Steel bars                  Kg      500         65          32500
+        Sand                        Cum     10          1200        12000
         
         Total Amount: Rs 89,500
         
