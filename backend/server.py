@@ -3380,6 +3380,11 @@ async def get_pdf_extractions(
     try:
         extractions = await db.pdf_extractions.find().skip(skip).limit(limit).sort("processed_at", -1).to_list(limit)
         
+        # Convert ObjectId to string for JSON serialization
+        for extraction in extractions:
+            if "_id" in extraction:
+                extraction["_id"] = str(extraction["_id"])
+        
         return {
             "extractions": extractions,
             "total": len(extractions)
