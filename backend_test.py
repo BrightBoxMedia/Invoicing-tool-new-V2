@@ -864,7 +864,16 @@ class ActivusAPITester:
         self.test_search_and_filter_apis()
         self.test_reports_and_insights_apis()
         
-        # Test error handling
+        # Test NEW PDF Text Extraction Engine (BE-01)
+        self.test_pdf_processing_endpoints()
+        
+        # Test NEW Admin Configuration System
+        self.test_admin_configuration_system()
+        
+        # Test authentication and permissions for new endpoints
+        self.test_authentication_and_permissions()
+        
+        # Test error handling (updated with new endpoints)
         self.test_error_handling()
         
         # Print summary
