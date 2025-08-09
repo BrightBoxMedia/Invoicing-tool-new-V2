@@ -274,7 +274,7 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
             };
 
             const token = localStorage.getItem('token');
-            const response = await fetch(`${backendUrl}/api/invoices`, {
+            const response = await fetch(`${backendUrl}/api/invoices/enhanced`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
