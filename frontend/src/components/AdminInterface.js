@@ -522,12 +522,20 @@ const AdminInterface = ({ currentUser }) => {
                     <h2 className="text-lg font-semibold text-gray-900">System Health</h2>
                     <p className="text-gray-600">Monitor system status and performance</p>
                 </div>
-                <button
-                    onClick={fetchSystemHealth}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                    Refresh
-                </button>
+                <div className="flex space-x-3">
+                    <button
+                        onClick={() => setShowClearDBModal(true)}
+                        className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                    >
+                        🗑️ Clear Database
+                    </button>
+                    <button
+                        onClick={fetchSystemHealth}
+                        className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                        Refresh
+                    </button>
+                </div>
             </div>
 
             {systemHealth && (
