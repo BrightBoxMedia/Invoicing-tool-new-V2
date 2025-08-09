@@ -701,6 +701,17 @@ class Project(BaseModel):
     client_name: str
     location: Optional[str] = None
     metadata: Optional[dict] = Field(default_factory=dict)
+    
+    # Enhanced company profile integration
+    company_profile_id: Optional[str] = None
+    selected_location_id: Optional[str] = None
+    selected_bank_id: Optional[str] = None
+    
+    # Enhanced project metadata
+    project_metadata: List[dict] = Field(default_factory=list)
+    metadata_validated: bool = False
+    validation_errors: List[str] = Field(default_factory=list)
+    
     boq_items: List[dict] = Field(default_factory=list)
     total_project_value: float = 0.0
     advance_received: float = 0.0
