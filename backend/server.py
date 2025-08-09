@@ -1579,7 +1579,13 @@ async def create_invoice(invoice_data: dict, current_user: dict = Depends(get_cu
         # Generate invoice and RA numbers
         invoice_count = await db.invoices.count_documents({}) + 1
         invoice_number = f"INV-{datetime.now().year}-{invoice_count:04d}"
-        ra_number = f"RA-{invoice_count}"
+        
+        # RA numbers only for tax invoices
+        ra_number = ""
+        if invoice_data["invoice_type"] == "tax_invoice":
+            # Count existing tax invoices to get next RA number
+            tax_invoice_count = await db.invoices.count_documents({"invoice_type": "tax_invoice"}) + 1
+            ra_number = f"RA{tax_invoice_count}"
         
         # Payment terms
         payment_terms = invoice_data.get("payment_terms", "Payment due within 30 days from invoice date")
