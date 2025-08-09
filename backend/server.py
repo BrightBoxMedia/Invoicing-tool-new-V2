@@ -3335,7 +3335,16 @@ async def extract_pdf_data(
         # Extract data
         extracted_data = await parser.extract_from_file(file_content, file.filename)
         
-        # Store extraction result in database for future reference
+    except ValueError as e:
+        # Handle unsupported file formats and other value errors
+        raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error processing PDF file {file.filename}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to process file: {str(e)}")
+
+    try:
         extraction_record = {
             "id": str(uuid.uuid4()),
             "original_filename": file.filename,
