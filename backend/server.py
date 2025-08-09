@@ -4018,8 +4018,8 @@ async def create_company_profile(
 ):
     """Create a new company profile - Admin/Super Admin only"""
     try:
-        if current_user["role"] not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
-            raise HTTPException(status_code=403, detail="Only admin/super admin can create company profiles")
+        if current_user["role"] != UserRole.SUPER_ADMIN:
+            raise HTTPException(status_code=403, detail="Only super admin can create company profiles")
         
         profile_data.created_by = current_user["id"]
         profile_data.updated_at = datetime.utcnow()
