@@ -271,6 +271,49 @@ const AdminInterface = ({ currentUser }) => {
         }
     };
 
+    const handleClearDatabase = async () => {
+        try {
+            if (!clearDBConfirmation.confirm_clear || clearDBConfirmation.confirmation_text !== 'DELETE ALL DATA') {
+                setError('Please check the confirmation box and type "DELETE ALL DATA" exactly');
+                return;
+            }
+
+            setLoading(true);
+            const token = localStorage.getItem('token');
+            
+            const response = await fetch(`${backendUrl}/api/admin/clear-database`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(clearDBConfirmation)
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                setShowClearDBModal(false);
+                setClearDBConfirmation({ confirm_clear: false, confirmation_text: '' });
+                
+                // Show success message with statistics
+                alert(`Database cleared successfully!\n\nTotal records deleted: ${result.statistics.total_records_deleted}\nCollections cleared: ${result.statistics.collections_cleared}\n\nUser accounts have been preserved.`);
+                
+                // Refresh system health to show updated stats
+                if (activeTab === 'health') {
+                    fetchSystemHealth();
+                }
+            } else {
+                const errorData = await response.json();
+                setError(errorData.detail || 'Failed to clear database');
+            }
+        } catch (err) {
+            setError('Network error clearing database');
+            console.error('Error clearing database:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const getHealthStatusColor = (status) => {
         return status === 'healthy' ? 'text-green-600' : 'text-red-600';
     };
