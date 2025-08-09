@@ -1227,82 +1227,158 @@ const Projects = () => {
                             <div>
                               <span className="text-gray-600">Balance Invoiceable:</span>
                               <div className="font-bold text-lg text-orange-600">
-                                ₹{((project.total_project_value || 0) - (projectDetails[project.id]?.summary?.totalInvoiced || 0)).toLocaleString()}
+                                ₹{((project.total_project_value || 0) - (projectDetails[project.id]?.summary?.totalRAInvoiced || 0)).toLocaleString()}
                               </div>
                             </div>
                             <div>
-                              <span className="text-gray-600">Total GST Applicable:</span>
+                              <span className="text-gray-600">Total RA GST:</span>
                               <div className="font-bold text-lg text-purple-600">
-                                ₹{(projectDetails[project.id]?.summary?.totalGST || 0).toLocaleString()}
+                                ₹{(projectDetails[project.id]?.summary?.totalRAGST || 0).toLocaleString()}
                               </div>
                             </div>
                             <div className="col-span-2 border-t pt-2 mt-2">
-                              <span className="text-gray-600">Grand Total (with GST):</span>
+                              <span className="text-gray-600">RA Total (Tax Invoices):</span>
                               <div className="font-bold text-xl text-gray-900">
-                                ₹{((project.total_project_value || 0) + (projectDetails[project.id]?.summary?.totalGST || 0)).toLocaleString()}
+                                ₹{(projectDetails[project.id]?.summary?.totalRAInvoiced || 0).toLocaleString()}
                               </div>
                             </div>
                           </div>
                         </div>
 
-                        {/* RA Invoices List */}
-                        <div className="bg-white rounded-lg p-4 shadow-sm">
-                          <h4 className="font-semibold text-gray-900 mb-3">🧾 RA Invoices Raised</h4>
-                          <div className="max-h-64 overflow-y-auto">
-                            {projectDetails[project.id]?.invoices?.length > 0 ? (
-                              <div className="space-y-2">
-                                {projectDetails[project.id].invoices.map((invoice) => (
-                                  <div key={invoice.id} className="border rounded-lg p-3 text-sm">
-                                    <div className="flex justify-between items-start">
-                                      <div className="flex-1">
-                                        <div className="font-semibold text-blue-600">{invoice.ra_number || invoice.invoice_number}</div>
-                                        <div className="text-gray-600">₹{(invoice.total_amount || 0).toLocaleString()}</div>
-                                        <div className="text-xs text-gray-500">
-                                          {invoice.invoice_date ? new Date(invoice.invoice_date).toLocaleDateString() : 'N/A'}
+                        {/* Two Column Layout for Invoice Types */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                          {/* Tax Invoices (RA Bills) */}
+                          <div className="bg-white rounded-lg p-4 shadow-sm border-l-4 border-blue-500">
+                            <h4 className="font-semibold text-blue-900 mb-3">🧾 RA Bills (Tax Invoices)</h4>
+                            <div className="max-h-48 overflow-y-auto">
+                              {projectDetails[project.id]?.taxInvoices?.length > 0 ? (
+                                <div className="space-y-2">
+                                  {projectDetails[project.id].taxInvoices.map((invoice, index) => (
+                                    <div key={invoice.id} className="border rounded-lg p-3 text-sm bg-blue-50">
+                                      <div className="flex justify-between items-start">
+                                        <div className="flex-1">
+                                          <div className="font-semibold text-blue-700">
+                                            {invoice.ra_number || `RA${index + 1}`}
+                                          </div>
+                                          <div className="text-gray-700">₹{(invoice.total_amount || 0).toLocaleString()}</div>
+                                          <div className="text-xs text-gray-600">
+                                            Tax Invoice • {invoice.invoice_date ? new Date(invoice.invoice_date).toLocaleDateString() : 'N/A'}
+                                          </div>
+                                        </div>
+                                        <div className="text-right">
+                                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                            invoice.status === 'paid' ? 'bg-green-100 text-green-800' :
+                                            invoice.status === 'approved' ? 'bg-blue-100 text-blue-800' :
+                                            'bg-yellow-100 text-yellow-800'
+                                          }`}>
+                                            {invoice.status || 'Pending'}
+                                          </span>
+                                          <div className="mt-1">
+                                            <span className="text-xs text-green-600">✓ GST Applied</span>
+                                          </div>
                                         </div>
                                       </div>
-                                      <div className="text-right">
-                                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                          invoice.status === 'paid' ? 'bg-green-100 text-green-800' :
-                                          invoice.status === 'approved' ? 'bg-blue-100 text-blue-800' :
-                                          'bg-yellow-100 text-yellow-800'
-                                        }`}>
-                                          {invoice.status || 'Pending'}
-                                        </span>
-                                        <div className="mt-1">
-                                          <span className="text-xs text-green-600">✓ GST Confirmed</span>
-                                        </div>
+                                      <div className="mt-2 flex space-x-1">
+                                        <button
+                                          onClick={() => window.open(`${API}/invoices/${invoice.id}/pdf`, '_blank')}
+                                          className="text-xs text-blue-600 hover:text-blue-800 bg-blue-100 px-2 py-1 rounded"
+                                        >
+                                          📄 View
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            const link = document.createElement('a');
+                                            link.href = `${API}/invoices/${invoice.id}/pdf`;
+                                            link.download = `${invoice.ra_number || invoice.invoice_number}.pdf`;
+                                            link.click();
+                                          }}
+                                          className="text-xs text-green-600 hover:text-green-800 bg-green-100 px-2 py-1 rounded"
+                                        >
+                                          ⬇️ Download
+                                        </button>
                                       </div>
                                     </div>
-                                    <div className="mt-2 flex space-x-2">
-                                      <button
-                                        onClick={() => window.open(`${API}/invoices/${invoice.id}/pdf`, '_blank')}
-                                        className="text-xs text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded"
-                                      >
-                                        📄 View
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          const link = document.createElement('a');
-                                          link.href = `${API}/invoices/${invoice.id}/pdf`;
-                                          link.download = `${invoice.ra_number || invoice.invoice_number}.pdf`;
-                                          link.click();
-                                        }}
-                                        className="text-xs text-green-600 hover:text-green-800 bg-green-50 px-2 py-1 rounded"
-                                      >
-                                        ⬇️ Download
-                                      </button>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="text-center text-gray-500 py-6">
+                                  <div className="text-2xl mb-2">📋</div>
+                                  <div className="font-medium">No RA Bills yet</div>
+                                  <div className="text-xs mt-1">Click "Create Invoice" to start RA1</div>
+                                </div>
+                              )}
+                            </div>
+                            <div className="mt-3 pt-3 border-t">
+                              <div className="text-xs text-gray-600">
+                                Total RA Bills: <span className="font-medium">{projectDetails[project.id]?.summary?.raCount || 0}</span> • 
+                                Value: <span className="font-medium">₹{(projectDetails[project.id]?.summary?.totalRAInvoiced || 0).toLocaleString()}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Proforma Invoices */}
+                          <div className="bg-white rounded-lg p-4 shadow-sm border-l-4 border-purple-500">
+                            <h4 className="font-semibold text-purple-900 mb-3">📄 Proforma Invoices</h4>
+                            <div className="max-h-48 overflow-y-auto">
+                              {projectDetails[project.id]?.proformaInvoices?.length > 0 ? (
+                                <div className="space-y-2">
+                                  {projectDetails[project.id].proformaInvoices.map((invoice, index) => (
+                                    <div key={invoice.id} className="border rounded-lg p-3 text-sm bg-purple-50">
+                                      <div className="flex justify-between items-start">
+                                        <div className="flex-1">
+                                          <div className="font-semibold text-purple-700">
+                                            {invoice.invoice_number || `PF${index + 1}`}
+                                          </div>
+                                          <div className="text-gray-700">₹{(invoice.total_amount || 0).toLocaleString()}</div>
+                                          <div className="text-xs text-gray-600">
+                                            Proforma • {invoice.invoice_date ? new Date(invoice.invoice_date).toLocaleDateString() : 'N/A'}
+                                          </div>
+                                        </div>
+                                        <div className="text-right">
+                                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                            {invoice.status || 'Draft'}
+                                          </span>
+                                          <div className="mt-1">
+                                            <span className="text-xs text-gray-500">Estimate</span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div className="mt-2 flex space-x-1">
+                                        <button
+                                          onClick={() => window.open(`${API}/invoices/${invoice.id}/pdf`, '_blank')}
+                                          className="text-xs text-purple-600 hover:text-purple-800 bg-purple-100 px-2 py-1 rounded"
+                                        >
+                                          📄 View
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            const link = document.createElement('a');
+                                            link.href = `${API}/invoices/${invoice.id}/pdf`;
+                                            link.download = `${invoice.invoice_number}.pdf`;
+                                            link.click();
+                                          }}
+                                          className="text-xs text-green-600 hover:text-green-800 bg-green-100 px-2 py-1 rounded"
+                                        >
+                                          ⬇️ Download
+                                        </button>
+                                      </div>
                                     </div>
-                                  </div>
-                                ))}
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="text-center text-gray-500 py-6">
+                                  <div className="text-2xl mb-2">📄</div>
+                                  <div className="font-medium">No Proforma Invoices</div>
+                                  <div className="text-xs mt-1">Click "Create Proforma" for estimates</div>
+                                </div>
+                              )}
+                            </div>
+                            <div className="mt-3 pt-3 border-t">
+                              <div className="text-xs text-gray-600">
+                                Total Proforma: <span className="font-medium">{projectDetails[project.id]?.summary?.proformaCount || 0}</span> • 
+                                Value: <span className="font-medium">₹{(projectDetails[project.id]?.summary?.totalProforma || 0).toLocaleString()}</span>
                               </div>
-                            ) : (
-                              <div className="text-center text-gray-500 py-8">
-                                <div className="text-2xl mb-2">📋</div>
-                                <div>No RA invoices raised yet</div>
-                                <div className="text-xs mt-1">Click "Create Invoice" to get started</div>
-                              </div>
-                            )}
+                            </div>
                           </div>
                         </div>
                       </div>
