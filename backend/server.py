@@ -27,6 +27,9 @@ from enum import Enum
 import bcrypt
 import jwt
 from fastapi.middleware.cors import CORSMiddleware
+import pdfplumber
+import PyPDF2
+import tabula
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
