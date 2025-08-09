@@ -459,6 +459,178 @@ class InvoiceStatus(str, Enum):
     APPROVED = "approved"
     PAID = "paid"
 
+# Enhanced Models for Company Profile and Metadata Management
+
+class CompanyLocation(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    location_name: str
+    address_line_1: str
+    address_line_2: Optional[str] = None
+    city: str
+    state: str
+    pincode: str
+    country: str = "India"
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    gst_number: Optional[str] = None
+    is_default: bool = False
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class CompanyBankDetails(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    bank_name: str
+    account_number: str
+    account_holder_name: str
+    ifsc_code: str
+    branch_name: str
+    account_type: str = "Current"  # Current, Savings
+    is_default: bool = False
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class CompanyProfile(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    company_name: str
+    company_logo: Optional[str] = None
+    locations: List[CompanyLocation] = []
+    bank_details: List[CompanyBankDetails] = []
+    default_location_id: Optional[str] = None
+    default_bank_id: Optional[str] = None
+    created_by: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+# Enhanced Project Metadata Models
+class EnhancedProjectMetadata(BaseModel):
+    purchase_order_number: str  # Mandatory field
+    type: str
+    reference_no: Optional[str] = None
+    dated: Optional[str] = None
+    basic: Optional[float] = 0.0
+    overall_multiplier: Optional[float] = 1.0
+    po_inv_value: Optional[float] = 0.0
+    abg_percentage: Optional[float] = 0.0  # Advance Bank Guarantee %
+    ra_bill_with_taxes_percentage: Optional[float] = 0.0  # RA Bill with Taxes %
+    erection_percentage: Optional[float] = 0.0  # Erection %
+    pbg_percentage: Optional[float] = 0.0  # Performance Bank Guarantee %
+    
+    # Calculated fields
+    abg_amount: Optional[float] = 0.0
+    ra_bill_amount: Optional[float] = 0.0
+    erection_amount: Optional[float] = 0.0
+    pbg_amount: Optional[float] = 0.0
+    
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+# Enhanced GST Models
+class GSTType(str, Enum):
+    CGST_SGST = "cgst_sgst"  # Central + State GST
+    IGST = "igst"  # Integrated GST
+
+class ItemGSTMapping(BaseModel):
+    item_id: str
+    gst_type: GSTType
+    cgst_rate: Optional[float] = 0.0
+    sgst_rate: Optional[float] = 0.0
+    igst_rate: Optional[float] = 0.0
+    total_gst_rate: float
+
+# Enhanced RA Bill Tracking Models
+class RAQuantityTracking(BaseModel):
+    item_id: str
+    description: str
+    unit: str
+    overall_qty: float
+    ra_usage: Dict[str, float] = {}  # {"RA1": 10.0, "RA2": 5.0, ...}
+    balance_qty: float
+    rate: float
+    gst_mapping: ItemGSTMapping
+
+class RABillTracking(BaseModel):
+    project_id: str
+    ra_number: str  # RA1, RA2, RA3, etc.
+    items: List[RAQuantityTracking]
+    total_amount: float
+    gst_amount: float
+    total_with_gst: float
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+# Enhanced Project Model Updates
+class EnhancedProject(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    project_name: str
+    architect: str
+    client_id: str
+    client_name: str
+    
+    # Enhanced company and location details
+    company_profile_id: Optional[str] = None
+    selected_location_id: Optional[str] = None
+    selected_bank_id: Optional[str] = None
+    
+    # Project metadata with validation
+    metadata: List[EnhancedProjectMetadata] = []
+    metadata_validated: bool = False
+    validation_errors: List[str] = []
+    
+    # Enhanced BOQ with RA tracking
+    boq_items: List[Dict[str, Any]] = []
+    ra_tracking: List[RABillTracking] = []
+    
+    # Financial calculations
+    total_project_value: float = 0.0
+    advance_received: float = 0.0
+    pending_payment: float = 0.0
+    
+    created_by: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+# Enhanced Invoice Model Updates  
+class EnhancedInvoice(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    invoice_number: str
+    project_id: str
+    project_name: str
+    client_name: str
+    
+    # Company and GST details
+    company_location_id: Optional[str] = None
+    company_bank_id: Optional[str] = None
+    invoice_gst_type: GSTType = GSTType.CGST_SGST
+    
+    # Enhanced invoice items with GST mapping
+    invoice_items: List[Dict[str, Any]] = []
+    item_gst_mappings: List[ItemGSTMapping] = []
+    
+    # RA Bill specific fields
+    ra_number: Optional[str] = None
+    ra_quantities: List[RAQuantityTracking] = []
+    quantity_validation_passed: bool = True
+    validation_errors: List[str] = []
+    
+    # Invoice type and amounts
+    invoice_type: InvoiceType
+    invoice_date: datetime = Field(default_factory=datetime.utcnow)
+    
+    # Financial details with enhanced GST
+    subtotal: float = 0.0
+    cgst_amount: float = 0.0
+    sgst_amount: float = 0.0
+    igst_amount: float = 0.0
+    total_gst_amount: float = 0.0
+    total_amount: float = 0.0
+    
+    status: InvoiceStatus = InvoiceStatus.DRAFT
+    payment_terms: Optional[str] = None
+    advance_received: float = 0.0
+    
+    created_by: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
 class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     email: str
