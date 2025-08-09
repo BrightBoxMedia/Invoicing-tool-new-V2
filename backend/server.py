@@ -1656,7 +1656,14 @@ async def create_invoice(invoice_data: dict, current_user: dict = Depends(get_cu
         raise HTTPException(status_code=500, detail=f"Failed to create invoice: {str(e)}")
 
 @api_router.get("/invoices", response_model=List[Invoice])
-async def get_invoices(current_user: dict = Depends(get_current_user)):
+async def get_invoices(
+    current_user: dict = Depends(get_current_user),
+    search: Optional[str] = None,
+    type: Optional[str] = None,
+    project_id: Optional[str] = None,
+    status: Optional[str] = None,
+    client_id: Optional[str] = None
+):
     try:
         invoices = await db.invoices.find().to_list(1000)
         
