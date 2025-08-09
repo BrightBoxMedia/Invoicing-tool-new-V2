@@ -3753,6 +3753,87 @@ async def update_system_config(
         logger.error(f"Error updating system config: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to update system config: {str(e)}")
 
+@api_router.post("/admin/clear-database")
+async def clear_database(
+    confirmation: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Clear entire database - DANGEROUS OPERATION - Super Admin Only"""
+    try:
+        if current_user["role"] != UserRole.SUPER_ADMIN:
+            raise HTTPException(status_code=403, detail="Only super admin can clear database")
+        
+        # Require explicit confirmation
+        if not confirmation.get("confirm_clear") or confirmation.get("confirmation_text") != "DELETE ALL DATA":
+            raise HTTPException(status_code=400, detail="Proper confirmation required to clear database")
+        
+        # Get collection stats before clearing
+        collections_to_clear = [
+            "projects", "invoices", "clients", "bank_guarantees", 
+            "pdf_extractions", "master_items", "workflow_configs", 
+            "system_configs", "activity_logs"
+        ]
+        
+        stats_before = {}
+        for collection_name in collections_to_clear:
+            try:
+                count = await db[collection_name].count_documents({})
+                stats_before[collection_name] = count
+            except:
+                stats_before[collection_name] = 0
+        
+        # Clear all collections except users (preserve user accounts)
+        cleared_collections = []
+        total_deleted = 0
+        
+        for collection_name in collections_to_clear:
+            try:
+                result = await db[collection_name].delete_many({})
+                cleared_collections.append({
+                    "collection": collection_name,
+                    "deleted_count": result.deleted_count,
+                    "previous_count": stats_before.get(collection_name, 0)
+                })
+                total_deleted += result.deleted_count
+            except Exception as e:
+                logger.error(f"Error clearing collection {collection_name}: {str(e)}")
+                cleared_collections.append({
+                    "collection": collection_name,
+                    "deleted_count": 0,
+                    "previous_count": stats_before.get(collection_name, 0),
+                    "error": str(e)
+                })
+        
+        # Log this critical action
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "database_cleared", 
+            f"🚨 CRITICAL: Database cleared by super admin. Total records deleted: {total_deleted}. Collections cleared: {len(cleared_collections)}"
+        )
+        
+        return {
+            "message": "Database cleared successfully",
+            "timestamp": datetime.utcnow(),
+            "cleared_by": {
+                "user_id": current_user["id"],
+                "email": current_user["email"]
+            },
+            "statistics": {
+                "total_records_deleted": total_deleted,
+                "collections_cleared": len([c for c in cleared_collections if c.get("deleted_count", 0) > 0]),
+                "collections_details": cleared_collections
+            },
+            "preserved": {
+                "users": "User accounts preserved for system access"
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error clearing database: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to clear database: {str(e)}")
+
 @api_router.get("/admin/system-health")
 async def get_system_health(current_user: dict = Depends(get_current_user)):
     """Get system health and status information"""
