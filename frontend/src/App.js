@@ -7,7 +7,6 @@ import './App.css';
 import ActivityLogs from './components/ActivityLogs';
 import ItemMaster from './components/ItemMaster';
 import SmartSearch from './components/SmartSearch';
-import Reports from './components/Reports';
 import PDFProcessor from './components/PDFProcessor';
 import AdminInterface from './components/AdminInterface';
 
