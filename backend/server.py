@@ -1755,6 +1755,69 @@ async def get_invoices(
         logger.error(f"Error fetching invoices: {str(e)}")
         return []
 
+@api_router.get("/invoices/{invoice_id}", response_model=Invoice)
+async def get_invoice(invoice_id: str, current_user: dict = Depends(get_current_user)):
+    """Get individual invoice by ID"""
+    try:
+        if not invoice_id or len(invoice_id.strip()) == 0:
+            raise HTTPException(status_code=400, detail="Invoice ID is required")
+        
+        invoice_data = await db.invoices.find_one({"id": invoice_id})
+        if not invoice_data:
+            raise HTTPException(status_code=404, detail=f"Invoice with ID {invoice_id} not found")
+        
+        # Clean and validate invoice data
+        cleaned_invoice = {
+            "id": invoice_data.get("id", str(uuid.uuid4())),
+            "invoice_number": invoice_data.get("invoice_number", ""),
+            "ra_number": invoice_data.get("ra_number", ""),
+            "project_id": invoice_data.get("project_id", ""),
+            "project_name": invoice_data.get("project_name", ""),
+            "client_id": invoice_data.get("client_id", ""),
+            "client_name": invoice_data.get("client_name", ""),
+            "invoice_type": invoice_data.get("invoice_type", "proforma"),
+            "items": [],
+            "subtotal": float(invoice_data.get("subtotal", 0)),
+            "total_gst_amount": float(invoice_data.get("total_gst_amount", invoice_data.get("gst_amount", 0))),
+            "total_amount": float(invoice_data.get("total_amount", 0)),
+            "is_partial": invoice_data.get("is_partial", True),
+            "billing_percentage": invoice_data.get("billing_percentage"),
+            "cumulative_billed": invoice_data.get("cumulative_billed"),
+            "status": invoice_data.get("status", "draft"),
+            "created_by": invoice_data.get("created_by"),
+            "reviewed_by": invoice_data.get("reviewed_by"),
+            "approved_by": invoice_data.get("approved_by"),
+            "invoice_date": invoice_data.get("invoice_date", datetime.utcnow()),
+            "due_date": invoice_data.get("due_date"),
+            "created_at": invoice_data.get("created_at", datetime.utcnow()),
+            "updated_at": invoice_data.get("updated_at", datetime.utcnow())
+        }
+        
+        # Clean up items
+        for item in invoice_data.get("items", []):
+            if isinstance(item, dict):
+                cleaned_item = {
+                    "boq_item_id": item.get("boq_item_id", item.get("serial_number", str(uuid.uuid4()))),
+                    "serial_number": str(item.get("serial_number", "")),
+                    "description": str(item.get("description", "")),
+                    "unit": str(item.get("unit", "nos")),
+                    "quantity": float(item.get("quantity", 0)),
+                    "rate": float(item.get("rate", 0)),
+                    "amount": float(item.get("amount", 0)),
+                    "gst_rate": float(item.get("gst_rate", 18.0)),
+                    "gst_amount": float(item.get("gst_amount", 0)),
+                    "total_with_gst": float(item.get("total_with_gst", item.get("amount", 0) * 1.18))
+                }
+                cleaned_invoice["items"].append(cleaned_item)
+        
+        return Invoice(**cleaned_invoice)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching invoice {invoice_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
 @api_router.get("/invoices/{invoice_id}/pdf")
 async def download_invoice_pdf(invoice_id: str, current_user: dict = Depends(get_current_user)):
     try:
