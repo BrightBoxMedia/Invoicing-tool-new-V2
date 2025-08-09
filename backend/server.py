@@ -3681,6 +3681,10 @@ async def get_system_configs(
         # Group by category for better organization
         grouped_configs = {}
         for config in configs:
+            # Convert ObjectIds to strings for JSON serialization
+            if "_id" in config:
+                config["_id"] = str(config["_id"])
+                
             cat = config["config_category"]
             if cat not in grouped_configs:
                 grouped_configs[cat] = []
