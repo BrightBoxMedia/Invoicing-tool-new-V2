@@ -858,6 +858,87 @@ const AdminInterface = ({ currentUser }) => {
                     </div>
                 </div>
             )}
+
+            {/* Clear Database Modal */}
+            {showClearDBModal && (
+                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                    <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-white">
+                        <div className="text-center">
+                            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                                <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">⚠️ DANGER: Clear Database</h3>
+                            <div className="text-left mb-6">
+                                <p className="text-sm text-red-600 mb-3">
+                                    <strong>This will permanently delete ALL data including:</strong>
+                                </p>
+                                <ul className="text-sm text-red-600 space-y-1 mb-4">
+                                    <li>• All Projects and BOQ data</li>
+                                    <li>• All Invoices and PDFs</li>
+                                    <li>• All Clients information</li>
+                                    <li>• All Bank Guarantees</li>
+                                    <li>• All PDF Extractions</li>
+                                    <li>• All Item Master data</li>
+                                    <li>• All Activity Logs</li>
+                                    <li>• All System Configurations</li>
+                                </ul>
+                                <p className="text-sm text-green-600 mb-4">
+                                    <strong>User accounts will be preserved.</strong>
+                                </p>
+                            </div>
+                            
+                            <div className="space-y-4">
+                                <div className="flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        id="confirmClear"
+                                        className="rounded border-gray-300 text-red-600 shadow-sm focus:border-red-300 focus:ring focus:ring-red-200 focus:ring-opacity-50"
+                                        checked={clearDBConfirmation.confirm_clear}
+                                        onChange={(e) => setClearDBConfirmation({...clearDBConfirmation, confirm_clear: e.target.checked})}
+                                    />
+                                    <label htmlFor="confirmClear" className="ml-2 text-sm text-gray-700">
+                                        I understand that this action cannot be undone
+                                    </label>
+                                </div>
+                                
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Type "DELETE ALL DATA" to confirm:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                                        value={clearDBConfirmation.confirmation_text}
+                                        onChange={(e) => setClearDBConfirmation({...clearDBConfirmation, confirmation_text: e.target.value})}
+                                        placeholder="DELETE ALL DATA"
+                                    />
+                                </div>
+                            </div>
+                            
+                            <div className="flex justify-center space-x-3 mt-6">
+                                <button
+                                    onClick={() => {
+                                        setShowClearDBModal(false);
+                                        setClearDBConfirmation({ confirm_clear: false, confirmation_text: '' });
+                                    }}
+                                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleClearDatabase}
+                                    disabled={!clearDBConfirmation.confirm_clear || clearDBConfirmation.confirmation_text !== 'DELETE ALL DATA' || loading}
+                                    className="px-4 py-2 bg-red-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                >
+                                    {loading ? 'Clearing...' : '🗑️ Clear Database'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
