@@ -1963,6 +1963,13 @@ const Invoices = () => {
   const [partialQuantities, setPartialQuantities] = useState({});
   const [itemGSTRates, setItemGSTRates] = useState({});
   const [loading, setLoading] = useState(true);
+  
+  // Search and Filter states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
+  const [projectFilter, setProjectFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
 
   useEffect(() => {
     fetchInvoices();
