@@ -4097,8 +4097,8 @@ async def update_company_profile(
 ):
     """Update company profile - Admin/Super Admin only"""
     try:
-        if current_user["role"] not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
-            raise HTTPException(status_code=403, detail="Only admin/super admin can update company profiles")
+        if current_user["role"] != UserRole.SUPER_ADMIN:
+            raise HTTPException(status_code=403, detail="Only super admin can update company profiles")
         
         profile = await db.company_profiles.find_one({"id": profile_id})
         if not profile:
