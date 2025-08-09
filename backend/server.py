@@ -4089,6 +4089,10 @@ async def get_company_profile(
         if not profile:
             raise HTTPException(status_code=404, detail="Company profile not found")
         
+        # Clean profile for JSON serialization
+        if '_id' in profile:
+            del profile['_id']
+        
         return profile
         
     except HTTPException:
