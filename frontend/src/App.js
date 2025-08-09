@@ -158,6 +158,31 @@ const Sidebar = ({ user }) => {
           ))}
         </div>
         
+        {/* Enhanced Features Section */}
+        {(user.role === 'admin' || user.role === 'super_admin') && (
+          <>
+            <hr className="my-6 border-gray-300" />
+            <h3 className="text-sm font-semibold text-gray-600 mb-4 px-2">ENHANCED FEATURES</h3>
+            <div className="space-y-2">
+              {enhancedItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center px-4 py-3 rounded-lg transition-colors ${
+                    isActive(item.path)
+                      ? 'text-white'
+                      : 'text-gray-700 hover:bg-gray-200'
+                  }`}
+                  style={isActive(item.path) ? { backgroundColor: '#127285' } : {}}
+                >
+                  <span className="mr-3">{item.icon}</span>
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </>
+        )}
+        
         {/* Admin Menu Items */}
         {user.role === 'super_admin' && (
           <>
