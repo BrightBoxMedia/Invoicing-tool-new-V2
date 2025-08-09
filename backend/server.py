@@ -3312,6 +3312,470 @@ async def get_bank_guarantees_summary(current_user: dict = Depends(get_current_u
         logger.error(f"Error generating bank guarantees summary: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to generate summary: {str(e)}")
 
+# PDF Text Extraction Engine for PO Processing
+@api_router.post("/pdf-processor/extract")
+async def extract_pdf_data(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Extract data from uploaded PDF/DOCX Purchase Order"""
+    try:
+        if not file.filename:
+            raise HTTPException(status_code=400, detail="No file provided")
+        
+        # Read file content
+        file_content = await file.read()
+        
+        if len(file_content) == 0:
+            raise HTTPException(status_code=400, detail="Empty file provided")
+        
+        # Initialize PDF parser
+        parser = POPDFParser()
+        
+        # Extract data
+        extracted_data = await parser.extract_from_file(file_content, file.filename)
+        
+        # Store extraction result in database for future reference
+        extraction_record = {
+            "id": str(uuid.uuid4()),
+            "original_filename": file.filename,
+            "extracted_data": extracted_data.dict(),
+            "processed_by": current_user["id"],
+            "processed_at": datetime.utcnow(),
+            "file_size": len(file_content)
+        }
+        
+        await db.pdf_extractions.insert_one(extraction_record)
+        
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "pdf_data_extracted", 
+            f"Extracted data from PO file: {file.filename} (Method: {extracted_data.extraction_method}, Confidence: {extracted_data.confidence_score:.2f})"
+        )
+        
+        return {
+            "extraction_id": extraction_record["id"],
+            "extracted_data": extracted_data,
+            "processing_info": {
+                "filename": file.filename,
+                "file_size": len(file_content),
+                "extraction_method": extracted_data.extraction_method,
+                "confidence_score": extracted_data.confidence_score
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error processing PDF file {file.filename}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to process file: {str(e)}")
+
+@api_router.get("/pdf-processor/extractions")
+async def get_pdf_extractions(
+    skip: int = 0,
+    limit: int = 50,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get list of PDF extractions"""
+    try:
+        extractions = await db.pdf_extractions.find().skip(skip).limit(limit).sort("processed_at", -1).to_list(limit)
+        
+        return {
+            "extractions": extractions,
+            "total": len(extractions)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching PDF extractions: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch extractions: {str(e)}")
+
+@api_router.get("/pdf-processor/extractions/{extraction_id}")
+async def get_pdf_extraction(
+    extraction_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get specific PDF extraction details"""
+    try:
+        extraction = await db.pdf_extractions.find_one({"id": extraction_id})
+        
+        if not extraction:
+            raise HTTPException(status_code=404, detail="Extraction not found")
+        
+        return extraction
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching PDF extraction {extraction_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch extraction: {str(e)}")
+
+@api_router.post("/pdf-processor/convert-to-project")
+async def convert_extraction_to_project(
+    extraction_id: str,
+    project_metadata: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Convert PDF extraction data to a new project"""
+    try:
+        # Get extraction data
+        extraction = await db.pdf_extractions.find_one({"id": extraction_id})
+        if not extraction:
+            raise HTTPException(status_code=404, detail="Extraction not found")
+        
+        extracted_data = extraction["extracted_data"]
+        
+        # Create BOQ items from line items
+        boq_items = []
+        for i, item in enumerate(extracted_data.get("line_items", [])):
+            boq_item = {
+                "serial_number": str(i + 1),
+                "description": item.get("description", "Imported Item"),
+                "unit": item.get("unit", "nos"),
+                "quantity": item.get("quantity", 1.0),
+                "rate": item.get("rate", 0.0),
+                "amount": item.get("amount", item.get("quantity", 1.0) * item.get("rate", 0.0)),
+                "gst_rate": 18.0,  # Default GST rate
+                "gst_amount": (item.get("amount", item.get("quantity", 1.0) * item.get("rate", 0.0))) * 0.18,
+                "total_with_gst": (item.get("amount", item.get("quantity", 1.0) * item.get("rate", 0.0))) * 1.18
+            }
+            boq_items.append(boq_item)
+        
+        # Calculate totals
+        total_project_value = sum(item["total_with_gst"] for item in boq_items)
+        
+        # Create project
+        project_data = {
+            "id": str(uuid.uuid4()),
+            "project_name": project_metadata.get("project_name", f"Project from PO {extracted_data.get('po_number', 'Unknown')}"),
+            "architect": project_metadata.get("architect", extracted_data.get("vendor_name", "Unknown Architect")),
+            "client_id": project_metadata.get("client_id", ""),
+            "client_name": project_metadata.get("client_name", extracted_data.get("client_name", "Unknown Client")),
+            "metadata": {
+                "imported_from_pdf": True,
+                "original_filename": extraction["original_filename"],
+                "po_number": extracted_data.get("po_number"),
+                "po_date": extracted_data.get("po_date"),
+                "extraction_method": extracted_data.get("extraction_method"),
+                "confidence_score": extracted_data.get("confidence_score"),
+                **project_metadata.get("additional_metadata", {})
+            },
+            "boq_items": boq_items,
+            "total_project_value": total_project_value,
+            "advance_received": 0.0,
+            "pending_payment": total_project_value,
+            "created_by": current_user["id"],
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        
+        # Create the project
+        await db.projects.insert_one(project_data)
+        
+        # Update extraction record to mark as converted
+        await db.pdf_extractions.update_one(
+            {"id": extraction_id},
+            {"$set": {
+                "converted_to_project": True,
+                "project_id": project_data["id"],
+                "conversion_date": datetime.utcnow()
+            }}
+        )
+        
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "pdf_converted_to_project", 
+            f"Converted PDF extraction to project: {project_data['project_name']} (₹{total_project_value:,.2f})"
+        )
+        
+        return {
+            "message": "Project created successfully from PDF extraction",
+            "project_id": project_data["id"],
+            "project_name": project_data["project_name"],
+            "total_value": total_project_value,
+            "items_count": len(boq_items)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error converting extraction to project: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to convert to project: {str(e)}")
+
+# Admin Configuration System
+class WorkflowConfig(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    workflow_name: str
+    workflow_type: str  # 'approval', 'billing', 'project', 'invoice'
+    steps: List[Dict[str, Any]]
+    roles_permissions: Dict[str, List[str]]
+    notifications_config: Dict[str, Any]
+    active: bool = True
+    created_by: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class SystemConfig(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    config_category: str  # 'ui', 'business', 'integration', 'notification'
+    config_key: str
+    config_value: Any
+    config_type: str  # 'string', 'number', 'boolean', 'object', 'array'
+    description: Optional[str] = None
+    is_sensitive: bool = False
+    requires_restart: bool = False
+    created_by: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+@api_router.post("/admin/workflows", response_model=dict)
+async def create_workflow_config(
+    workflow_data: WorkflowConfig,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a new workflow configuration"""
+    try:
+        if current_user["role"] != UserRole.SUPER_ADMIN:
+            raise HTTPException(status_code=403, detail="Only super admin can configure workflows")
+        
+        workflow_data.created_by = current_user["id"]
+        workflow_data.updated_at = datetime.utcnow()
+        
+        await db.workflow_configs.insert_one(workflow_data.dict())
+        
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "workflow_created", 
+            f"Created workflow configuration: {workflow_data.workflow_name} ({workflow_data.workflow_type})"
+        )
+        
+        return {"message": "Workflow configuration created successfully", "workflow_id": workflow_data.id}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating workflow config: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create workflow: {str(e)}")
+
+@api_router.get("/admin/workflows")
+async def get_workflow_configs(
+    workflow_type: Optional[str] = None,
+    active_only: bool = True,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get workflow configurations"""
+    try:
+        if current_user["role"] != UserRole.SUPER_ADMIN:
+            raise HTTPException(status_code=403, detail="Only super admin can view workflow configs")
+        
+        query = {}
+        if workflow_type:
+            query["workflow_type"] = workflow_type
+        if active_only:
+            query["active"] = True
+        
+        workflows = await db.workflow_configs.find(query).sort("created_at", -1).to_list(100)
+        return workflows
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching workflow configs: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch workflows: {str(e)}")
+
+@api_router.put("/admin/workflows/{workflow_id}")
+async def update_workflow_config(
+    workflow_id: str,
+    update_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update workflow configuration"""
+    try:
+        if current_user["role"] != UserRole.SUPER_ADMIN:
+            raise HTTPException(status_code=403, detail="Only super admin can update workflows")
+        
+        workflow = await db.workflow_configs.find_one({"id": workflow_id})
+        if not workflow:
+            raise HTTPException(status_code=404, detail="Workflow configuration not found")
+        
+        update_data["updated_at"] = datetime.utcnow()
+        
+        await db.workflow_configs.update_one(
+            {"id": workflow_id},
+            {"$set": update_data}
+        )
+        
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "workflow_updated", 
+            f"Updated workflow configuration: {workflow['workflow_name']}"
+        )
+        
+        return {"message": "Workflow configuration updated successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating workflow config: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to update workflow: {str(e)}")
+
+@api_router.post("/admin/system-config", response_model=dict)
+async def create_system_config(
+    config_data: SystemConfig,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create system configuration"""
+    try:
+        if current_user["role"] != UserRole.SUPER_ADMIN:
+            raise HTTPException(status_code=403, detail="Only super admin can configure system")
+        
+        config_data.created_by = current_user["id"]
+        config_data.updated_at = datetime.utcnow()
+        
+        await db.system_configs.insert_one(config_data.dict())
+        
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "system_config_created", 
+            f"Created system config: {config_data.config_category}.{config_data.config_key}"
+        )
+        
+        return {"message": "System configuration created successfully", "config_id": config_data.id}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating system config: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create system config: {str(e)}")
+
+@api_router.get("/admin/system-config")
+async def get_system_configs(
+    category: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get system configurations"""
+    try:
+        if current_user["role"] != UserRole.SUPER_ADMIN:
+            raise HTTPException(status_code=403, detail="Only super admin can view system configs")
+        
+        query = {}
+        if category:
+            query["config_category"] = category
+        
+        configs = await db.system_configs.find(query).sort("config_category", 1).to_list(1000)
+        
+        # Group by category for better organization
+        grouped_configs = {}
+        for config in configs:
+            cat = config["config_category"]
+            if cat not in grouped_configs:
+                grouped_configs[cat] = []
+            
+            # Remove sensitive values
+            if config.get("is_sensitive", False):
+                config["config_value"] = "***HIDDEN***"
+            
+            grouped_configs[cat].append(config)
+        
+        return grouped_configs
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching system configs: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch system configs: {str(e)}")
+
+@api_router.put("/admin/system-config/{config_id}")
+async def update_system_config(
+    config_id: str,
+    update_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update system configuration"""
+    try:
+        if current_user["role"] != UserRole.SUPER_ADMIN:
+            raise HTTPException(status_code=403, detail="Only super admin can update system configs")
+        
+        config = await db.system_configs.find_one({"id": config_id})
+        if not config:
+            raise HTTPException(status_code=404, detail="System configuration not found")
+        
+        update_data["updated_at"] = datetime.utcnow()
+        
+        await db.system_configs.update_one(
+            {"id": config_id},
+            {"$set": update_data}
+        )
+        
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "system_config_updated", 
+            f"Updated system config: {config['config_category']}.{config['config_key']}"
+        )
+        
+        restart_required = config.get("requires_restart", False) or update_data.get("requires_restart", False)
+        
+        return {
+            "message": "System configuration updated successfully",
+            "restart_required": restart_required
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating system config: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to update system config: {str(e)}")
+
+@api_router.get("/admin/system-health")
+async def get_system_health(current_user: dict = Depends(get_current_user)):
+    """Get system health and status information"""
+    try:
+        if current_user["role"] != UserRole.SUPER_ADMIN:
+            raise HTTPException(status_code=403, detail="Only super admin can view system health")
+        
+        # Database connectivity check
+        db_status = "healthy"
+        try:
+            await db.command("ping")
+        except:
+            db_status = "unhealthy"
+        
+        # Collection counts
+        collections_status = {}
+        collection_names = ["users", "projects", "invoices", "clients", "activity_logs", "master_items", "bank_guarantees", "pdf_extractions"]
+        
+        for collection_name in collection_names:
+            try:
+                count = await db[collection_name].count_documents({})
+                collections_status[collection_name] = {"count": count, "status": "healthy"}
+            except Exception as e:
+                collections_status[collection_name] = {"count": 0, "status": "error", "error": str(e)}
+        
+        # Recent activity
+        recent_logs = await db.activity_logs.find().sort("timestamp", -1).limit(10).to_list(10)
+        
+        # System info
+        health_info = {
+            "database": {
+                "status": db_status,
+                "collections": collections_status
+            },
+            "application": {
+                "version": "1.0.0",
+                "uptime": "Available",  # Could be calculated from startup time
+                "environment": os.environ.get("ENVIRONMENT", "development")
+            },
+            "recent_activity": recent_logs,
+            "timestamp": datetime.utcnow()
+        }
+        
+        return health_info
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting system health: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get system health: {str(e)}")
+
 # Include router
 app.include_router(api_router)
 
