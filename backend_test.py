@@ -787,41 +787,41 @@ class ActivusAPITester:
         success, result = self.make_request('GET', 'projects', expected_status=401)
         self.log_test("Unauthorized access rejection", not success, "- Correctly rejected request without token")
         
-        # Restore token
+        # Restore token for authenticated error tests
         self.token = old_token
         
-        # Test invalid project ID
+        # Test invalid project ID (with authentication)
         success, result = self.make_request('GET', 'projects/invalid-id', expected_status=404)
         self.log_test("Invalid project ID handling", not success, "- Correctly returned 404 for invalid ID")
         
-        # Test invalid file upload
+        # Test invalid file upload (with authentication)
         files = {'file': ('test.txt', b'not an excel file', 'text/plain')}
         success, result = self.make_request('POST', 'upload-boq', files=files, expected_status=400)
         self.log_test("Invalid file type rejection", not success, "- Correctly rejected non-Excel file")
         
-        # Test invalid PDF file upload
+        # Test invalid PDF file upload (with authentication)
         files = {'file': ('test.txt', b'not a pdf file', 'text/plain')}
         success, result = self.make_request('POST', 'pdf-processor/extract', files=files, expected_status=400)
         self.log_test("Invalid PDF file rejection", not success, "- Correctly rejected non-PDF file")
         
-        # Test empty PDF file
+        # Test empty PDF file (with authentication)
         files = {'file': ('empty.pdf', b'', 'application/pdf')}
         success, result = self.make_request('POST', 'pdf-processor/extract', files=files, expected_status=400)
         self.log_test("Empty PDF file rejection", not success, "- Correctly rejected empty file")
         
-        # Test invalid extraction ID
+        # Test invalid extraction ID (with authentication)
         success, result = self.make_request('GET', 'pdf-processor/extractions/invalid-id', expected_status=404)
         self.log_test("Invalid extraction ID handling", not success, "- Correctly returned 404 for invalid extraction ID")
         
-        # Test invalid workflow ID
+        # Test invalid workflow ID (with authentication)
         success, result = self.make_request('PUT', 'admin/workflows/invalid-id', {"active": False}, expected_status=404)
         self.log_test("Invalid workflow ID handling", not success, "- Correctly returned 404 for invalid workflow ID")
         
-        # Test invalid system config ID
+        # Test invalid system config ID (with authentication)
         success, result = self.make_request('PUT', 'admin/system-config/invalid-id', {"config_value": "test"}, expected_status=404)
         self.log_test("Invalid system config ID handling", not success, "- Correctly returned 404 for invalid config ID")
         
-        # Test invalid master item creation (duplicate)
+        # Test invalid master item creation (duplicate) (with authentication)
         master_item_data = {
             "description": "Duplicate Test Item",
             "unit": "nos",
@@ -833,7 +833,7 @@ class ActivusAPITester:
         success, result = self.make_request('POST', 'item-master', master_item_data, expected_status=400)
         self.log_test("Duplicate master item rejection", not success, "- Correctly rejected duplicate item")
         
-        # Test invalid client summary
+        # Test invalid client summary (with authentication)
         success, result = self.make_request('GET', 'reports/client-summary/invalid-client-id', expected_status=404)
         self.log_test("Invalid client summary handling", not success, "- Correctly returned 404 for invalid client ID")
 
