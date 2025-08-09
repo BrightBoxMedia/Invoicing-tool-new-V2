@@ -778,6 +778,144 @@ class ActivusAPITester:
             is_permission_error = "403" in str(result) or "super admin" in str(result).lower()
             self.log_test("Admin workflows permission check", is_permission_error, f"- Permission validation working")
 
+    def test_database_clear_functionality(self):
+        """Test the new database clear functionality - CRITICAL SECURITY FEATURE"""
+        print("\n🚨 Testing Database Clear Functionality (CRITICAL)...")
+        
+        if not self.user_data or self.user_data.get('role') != 'super_admin':
+            self.log_test("Database clear access check", False, "- Not super admin, skipping database clear tests")
+            return False
+        
+        # 1. SECURITY TESTING - Test unauthorized access (without token)
+        old_token = self.token
+        self.token = None
+        
+        clear_data = {
+            "confirm_clear": True,
+            "confirmation_text": "DELETE ALL DATA"
+        }
+        
+        success, result = self.make_request('POST', 'admin/clear-database', clear_data, expected_status=401)
+        self.log_test("Database clear - unauthorized access rejection", success, "- Correctly rejected unauthenticated request")
+        
+        # Restore token
+        self.token = old_token
+        
+        # 2. CONFIRMATION TESTING - Test without confirmation parameters
+        success, result = self.make_request('POST', 'admin/clear-database', {}, expected_status=400)
+        self.log_test("Database clear - no confirmation rejection", success, "- Correctly rejected request without confirmation")
+        
+        # 3. CONFIRMATION TESTING - Test with wrong confirmation text
+        wrong_confirmation = {
+            "confirm_clear": True,
+            "confirmation_text": "WRONG TEXT"
+        }
+        success, result = self.make_request('POST', 'admin/clear-database', wrong_confirmation, expected_status=400)
+        self.log_test("Database clear - wrong confirmation text rejection", success, "- Correctly rejected wrong confirmation text")
+        
+        # 4. CONFIRMATION TESTING - Test with checkbox unchecked
+        unchecked_confirmation = {
+            "confirm_clear": False,
+            "confirmation_text": "DELETE ALL DATA"
+        }
+        success, result = self.make_request('POST', 'admin/clear-database', unchecked_confirmation, expected_status=400)
+        self.log_test("Database clear - unchecked confirmation rejection", success, "- Correctly rejected unchecked confirmation")
+        
+        # 5. Get system health before clearing to see current data
+        success, health_before = self.make_request('GET', 'admin/system-health')
+        collections_before = {}
+        if success:
+            collections_before = health_before.get('database', {}).get('collections', {})
+            total_records_before = sum(col.get('count', 0) for col in collections_before.values())
+            self.log_test("Pre-clear system health check", True, 
+                        f"- Total records before clear: {total_records_before}")
+        
+        # 6. FUNCTIONALITY TESTING - Test with correct confirmation
+        correct_confirmation = {
+            "confirm_clear": True,
+            "confirmation_text": "DELETE ALL DATA"
+        }
+        
+        success, result = self.make_request('POST', 'admin/clear-database', correct_confirmation)
+        
+        if success:
+            # 7. RESPONSE VALIDATION - Check response structure
+            required_fields = ['message', 'timestamp', 'cleared_by', 'statistics', 'preserved']
+            has_all_fields = all(field in result for field in required_fields)
+            self.log_test("Database clear - response structure", has_all_fields, 
+                        f"- Response contains all required fields")
+            
+            # Check statistics
+            stats = result.get('statistics', {})
+            total_deleted = stats.get('total_records_deleted', 0)
+            collections_cleared = stats.get('collections_cleared', 0)
+            collections_details = stats.get('collections_details', [])
+            
+            self.log_test("Database clear - deletion statistics", total_deleted >= 0, 
+                        f"- Total deleted: {total_deleted}, Collections cleared: {collections_cleared}")
+            
+            # Check that specific collections were targeted
+            expected_collections = ['projects', 'invoices', 'clients', 'bank_guarantees', 
+                                  'pdf_extractions', 'master_items', 'workflow_configs', 
+                                  'system_configs', 'activity_logs']
+            
+            cleared_collection_names = [c.get('collection') for c in collections_details]
+            has_expected_collections = all(col in cleared_collection_names for col in expected_collections)
+            self.log_test("Database clear - targeted collections", has_expected_collections,
+                        f"- All expected collections targeted: {len(cleared_collection_names)}")
+            
+            # Check that users collection is preserved
+            preserved = result.get('preserved', {})
+            users_preserved = 'users' in str(preserved)
+            self.log_test("Database clear - users preservation", users_preserved,
+                        "- User accounts preserved as expected")
+            
+            # Check cleared_by information
+            cleared_by = result.get('cleared_by', {})
+            has_user_info = 'user_id' in cleared_by and 'email' in cleared_by
+            self.log_test("Database clear - audit trail", has_user_info,
+                        f"- Cleared by: {cleared_by.get('email', 'Unknown')}")
+            
+            # 8. VERIFICATION - Check system health after clearing
+            success_after, health_after = self.make_request('GET', 'admin/system-health')
+            if success_after:
+                collections_after = health_after.get('database', {}).get('collections', {})
+                
+                # Verify users collection still has data
+                users_count_after = collections_after.get('users', {}).get('count', 0)
+                self.log_test("Database clear - users preserved verification", users_count_after > 0,
+                            f"- Users collection still has {users_count_after} records")
+                
+                # Verify other collections are cleared (should be 0 or very low)
+                other_collections_cleared = True
+                for col_name in expected_collections:
+                    if col_name in collections_after:
+                        count = collections_after[col_name].get('count', 0)
+                        if count > 0:
+                            other_collections_cleared = False
+                            break
+                
+                self.log_test("Database clear - data collections cleared verification", other_collections_cleared,
+                            "- All data collections successfully cleared")
+            
+            # 9. ACTIVITY LOG VERIFICATION - Check that the action was logged
+            success_logs, logs_result = self.make_request('GET', 'activity-logs')
+            if success_logs and logs_result:
+                # Look for the database clear log entry
+                clear_log_found = False
+                for log_entry in logs_result[:5]:  # Check recent logs
+                    if log_entry.get('action') == 'database_cleared':
+                        clear_log_found = True
+                        break
+                
+                self.log_test("Database clear - activity logging", clear_log_found,
+                            "- Database clear action properly logged")
+            
+            return True
+        else:
+            self.log_test("Database clear - execution", False, f"- {result}")
+            return False
+
     def test_error_handling(self):
         """Test error handling and edge cases"""
         print("\n⚠️ Testing Error Handling...")
