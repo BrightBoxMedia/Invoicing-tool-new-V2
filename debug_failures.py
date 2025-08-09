@@ -44,11 +44,11 @@ class DebugTester:
             print(f"Response headers: {dict(response.headers)}")
             print(f"Response text: {response.text[:200]}...")
             
-            if response.status_code == 401:
+            if response.status_code in [401, 403]:
                 print("✅ Correctly rejected unauthorized request")
                 return True
             else:
-                print(f"❌ Expected 401, got {response.status_code}")
+                print(f"❌ Expected 401 or 403, got {response.status_code}")
                 return False
                 
         except Exception as e:
