@@ -1434,6 +1434,23 @@ class ActivusAPITester:
         # Test authentication and permissions for new endpoints
         self.test_authentication_and_permissions()
         
+        # ===== NEW ENHANCED FEATURES TESTING =====
+        print("\n" + "🌟" * 80)
+        print("🌟 TESTING NEW ENHANCED ENTERPRISE FEATURES")
+        print("🌟" * 80)
+        
+        # Test Enhanced Company Profile Management APIs
+        self.test_enhanced_company_profile_apis()
+        
+        # Test Enhanced Project Creation APIs
+        self.test_enhanced_project_creation_apis()
+        
+        # Test Enhanced Invoice Creation & RA Tracking APIs
+        self.test_enhanced_invoice_creation_and_ra_tracking_apis()
+        
+        # Test Enhanced Features Authentication
+        self.test_enhanced_features_authentication()
+        
         # Test error handling (updated with new endpoints)
         self.test_error_handling()
         
