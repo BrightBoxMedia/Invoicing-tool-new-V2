@@ -693,27 +693,45 @@ const Projects = () => {
       const invoicesResponse = await axios.get(`${API}/invoices`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const projectInvoices = invoicesResponse.data.filter(invoice => invoice.project_id === projectId);
+      const allProjectInvoices = invoicesResponse.data.filter(invoice => invoice.project_id === projectId);
+      
+      // Separate Tax invoices (RA invoices) from Proforma invoices
+      const taxInvoices = allProjectInvoices.filter(invoice => invoice.invoice_type === 'tax_invoice');
+      const proformaInvoices = allProjectInvoices.filter(invoice => invoice.invoice_type === 'proforma');
+      
+      // Sort tax invoices by RA number for proper RA1, RA2, RA3 display
+      const sortedTaxInvoices = taxInvoices.sort((a, b) => {
+        const aNum = parseInt(a.ra_number?.replace('RA', '') || '0');
+        const bNum = parseInt(b.ra_number?.replace('RA', '') || '0');
+        return aNum - bNum;
+      });
       
       // Fetch BOQ status for financial calculations
       const boqResponse = await axios.get(`${API}/projects/${projectId}/boq-status`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // Calculate summary data
-      const totalInvoiced = projectInvoices.reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
-      const totalGST = projectInvoices.reduce((sum, inv) => sum + (inv.total_gst_amount || 0), 0);
-      const totalBasic = totalInvoiced - totalGST;
+      // Calculate summary data only for tax invoices (RA invoices)
+      const totalRAInvoiced = taxInvoices.reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
+      const totalRAGST = taxInvoices.reduce((sum, inv) => sum + (inv.total_gst_amount || 0), 0);
+      const totalRABasic = totalRAInvoiced - totalRAGST;
+      
+      // Proforma totals (separate workflow)
+      const totalProforma = proformaInvoices.reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
       
       setProjectDetails(prev => ({
         ...prev,
         [projectId]: {
-          invoices: projectInvoices,
+          taxInvoices: sortedTaxInvoices,
+          proformaInvoices: proformaInvoices,
           boqStatus: boqResponse.data,
           summary: {
-            totalInvoiced,
-            totalGST,
-            totalBasic
+            totalRAInvoiced,  // Only RA (tax) invoices
+            totalRAGST,
+            totalRABasic,
+            totalProforma,    // Separate proforma total
+            raCount: taxInvoices.length,
+            proformaCount: proformaInvoices.length
           }
         }
       }));
