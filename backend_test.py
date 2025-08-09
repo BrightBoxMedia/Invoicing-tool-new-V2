@@ -786,7 +786,10 @@ class ActivusAPITester:
         old_token = self.token
         self.token = None
         
-        success, result = self.make_request('GET', 'projects', expected_status=401)
+        # Test unauthorized access - FastAPI HTTPBearer can return either 401 or 403
+        success_401, result_401 = self.make_request('GET', 'projects', expected_status=401)
+        success_403, result_403 = self.make_request('GET', 'projects', expected_status=403)
+        success = success_401 or success_403
         self.log_test("Unauthorized access rejection", success, "- Correctly rejected request without token")
         
         # Restore token for authenticated error tests
