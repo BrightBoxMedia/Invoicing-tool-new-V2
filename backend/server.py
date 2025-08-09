@@ -3762,6 +3762,11 @@ async def get_system_health(current_user: dict = Depends(get_current_user)):
         # Recent activity
         recent_logs = await db.activity_logs.find().sort("timestamp", -1).limit(10).to_list(10)
         
+        # Convert ObjectId to string for JSON serialization
+        for log in recent_logs:
+            if "_id" in log:
+                log["_id"] = str(log["_id"])
+        
         # System info
         health_info = {
             "database": {
