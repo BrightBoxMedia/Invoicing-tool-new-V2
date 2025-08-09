@@ -3406,6 +3406,10 @@ async def get_pdf_extraction(
         if not extraction:
             raise HTTPException(status_code=404, detail="Extraction not found")
         
+        # Convert ObjectId to string for JSON serialization
+        if "_id" in extraction:
+            extraction["_id"] = str(extraction["_id"])
+        
         return extraction
         
     except HTTPException:
