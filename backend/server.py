@@ -1828,6 +1828,80 @@ async def get_clients(current_user: dict = Depends(get_current_user)):
     clients = await db.clients.find().to_list(1000)
     return [ClientInfo(**client) for client in clients]
 
+@api_router.post("/projects/enhanced", response_model=dict)
+async def create_enhanced_project(
+    project_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create enhanced project with metadata validation and company profile integration"""
+    try:
+        # Validate metadata first if provided
+        metadata = project_data.get("project_metadata", [])
+        boq_items = project_data.get("boq_items", [])
+        
+        validation_result = {"valid": True, "errors": []}
+        if metadata:
+            validator = ProjectMetadataValidator()
+            validation_result = await validator.validate_project_metadata(metadata, boq_items)
+        
+        # Create project with enhanced fields
+        project_id = str(uuid.uuid4())
+        enhanced_project = {
+            "id": project_id,
+            "project_name": project_data.get("project_name", ""),
+            "architect": project_data.get("architect", ""),
+            "client_id": project_data.get("client_id"),
+            "client_name": project_data.get("client_name", ""),
+            "location": project_data.get("location", ""),
+            "metadata": project_data.get("metadata", {}),
+            
+            # Enhanced fields
+            "company_profile_id": project_data.get("company_profile_id"),
+            "selected_location_id": project_data.get("selected_location_id"),
+            "selected_bank_id": project_data.get("selected_bank_id"),
+            "project_metadata": metadata,
+            "metadata_validated": validation_result["valid"],
+            "validation_errors": validation_result.get("errors", []),
+            
+            "boq_items": boq_items,
+            "total_project_value": float(project_data.get("total_project_value", 0)),
+            "advance_received": float(project_data.get("advance_received", 0)),
+            "pending_payment": float(project_data.get("total_project_value", 0)) - float(project_data.get("advance_received", 0)),
+            "created_by": current_user["id"],
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        
+        # If metadata validation failed and it's mandatory, block project creation
+        if metadata and not validation_result["valid"]:
+            return {
+                "success": False,
+                "message": "Project metadata validation failed",
+                "validation_result": validation_result,
+                "can_proceed": False
+            }
+        
+        # Insert project
+        await db.projects.insert_one(enhanced_project)
+        
+        # Log activity
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "enhanced_project_created",
+            f"Created enhanced project: {enhanced_project['project_name']} with metadata validation ({'passed' if validation_result['valid'] else 'failed'})"
+        )
+        
+        return {
+            "success": True,
+            "message": "Enhanced project created successfully",
+            "project_id": project_id,
+            "validation_result": validation_result
+        }
+        
+    except Exception as e:
+        logger.error(f"Error creating enhanced project: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create enhanced project: {str(e)}")
+
 @api_router.post("/projects", response_model=dict)
 async def create_project(project_data: Project, current_user: dict = Depends(get_current_user)):
     try:
