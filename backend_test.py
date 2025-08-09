@@ -649,7 +649,8 @@ class ActivusAPITester:
                 "sms_notifications": False,
                 "in_app_notifications": True
             },
-            "active": True
+            "active": True,
+            "created_by": self.user_data['id'] if self.user_data else "test-user-id"
         }
         
         success, result = self.make_request('POST', 'admin/workflows', workflow_data)
