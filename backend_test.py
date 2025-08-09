@@ -88,7 +88,7 @@ class ActivusAPITester:
         success, result = self.make_request('POST', 'auth/login', 
                                           {'email': 'invalid@test.com', 'password': 'wrong'}, 
                                           expected_status=401)
-        self.log_test("Invalid login rejection", not success, "- Correctly rejected invalid credentials")
+        self.log_test("Invalid login rejection", success, "- Correctly rejected invalid credentials")
         
         # Test valid super admin login
         success, result = self.make_request('POST', 'auth/login', 
