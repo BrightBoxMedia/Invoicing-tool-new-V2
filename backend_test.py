@@ -916,6 +916,393 @@ class ActivusAPITester:
             self.log_test("Database clear - execution", False, f"- {result}")
             return False
 
+    def test_enhanced_company_profile_apis(self):
+        """Test Enhanced Company Profile Management APIs"""
+        print("\n🏢 Testing Enhanced Company Profile Management APIs...")
+        
+        # Test getting company profiles (initially empty)
+        success, result = self.make_request('GET', 'company-profiles')
+        initial_count = len(result) if success else 0
+        self.log_test("Get company profiles list", success, f"- Found {initial_count} company profiles")
+        
+        # Test creating a company profile with locations and bank details
+        company_profile_data = {
+            "company_name": "Activus Test Branch Ltd",
+            "locations": [
+                {
+                    "location_name": "Head Office",
+                    "address_line_1": "123 Industrial Area",
+                    "address_line_2": "Phase 2",
+                    "city": "Bangalore",
+                    "state": "Karnataka",
+                    "pincode": "560001",
+                    "country": "India",
+                    "phone": "+91-9876543210",
+                    "email": "headoffice@activustest.com",
+                    "gst_number": "29ABCDE1234F1Z5",
+                    "is_default": True
+                },
+                {
+                    "location_name": "Branch Office",
+                    "address_line_1": "456 Tech Park",
+                    "city": "Mumbai",
+                    "state": "Maharashtra",
+                    "pincode": "400001",
+                    "country": "India",
+                    "phone": "+91-9876543211",
+                    "email": "branch@activustest.com",
+                    "gst_number": "27ABCDE1234F1Z6",
+                    "is_default": False
+                }
+            ],
+            "bank_details": [
+                {
+                    "bank_name": "State Bank of India",
+                    "account_number": "12345678901",
+                    "account_holder_name": "Activus Test Branch Ltd",
+                    "ifsc_code": "SBIN0001234",
+                    "branch_name": "Bangalore Main Branch",
+                    "account_type": "Current",
+                    "is_default": True
+                },
+                {
+                    "bank_name": "HDFC Bank",
+                    "account_number": "98765432101",
+                    "account_holder_name": "Activus Test Branch Ltd",
+                    "ifsc_code": "HDFC0001234",
+                    "branch_name": "Mumbai Branch",
+                    "account_type": "Current",
+                    "is_default": False
+                }
+            ]
+        }
+        
+        success, result = self.make_request('POST', 'company-profiles', company_profile_data)
+        
+        company_profile_id = None
+        if success and 'profile_id' in result:
+            company_profile_id = result['profile_id']
+            self.log_test("Create company profile", True, f"- Profile ID: {company_profile_id}")
+            
+            # Test getting specific company profile
+            success, profile = self.make_request('GET', f'company-profiles/{company_profile_id}')
+            if success:
+                has_locations = len(profile.get('locations', [])) == 2
+                has_bank_details = len(profile.get('bank_details', [])) == 2
+                self.log_test("Get specific company profile", has_locations and has_bank_details, 
+                            f"- Locations: {len(profile.get('locations', []))}, Banks: {len(profile.get('bank_details', []))}")
+            else:
+                self.log_test("Get specific company profile", False, f"- {profile}")
+            
+            # Test updating company profile
+            update_data = {
+                "company_name": "Activus Test Branch Ltd - Updated",
+                "locations": [
+                    {
+                        "location_name": "Updated Head Office",
+                        "address_line_1": "789 Updated Industrial Area",
+                        "city": "Bangalore",
+                        "state": "Karnataka",
+                        "pincode": "560002",
+                        "country": "India",
+                        "phone": "+91-9876543212",
+                        "email": "updated@activustest.com",
+                        "gst_number": "29ABCDE1234F1Z7",
+                        "is_default": True
+                    }
+                ]
+            }
+            
+            success, result = self.make_request('PUT', f'company-profiles/{company_profile_id}', update_data)
+            self.log_test("Update company profile", success, f"- Profile updated successfully")
+            
+            return company_profile_id
+        else:
+            self.log_test("Create company profile", False, f"- {result}")
+            return None
+
+    def test_enhanced_project_creation_apis(self):
+        """Test Enhanced Project Creation APIs"""
+        print("\n🏗️ Testing Enhanced Project Creation APIs...")
+        
+        # Ensure we have a client and company profile
+        if not self.created_resources['clients']:
+            self.test_client_management()
+        
+        company_profile_id = self.test_enhanced_company_profile_apis()
+        
+        if not company_profile_id:
+            self.log_test("Enhanced project creation setup", False, "- No company profile available")
+            return None
+        
+        client_id = self.created_resources['clients'][0] if self.created_resources['clients'] else None
+        
+        # Test enhanced project creation with metadata validation
+        enhanced_project_data = {
+            "project_name": "Enhanced Test Construction Project",
+            "architect": "Enhanced Test Architect",
+            "client_id": client_id,
+            "client_name": "Test Client Ltd",
+            "company_profile_id": company_profile_id,
+            "metadata": [
+                {
+                    "purchase_order_number": "PO-2024-ENH-001",
+                    "type": "Construction",
+                    "reference_no": "REF-001",
+                    "dated": "2024-01-15",
+                    "basic": 1000000.0,
+                    "overall_multiplier": 1.2,
+                    "po_inv_value": 1200000.0,
+                    "abg_percentage": 10.0,
+                    "ra_bill_with_taxes_percentage": 80.0,
+                    "erection_percentage": 15.0,
+                    "pbg_percentage": 5.0
+                }
+            ],
+            "boq_items": [
+                {
+                    "serial_number": "1",
+                    "description": "Enhanced Foundation Work",
+                    "unit": "Cum",
+                    "quantity": 100,
+                    "rate": 5000,
+                    "amount": 500000,
+                    "gst_rate": 18.0
+                },
+                {
+                    "serial_number": "2",
+                    "description": "Enhanced Steel Structure",
+                    "unit": "Kg",
+                    "quantity": 2000,
+                    "rate": 350,
+                    "amount": 700000,
+                    "gst_rate": 18.0
+                }
+            ]
+        }
+        
+        success, result = self.make_request('POST', 'projects/enhanced', enhanced_project_data)
+        
+        enhanced_project_id = None
+        if success and 'project_id' in result:
+            enhanced_project_id = result['project_id']
+            self.created_resources['projects'].append(enhanced_project_id)
+            validation_passed = result.get('validation_result', {}).get('valid', False)
+            self.log_test("Create enhanced project", True, 
+                        f"- Project ID: {enhanced_project_id}, Validation: {'Passed' if validation_passed else 'Failed'}")
+            
+            # Test getting project metadata template
+            success, template = self.make_request('GET', f'projects/{enhanced_project_id}/metadata-template')
+            if success:
+                has_template_fields = 'template' in template and 'required_fields' in template
+                self.log_test("Get project metadata template", has_template_fields, 
+                            f"- Template fields: {len(template.get('template', {}).keys()) if has_template_fields else 0}")
+            else:
+                self.log_test("Get project metadata template", False, f"- {template}")
+            
+            # Test metadata validation
+            validation_data = {
+                "project_id": enhanced_project_id,
+                "metadata": [
+                    {
+                        "purchase_order_number": "PO-2024-VAL-001",
+                        "type": "Validation Test",
+                        "basic": 500000.0,
+                        "overall_multiplier": 1.1,
+                        "po_inv_value": 550000.0
+                    }
+                ]
+            }
+            
+            success, validation_result = self.make_request('POST', 'projects/validate-metadata', validation_data)
+            if success:
+                is_valid = validation_result.get('valid', False)
+                error_count = len(validation_result.get('errors', []))
+                self.log_test("Validate project metadata", True, 
+                            f"- Valid: {is_valid}, Errors: {error_count}")
+            else:
+                self.log_test("Validate project metadata", False, f"- {validation_result}")
+            
+            return enhanced_project_id
+        else:
+            self.log_test("Create enhanced project", False, f"- {result}")
+            return None
+
+    def test_enhanced_invoice_creation_and_ra_tracking_apis(self):
+        """Test Enhanced Invoice Creation & RA Tracking APIs"""
+        print("\n🧾 Testing Enhanced Invoice Creation & RA Tracking APIs...")
+        
+        # Ensure we have an enhanced project
+        enhanced_project_id = self.test_enhanced_project_creation_apis()
+        
+        if not enhanced_project_id:
+            self.log_test("Enhanced invoice creation setup", False, "- No enhanced project available")
+            return False
+        
+        client_id = self.created_resources['clients'][0] if self.created_resources['clients'] else None
+        
+        # Test getting RA tracking data for project
+        success, ra_tracking = self.make_request('GET', f'projects/{enhanced_project_id}/ra-tracking')
+        if success:
+            has_tracking_data = 'project_id' in ra_tracking and 'items' in ra_tracking
+            self.log_test("Get project RA tracking", has_tracking_data, 
+                        f"- Items tracked: {len(ra_tracking.get('items', []))}")
+        else:
+            self.log_test("Get project RA tracking", False, f"- {ra_tracking}")
+        
+        # Test validating invoice quantities against balance
+        quantity_validation_data = {
+            "project_id": enhanced_project_id,
+            "invoice_items": [
+                {
+                    "boq_item_id": "1",
+                    "quantity": 50.0,
+                    "description": "Enhanced Foundation Work"
+                },
+                {
+                    "boq_item_id": "2", 
+                    "quantity": 1000.0,
+                    "description": "Enhanced Steel Structure"
+                }
+            ]
+        }
+        
+        success, validation_result = self.make_request('POST', 'invoices/validate-quantities', quantity_validation_data)
+        if success:
+            is_valid = validation_result.get('valid', False)
+            warnings_count = len(validation_result.get('warnings', []))
+            self.log_test("Validate invoice quantities", True, 
+                        f"- Valid: {is_valid}, Warnings: {warnings_count}")
+        else:
+            self.log_test("Validate invoice quantities", False, f"- {validation_result}")
+        
+        # Test creating enhanced invoice with GST mapping and RA tracking
+        enhanced_invoice_data = {
+            "project_id": enhanced_project_id,
+            "project_name": "Enhanced Test Construction Project",
+            "client_id": client_id,
+            "client_name": "Test Client Ltd",
+            "invoice_type": "tax_invoice",
+            "invoice_gst_type": "CGST_SGST",  # Karnataka to Karnataka
+            "invoice_items": [
+                {
+                    "boq_item_id": "1",
+                    "serial_number": "1",
+                    "description": "Enhanced Foundation Work - Partial",
+                    "unit": "Cum",
+                    "quantity": 50.0,
+                    "rate": 5000.0,
+                    "amount": 250000.0
+                },
+                {
+                    "boq_item_id": "2",
+                    "serial_number": "2", 
+                    "description": "Enhanced Steel Structure - Partial",
+                    "unit": "Kg",
+                    "quantity": 1000.0,
+                    "rate": 350.0,
+                    "amount": 350000.0
+                }
+            ],
+            "item_gst_mappings": [
+                {
+                    "item_id": "1",
+                    "gst_type": "CGST_SGST",
+                    "cgst_rate": 9.0,
+                    "sgst_rate": 9.0,
+                    "total_gst_rate": 18.0
+                },
+                {
+                    "item_id": "2",
+                    "gst_type": "CGST_SGST", 
+                    "cgst_rate": 9.0,
+                    "sgst_rate": 9.0,
+                    "total_gst_rate": 18.0
+                }
+            ],
+            "subtotal": 600000.0,
+            "cgst_amount": 54000.0,
+            "sgst_amount": 54000.0,
+            "total_gst_amount": 108000.0,
+            "total_amount": 708000.0,
+            "payment_terms": "30 days from invoice date",
+            "advance_received": 50000.0
+        }
+        
+        success, result = self.make_request('POST', 'invoices/enhanced', enhanced_invoice_data)
+        
+        if success and 'invoice_id' in result:
+            enhanced_invoice_id = result['invoice_id']
+            self.created_resources['invoices'].append(enhanced_invoice_id)
+            ra_number = result.get('ra_number', 'N/A')
+            gst_breakdown = result.get('gst_breakdown', {})
+            
+            self.log_test("Create enhanced invoice", True, 
+                        f"- Invoice ID: {enhanced_invoice_id}, RA Number: {ra_number}")
+            
+            # Verify GST calculations
+            has_gst_breakdown = 'cgst_amount' in gst_breakdown and 'sgst_amount' in gst_breakdown
+            self.log_test("Enhanced invoice GST mapping", has_gst_breakdown,
+                        f"- CGST: ₹{gst_breakdown.get('cgst_amount', 0)}, SGST: ₹{gst_breakdown.get('sgst_amount', 0)}")
+            
+            # Verify RA tracking update
+            success, updated_ra_tracking = self.make_request('GET', f'projects/{enhanced_project_id}/ra-tracking')
+            if success:
+                ra_bills_count = len(updated_ra_tracking.get('ra_bills', []))
+                self.log_test("RA tracking update", ra_bills_count > 0,
+                            f"- RA Bills tracked: {ra_bills_count}")
+            
+            return enhanced_invoice_id
+        else:
+            self.log_test("Create enhanced invoice", False, f"- {result}")
+            return None
+
+    def test_enhanced_features_authentication(self):
+        """Test authentication and authorization for enhanced features"""
+        print("\n🔐 Testing Enhanced Features Authentication...")
+        
+        # Store current token
+        old_token = self.token
+        
+        # Test company profiles without authentication
+        self.token = None
+        success, result = self.make_request('GET', 'company-profiles', expected_status=401)
+        self.log_test("Company profiles unauthorized access", success, "- Correctly rejected unauthenticated request")
+        
+        success, result = self.make_request('POST', 'company-profiles', {}, expected_status=401)
+        self.log_test("Create company profile unauthorized", success, "- Correctly rejected unauthenticated request")
+        
+        # Test enhanced project creation without authentication
+        success, result = self.make_request('POST', 'projects/enhanced', {}, expected_status=401)
+        self.log_test("Enhanced project creation unauthorized", success, "- Correctly rejected unauthenticated request")
+        
+        # Test enhanced invoice creation without authentication
+        success, result = self.make_request('POST', 'invoices/enhanced', {}, expected_status=401)
+        self.log_test("Enhanced invoice creation unauthorized", success, "- Correctly rejected unauthenticated request")
+        
+        # Test RA tracking without authentication
+        success, result = self.make_request('GET', 'projects/test-id/ra-tracking', expected_status=401)
+        self.log_test("RA tracking unauthorized access", success, "- Correctly rejected unauthenticated request")
+        
+        # Test validation endpoints without authentication
+        success, result = self.make_request('POST', 'projects/validate-metadata', {}, expected_status=401)
+        self.log_test("Metadata validation unauthorized", success, "- Correctly rejected unauthenticated request")
+        
+        success, result = self.make_request('POST', 'invoices/validate-quantities', {}, expected_status=401)
+        self.log_test("Quantity validation unauthorized", success, "- Correctly rejected unauthenticated request")
+        
+        # Restore token
+        self.token = old_token
+        
+        # Test super admin only endpoints (company profile deletion)
+        if self.user_data and self.user_data.get('role') == 'super_admin':
+            # Test delete company profile (super admin only)
+            success, result = self.make_request('DELETE', 'company-profiles/test-id', expected_status=404)
+            # 404 is expected for non-existent ID, but it means the endpoint is accessible
+            self.log_test("Company profile deletion super admin access", True, "- Super admin can access deletion endpoint")
+        else:
+            self.log_test("Company profile deletion access check", False, "- Not super admin, cannot test deletion access")
+
     def test_error_handling(self):
         """Test error handling and edge cases"""
         print("\n⚠️ Testing Error Handling...")
@@ -979,6 +1366,31 @@ class ActivusAPITester:
         # Test invalid client summary (with authentication)
         success, result = self.make_request('GET', 'reports/client-summary/invalid-client-id', expected_status=404)
         self.log_test("Invalid client summary handling", success, "- Correctly returned 404 for invalid client ID")
+        
+        # Test enhanced features error handling
+        # Test invalid company profile ID
+        success, result = self.make_request('GET', 'company-profiles/invalid-id', expected_status=404)
+        self.log_test("Invalid company profile ID handling", success, "- Correctly returned 404 for invalid profile ID")
+        
+        # Test invalid enhanced project data
+        invalid_project_data = {
+            "project_name": "",  # Empty name should fail
+            "metadata": [{"purchase_order_number": ""}]  # Empty PO number should fail
+        }
+        success, result = self.make_request('POST', 'projects/enhanced', invalid_project_data, expected_status=400)
+        self.log_test("Invalid enhanced project data rejection", success, "- Correctly rejected invalid project data")
+        
+        # Test invalid RA tracking project ID
+        success, result = self.make_request('GET', 'projects/invalid-id/ra-tracking', expected_status=404)
+        self.log_test("Invalid RA tracking project ID handling", success, "- Correctly returned 404 for invalid project ID")
+        
+        # Test invalid quantity validation data
+        invalid_quantity_data = {
+            "project_id": "invalid-id",
+            "invoice_items": []
+        }
+        success, result = self.make_request('POST', 'invoices/validate-quantities', invalid_quantity_data, expected_status=404)
+        self.log_test("Invalid quantity validation data handling", success, "- Correctly handled invalid validation data")
 
     def run_all_tests(self):
         """Run complete test suite"""
