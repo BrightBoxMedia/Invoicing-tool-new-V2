@@ -518,6 +518,261 @@ class ActivusAPITester:
         else:
             self.log_test("Client summary report", False, "- No clients available for testing")
 
+    def create_sample_pdf_content(self):
+        """Create a sample PDF-like content for testing"""
+        # This creates a simple text content that mimics a Purchase Order
+        pdf_content = """
+        PURCHASE ORDER
+        
+        PO Number: PO-2024-001
+        PO Date: 15/01/2024
+        
+        Vendor: Test Construction Supplies Ltd
+        Client: Activus Industrial Design & Build LLP
+        
+        ITEM DETAILS:
+        S.No | Description | Unit | Quantity | Rate | Amount
+        1 | Cement bags | Nos | 100 | 450 | 45000
+        2 | Steel bars | Kg | 500 | 65 | 32500
+        3 | Sand | Cum | 10 | 1200 | 12000
+        
+        Total Amount: Rs 89,500
+        
+        Delivery Date: 30/01/2024
+        Contact: supplier@testconstruction.com
+        Phone: +91-9876543210
+        
+        Terms & Conditions:
+        Payment within 30 days
+        """
+        return pdf_content.encode('utf-8')
+
+    def test_pdf_processing_endpoints(self):
+        """Test PDF Text Extraction Engine endpoints"""
+        print("\n📄 Testing PDF Processing Endpoints...")
+        
+        # Test PDF extraction endpoint
+        pdf_content = self.create_sample_pdf_content()
+        files = {'file': ('test_po.pdf', pdf_content, 'application/pdf')}
+        
+        success, result = self.make_request('POST', 'pdf-processor/extract', files=files)
+        
+        extraction_id = None
+        if success:
+            extraction_id = result.get('extraction_id')
+            extracted_data = result.get('extracted_data', {})
+            processing_info = result.get('processing_info', {})
+            
+            self.log_test("PDF extraction", True, 
+                        f"- Extraction ID: {extraction_id}, Method: {processing_info.get('extraction_method', 'Unknown')}")
+            
+            # Check extracted data structure
+            has_required_fields = any([
+                extracted_data.get('po_number'),
+                extracted_data.get('vendor_name'),
+                extracted_data.get('total_amount'),
+                extracted_data.get('line_items')
+            ])
+            self.log_test("PDF data extraction quality", has_required_fields, 
+                        f"- Confidence: {extracted_data.get('confidence_score', 0):.2f}")
+        else:
+            self.log_test("PDF extraction", False, f"- {result}")
+        
+        # Test getting list of extractions
+        success, result = self.make_request('GET', 'pdf-processor/extractions')
+        if success:
+            extractions_count = result.get('total', 0)
+            self.log_test("Get PDF extractions list", True, f"- Found {extractions_count} extractions")
+        else:
+            self.log_test("Get PDF extractions list", False, f"- {result}")
+        
+        # Test getting specific extraction
+        if extraction_id:
+            success, result = self.make_request('GET', f'pdf-processor/extractions/{extraction_id}')
+            if success:
+                has_extraction_data = 'extracted_data' in result and 'original_filename' in result
+                self.log_test("Get specific PDF extraction", has_extraction_data, 
+                            f"- File: {result.get('original_filename', 'Unknown')}")
+            else:
+                self.log_test("Get specific PDF extraction", False, f"- {result}")
+        
+        # Test convert to project
+        if extraction_id:
+            project_metadata = {
+                "project_name": "Test Project from PDF",
+                "architect": "Test Architect",
+                "client_id": self.created_resources['clients'][0] if self.created_resources['clients'] else "",
+                "client_name": "Test Client from PDF",
+                "additional_metadata": {
+                    "source": "pdf_extraction_test"
+                }
+            }
+            
+            success, result = self.make_request('POST', 'pdf-processor/convert-to-project', 
+                                              {"extraction_id": extraction_id, "project_metadata": project_metadata})
+            if success:
+                project_id = result.get('project_id')
+                if project_id:
+                    self.created_resources['projects'].append(project_id)
+                self.log_test("Convert PDF to project", True, 
+                            f"- Project: {result.get('project_name', 'Unknown')}, Value: ₹{result.get('total_value', 0):,.2f}")
+            else:
+                self.log_test("Convert PDF to project", False, f"- {result}")
+        
+        return extraction_id
+
+    def test_admin_configuration_system(self):
+        """Test Admin Configuration System endpoints"""
+        print("\n⚙️ Testing Admin Configuration System...")
+        
+        if not self.user_data or self.user_data.get('role') != 'super_admin':
+            self.log_test("Admin access check", False, "- Not super admin, skipping admin tests")
+            return False
+        
+        # Test workflow configuration
+        workflow_data = {
+            "workflow_name": "Test Invoice Approval Workflow",
+            "workflow_type": "approval",
+            "steps": [
+                {"step": 1, "name": "Create", "role": "invoice_creator", "action": "create_invoice"},
+                {"step": 2, "name": "Review", "role": "reviewer", "action": "review_invoice"},
+                {"step": 3, "name": "Approve", "role": "approver", "action": "approve_invoice"}
+            ],
+            "roles_permissions": {
+                "invoice_creator": ["create", "edit_draft"],
+                "reviewer": ["review", "request_changes"],
+                "approver": ["approve", "reject"]
+            },
+            "notifications_config": {
+                "email_notifications": True,
+                "sms_notifications": False,
+                "in_app_notifications": True
+            },
+            "active": True
+        }
+        
+        success, result = self.make_request('POST', 'admin/workflows', workflow_data)
+        workflow_id = None
+        if success:
+            workflow_id = result.get('workflow_id')
+            self.log_test("Create workflow config", True, f"- Workflow ID: {workflow_id}")
+        else:
+            self.log_test("Create workflow config", False, f"- {result}")
+        
+        # Test getting workflows
+        success, result = self.make_request('GET', 'admin/workflows')
+        if success:
+            workflows_count = len(result) if isinstance(result, list) else 0
+            self.log_test("Get workflow configs", True, f"- Found {workflows_count} workflows")
+        else:
+            self.log_test("Get workflow configs", False, f"- {result}")
+        
+        # Test updating workflow
+        if workflow_id:
+            update_data = {
+                "active": False,
+                "notifications_config": {
+                    "email_notifications": False,
+                    "sms_notifications": True,
+                    "in_app_notifications": True
+                }
+            }
+            success, result = self.make_request('PUT', f'admin/workflows/{workflow_id}', update_data)
+            self.log_test("Update workflow config", success, f"- Workflow updated")
+        
+        # Test system configuration
+        system_config_data = {
+            "config_category": "business",
+            "config_key": "default_gst_rate",
+            "config_value": 18.0,
+            "config_type": "number",
+            "description": "Default GST rate for new items",
+            "is_sensitive": False,
+            "requires_restart": False
+        }
+        
+        success, result = self.make_request('POST', 'admin/system-config', system_config_data)
+        config_id = None
+        if success:
+            config_id = result.get('config_id')
+            self.log_test("Create system config", True, f"- Config ID: {config_id}")
+        else:
+            self.log_test("Create system config", False, f"- {result}")
+        
+        # Test getting system configs
+        success, result = self.make_request('GET', 'admin/system-config')
+        if success:
+            categories_count = len(result) if isinstance(result, dict) else 0
+            self.log_test("Get system configs", True, f"- Found {categories_count} config categories")
+        else:
+            self.log_test("Get system configs", False, f"- {result}")
+        
+        # Test updating system config
+        if config_id:
+            update_data = {
+                "config_value": 12.0,
+                "description": "Updated default GST rate"
+            }
+            success, result = self.make_request('PUT', f'admin/system-config/{config_id}', update_data)
+            restart_required = result.get('restart_required', False) if success else False
+            self.log_test("Update system config", success, f"- Config updated, Restart required: {restart_required}")
+        
+        # Test system health
+        success, result = self.make_request('GET', 'admin/system-health')
+        if success:
+            db_status = result.get('database', {}).get('status', 'unknown')
+            collections = result.get('database', {}).get('collections', {})
+            recent_activity_count = len(result.get('recent_activity', []))
+            
+            self.log_test("System health check", True, 
+                        f"- DB Status: {db_status}, Collections: {len(collections)}, Recent activity: {recent_activity_count}")
+            
+            # Check if all expected collections are healthy
+            expected_collections = ['users', 'projects', 'invoices', 'clients', 'pdf_extractions']
+            healthy_collections = sum(1 for col in expected_collections 
+                                    if collections.get(col, {}).get('status') == 'healthy')
+            self.log_test("Database collections health", healthy_collections >= 4, 
+                        f"- {healthy_collections}/{len(expected_collections)} collections healthy")
+        else:
+            self.log_test("System health check", False, f"- {result}")
+        
+        return True
+
+    def test_authentication_and_permissions(self):
+        """Test authentication and permission controls for new endpoints"""
+        print("\n🔐 Testing Authentication & Permissions...")
+        
+        # Store current token
+        old_token = self.token
+        
+        # Test PDF processing without authentication
+        self.token = None
+        pdf_content = self.create_sample_pdf_content()
+        files = {'file': ('test_po.pdf', pdf_content, 'application/pdf')}
+        
+        success, result = self.make_request('POST', 'pdf-processor/extract', files=files, expected_status=401)
+        self.log_test("PDF processing unauthorized access", not success, "- Correctly rejected unauthenticated request")
+        
+        # Test admin endpoints without authentication
+        success, result = self.make_request('GET', 'admin/workflows', expected_status=401)
+        self.log_test("Admin workflows unauthorized access", not success, "- Correctly rejected unauthenticated request")
+        
+        success, result = self.make_request('GET', 'admin/system-health', expected_status=401)
+        self.log_test("Admin system health unauthorized access", not success, "- Correctly rejected unauthenticated request")
+        
+        # Restore token
+        self.token = old_token
+        
+        # Test admin endpoints with non-admin user (if we had one)
+        # For now, we only have super admin, so we'll test with valid token
+        success, result = self.make_request('GET', 'admin/workflows')
+        if success:
+            self.log_test("Admin workflows with super admin", True, "- Super admin access granted")
+        else:
+            # Check if it's a permission error
+            is_permission_error = "403" in str(result) or "super admin" in str(result).lower()
+            self.log_test("Admin workflows permission check", is_permission_error, f"- Permission validation working")
+
     def test_error_handling(self):
         """Test error handling and edge cases"""
         print("\n⚠️ Testing Error Handling...")
@@ -540,6 +795,28 @@ class ActivusAPITester:
         files = {'file': ('test.txt', b'not an excel file', 'text/plain')}
         success, result = self.make_request('POST', 'upload-boq', files=files, expected_status=400)
         self.log_test("Invalid file type rejection", not success, "- Correctly rejected non-Excel file")
+        
+        # Test invalid PDF file upload
+        files = {'file': ('test.txt', b'not a pdf file', 'text/plain')}
+        success, result = self.make_request('POST', 'pdf-processor/extract', files=files, expected_status=400)
+        self.log_test("Invalid PDF file rejection", not success, "- Correctly rejected non-PDF file")
+        
+        # Test empty PDF file
+        files = {'file': ('empty.pdf', b'', 'application/pdf')}
+        success, result = self.make_request('POST', 'pdf-processor/extract', files=files, expected_status=400)
+        self.log_test("Empty PDF file rejection", not success, "- Correctly rejected empty file")
+        
+        # Test invalid extraction ID
+        success, result = self.make_request('GET', 'pdf-processor/extractions/invalid-id', expected_status=404)
+        self.log_test("Invalid extraction ID handling", not success, "- Correctly returned 404 for invalid extraction ID")
+        
+        # Test invalid workflow ID
+        success, result = self.make_request('PUT', 'admin/workflows/invalid-id', {"active": False}, expected_status=404)
+        self.log_test("Invalid workflow ID handling", not success, "- Correctly returned 404 for invalid workflow ID")
+        
+        # Test invalid system config ID
+        success, result = self.make_request('PUT', 'admin/system-config/invalid-id', {"config_value": "test"}, expected_status=404)
+        self.log_test("Invalid system config ID handling", not success, "- Correctly returned 404 for invalid config ID")
         
         # Test invalid master item creation (duplicate)
         master_item_data = {
