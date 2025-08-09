@@ -112,14 +112,16 @@ const Sidebar = ({ user }) => {
     { path: '/invoices', icon: '🧾', label: 'Invoices' },
     { path: '/clients', icon: '👥', label: 'Clients' },
     { path: '/bank-guarantees', icon: '🏦', label: 'Bank Guarantees' },
+    { path: '/item-master', icon: '📋', label: 'Item Master' },
+    { path: '/smart-search', icon: '🔍', label: 'Smart Search' },
+    { path: '/pdf-processor', icon: '📄', label: 'PDF Processor' },
+    { path: '/reports', icon: '📈', label: 'Reports' },
   ];
   
   const adminItems = [
-    { path: '/item-master', icon: '📋', label: 'Item Master' },
-    { path: '/users', icon: '👤', label: 'User Management' },
     { path: '/logs', icon: '📝', label: 'Activity Logs' },
-    { path: '/reports', icon: '📈', label: 'Reports' },
-    { path: '/search', icon: '🔍', label: 'Search' },
+    { path: '/users', icon: '👤', label: 'User Management' }, 
+    { path: '/admin', icon: '⚙️', label: 'Admin Interface' },
   ];
   
   return (
