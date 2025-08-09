@@ -1,104 +1,119 @@
 <analysis>
-The previous AI engineer effectively transitioned an initial MVP of an invoice and project management application into a more robust and feature-rich system. The trajectory highlights an iterative development process driven by user feedback, often focused on critical bug fixes related to data integrity, PDF generation, and UI rendering. Key achievements include implementing core BOQ upload, project/invoice management, and partial billing. Significant challenges involved persistent frontend rendering issues (e.g., missing table columns, session management) and complex PDF formatting (currency symbols, layout, branding). The AI engineer demonstrated a systematic debugging approach, using backend and frontend testing, and continuously refining the codebase to meet evolving requirements and fix critical display issues. The work progressed from initial scaffolding and feature implementation to detailed refinement and complex business logic implementation, such as GST rules and PDF layout.
+The previous AI engineer demonstrated an iterative development approach, completing a robust MVP for an invoice and project management system. Key accomplishments include implementing core features like BOQ processing, project/invoice management with complex partial billing (RA1/RA2+ GST logic), comprehensive PDF generation, and fixing critical synchronization and UI/UX issues. The engineer successfully achieved 100% test coverage for both backend and frontend, including newly added features like the PDF Text Extraction Engine for PO processing and a database clear option for super admins. The work then transitioned to implementing a large set of new enterprise-level enhancements, starting with Company Profile Management and initiating GST logic upgrades and dynamic RA bill tracking, which is the current focus.
 </analysis>
 
 <product_requirements>
-The user wants a web-based invoice and project management tool, aligning with Refrens.com's UI/UX, using Activus Design & Build's brand colors. The primary goal is to streamline BOQ upload, project tracking, and invoice generation, including complex partial billing.
+The overarching goal is to develop a web-based invoice and project management tool, inspired by Refrens.com's UI/UX, using Activus Design & Build's brand colors. The primary problem solved is streamlining BOQ upload, project tracking, invoice generation, including complex partial billing, and ensuring GST compliance.
 
-Core functionalities implemented and requested:
-- **User Roles**: Multi-role login (Super Admin, Invoice Creator, etc.) with a newly added User Management system.
-- **Project & BOQ Upload**: Excel BOQ upload, intelligent parsing with UOM, auto-fetching Architect, Project Name, Client. Client/project details are auto-saved for reuse. Project details now show bills generated, balance value, and completion percentage.
-- **Invoice Management**: Performa and Tax Invoices with partial billing (RA1 vs RA2+ GST logic). PDF generation includes client logo, project details, GST breakup, e-signature, and proper currency symbols, with company branding and improved layout. Option for tax/without tax in Proforma invoice. Payment terms and advance received against invoice.
-- **Dashboard**: Role-based views with metrics (partially pending).
-- **Logs & Activity**: Actions logged (implemented Activity Logs component).
-- **Item Master**: Auto-store/reuse BOQ items (backend and frontend components added).
-- **Smart Filters & Search**: Global search and detailed filters (backend and frontend components added).
-- **Reports & Insights**: GST/Tax Summary, visual charts (backend and frontend components added).
-- **Admin Features**: Toggle e-signature, logo upload, manage edit/delete access, lock invoices.
-- **New Features (requested recently)**: Advance received in project creation, percentage completion, summary of billing, Bank Guarantee section (with upload option).
+Implemented features include: multi-role user management, intelligent Excel BOQ upload, Performa/Tax invoice creation with RA1/RA2+ GST logic, dynamic PDF generation (client logo, GST breakup, e-signature, currency, branding), advance received tracking, percentage completion display, Item Master, Smart Filters/Search, Reports/Insights, Bank Guarantee section scaffolding, and a PDF Text Extraction Engine for PO Processing. Critical fixes addressed correct unit/rate extraction from BOQ, visible GST dropdown, proper RA invoice display, invoice data synchronization, and general UI/UX enhancements. A Clear DB option for super admins was recently added and verified.
+
+The current phase involves significant enhancements:
+1.  **Company Details Enhancement:** Manage multiple company locations/bank details, assign defaults, and select during project/invoice creation.
+2.  **GST Logic Upgrade:** Define GST type (C&S GST/IGST) per invoice/item, item-level GST mapping for RA bills, and dynamic display of Overall/Used/Balance QTY in line items. Prevent invoice creation if Balance QTY is exceeded.
+3.  **RA Bill & Quantity Tracking:** Dynamic RA table generation, auto-calculation of balance quantity, and cumulative GST logic per line item.
+4.  **Project Metadata & PO Validation:** Mandatory metadata input table at project creation (PO Number, Type, Reference No, Dated, Basic, Overall Multiplier, PO/Inv Value, ABG%, RA Bill with Taxes%, Erection%, PBG%) with PO item-BOQ matching, quantity, and total value verification to block project creation on mismatch.
+5.  **Real-time Excel-Like Data Table:** For project metadata, with real-time calculations based on percentages, auto-save, and pre-save validation.
+6.  **Integration in Project Workflow:** Company profile selection, PO metadata input/validation during project creation; GST type selection, item-level GST mapping, RA bill tracking during invoice creation.
+7.  **Additional Requirements:** Fully responsive UI, permissions (Admin/Super Admin edit, Managers/Users view/select), and audit logging for company details, metadata, and GST type changes.
 </product_requirements>
 
 <key_technical_concepts>
-- **Full-stack Architecture**: React.js (Frontend), FastAPI (Backend), MongoDB (Database).
-- **Data Processing**: OpenPyXL (Excel), ReportLab (PDF generation), Pillow (Image processing).
-- **Authentication**: Bcrypt (password hashing), JWT (token management).
-- **UI/UX**: Tailwind CSS, Shadcn UI, React Router (routing).
-- **State Management**: React Hooks (, ).
-- **API Interaction**:  and native  API.
-- **Deployment**: Kubernetes (containerized application), Supervisor (process management).
-- **Business Logic**: Partial billing, GST (IGST/CGST/SGST) calculation based on state, currency formatting.
+-   **Full-stack Architecture**: React.js (Frontend), FastAPI (Backend), MongoDB (Database).
+-   **Data Processing**: OpenPyXL (Excel), ReportLab (PDF generation), PDFMiner.six (PDF Text Extraction), Pillow (Image).
+-   **Authentication**: Bcrypt, JWT.
+-   **UI/UX**: Tailwind CSS, Shadcn UI, React Router.
+-   **Deployment**: Kubernetes, Supervisor.
 </key_technical_concepts>
 
 <code_architecture>
-The application follows a standard full-stack setup: React frontend, FastAPI backend, and MongoDB database.
+The application utilizes a React frontend, FastAPI backend, and MongoDB database.
 
 **Directory Structure:**
 
 
--   ****:
-    -   **Importance**: Centralizes FastAPI endpoints, MongoDB interactions, and core business logic.
-    -   **Changes Made**:
-        -   Initial setup with FastAPI, CORS, MongoDB connection, user auth.
-        -   BOQ parsing (), including robust , UOM extraction, and serial number generation.
-        -   Project CRUD, including  population and  field.
-        -   Invoice creation (Performa/Tax), complex partial billing (RA1/RA2+ with GST locking), and GST calculation (IGST vs. CGST+SGST based on state).
-        -   PDF generation (): Dynamic client/project/BOQ details, financial summaries, GST breakdown, text wrapping, company color (#127285), and proper currency symbol (₹).
-        -   Added new endpoints for Item Master, Smart Filters/Search, Reports/Insights, User Management, Project Details, and Bank Guarantee.
-        -   Extensive error handling for file uploads, invalid IDs, database issues, and PDF generation errors.
 
 -   ****:
-    -   **Importance**: Main React component managing routing, authentication, and view rendering.
-    -   **Changes Made**:
-        -   Routing for Login, Dashboard, Projects, Invoices, Item Master, Activity Logs, User Management, Reports, Search Results, and Project Details.
-        -   BOQ upload/review modal with editable fields and validation.
-        -   Project/Invoice listing and creation logic.
-        -   Invoice creation modal with partial billing and GST rate dropdown.
-        -   Comprehensive UI enhancements: loading states, error messages, null checks, default values for project data.
-        -   **Refactoring of Project and Invoice components** to fix  null errors and button visibility issues.
-        -   Implemented  API for PDF download/viewing with proper headers.
-        -   Integration of new  component for left navigation.
-        -   Added View, Download, Print buttons to invoice table (initially in a new column, then moved into 'AMOUNT' column due to rendering issues for guaranteed visibility).
-        -   Removed Emergent logo, updated title to Activus Invoice System.
-
+    -   **Importance**: Handles all API endpoints, database interactions, and complex business logic.
+    -   **Changes Made**: Initial FastAPI setup, CORS, MongoDB, user auth. BOQ parsing with  (improved , UOM, SN, robust column mapping for  and ). Project CRUD, Invoice creation (Performa/Tax), complex partial billing (RA1/RA2+ with GST locking), GST calculation. PDF generation () for dynamic content, financial summaries, GST breakdown, branding, currency. Added endpoints for Item Master, Smart Filters/Search, Reports, User Management, Project Details, Bank Guarantee. Implemented  class and PDF processing endpoints (, ) for PO PDF text extraction. Added  and  for clearing database. Started implementing Company Profile Management endpoints (, ). Also began enhanced GST calculation and RA bill tracking logic. Error handling improved for PDF processing (400 for unsupported formats).
 -   ****:
-    -   **Importance**: Lists Python dependencies.
-    -   **Changes Made**: Added , , , .
+    -   **Importance**: Main React component managing application state, routing, and UI rendering.
+    -   **Changes Made**: Comprehensive routing for all features (Login, Dashboard, Projects, Invoices, Item Master, Activity Logs, User Management, Reports, Search Results, Project Details, Bank Guarantees, Admin Interface, Company Profile Management, Enhanced Project Creation, Enhanced Invoice Creation). Implemented BOQ upload/review modal. Project/Invoice listing and creation logic. Invoice creation modal with added fields. UI enhancements (loading, error, null checks). Refactored Project/Invoice components for  and button visibility. Integrated  for navigation. PDF download/viewing. Rewrote Project table for expandable rows, financial summaries, RA/Proforma invoice separation. Added Project Dashboard summary. Replaced rudimentary Dashboard with comprehensive analytics. Added search and filter for Projects and Invoices pages. Updated  to refresh project details. RA invoice logic separated. Integrated new components by importing and adding routes, and removed redundant inline component definitions for , , and .
+-   ****:
+    -   **Importance**: Manages Python dependencies.
+    -   **Changes Made**: Added , , , , , , , usage: pdfplumber [-h] [--structure | --structure-text]
+                  [--format {csv,json,text}] [--types TYPES [TYPES ...]]
+                  [--include-attrs INCLUDE_ATTRS [INCLUDE_ATTRS ...]]
+                  [--exclude-attrs EXCLUDE_ATTRS [EXCLUDE_ATTRS ...]]
+                  [--laparams LAPARAMS] [--precision PRECISION]
+                  [--pages PAGES [PAGES ...]] [--indent INDENT]
+                  [infile]
 
+positional arguments:
+  infile
+
+options:
+  -h, --help            show this help message and exit
+  --structure           Write the structure tree as JSON. All other arguments
+                        except --pages, --laparams, and --indent will be
+                        ignored
+  --structure-text      Write the structure tree as JSON including text
+                        contents. All other arguments except --pages,
+                        --laparams, and --indent will be ignored
+  --format {csv,json,text}
+  --types TYPES [TYPES ...]
+  --include-attrs INCLUDE_ATTRS [INCLUDE_ATTRS ...]
+                        Include *only* these object attributes in output.
+  --exclude-attrs EXCLUDE_ATTRS [EXCLUDE_ATTRS ...]
+                        Exclude these object attributes from output.
+  --laparams LAPARAMS
+  --precision PRECISION
+  --pages PAGES [PAGES ...]
+  --indent INDENT       Indent level for JSON pretty-printing., .
 -   ** & **:
-    -   **Importance**: Tailwind CSS styling.
-    -   **Changes Made**: Tailwind directives for UI components, Activus branding colors, responsiveness, modal overlays, and various attempts to fix table/button rendering issues.
-
--   ** (New)**:
-    -   **Importance**: Implements the new left-aligned navigation bar, consolidating menu items and improving UI/UX.
-    -   **Changes Made**: Created to contain Dashboard, Projects, Invoices, Clients, and an Admin section with Item Master, User Management, Activity Logs, Reports, and Search. Includes active page highlighting and icons.
-
--   ** (New)**, ** (New)**, ** (New)**, ** (New)**, ** (New)**:
-    -   **Importance**: Frontend components for new features.
-    -   **Changes Made**: Initial scaffolding for displaying data and interacting with new backend endpoints. UserManagement and ProjectDetails are specifically mentioned as being implemented/updated.
+    -   **Importance**: Tailwind CSS styling for UI components.
+    -   **Changes Made**: Tailwind directives for UI components, Activus branding colors, responsiveness, modal overlays. Specific CSS for enhanced text wrapping and applied brand color.
+-   ****:
+    -   **Importance**: Implements the left-aligned navigation bar.
+    -   **Changes Made**: Consolidated menu items. Includes active page highlighting and icons. Added 'Bank Guarantee', 'Activity Logs', 'Item Master', 'Smart Search', 'Reports', 'Admin Interface', 'Company Profile Management', 'Enhanced Project Creation', and 'Enhanced Invoice Creation' to the menu. (Note: The trajectory states  was modified, but shows changes directly in  where the  component is likely defined inline).
+-   ** (New)**: Scaffolding for displaying BG data, status, expiry alerts, and upload options.
+-   ** (New)**: Created for logging user and system activities.
+-   ** (New)**: Component for managing item master data.
+-   ** (New)**: Component for smart filtering and search functionalities.
+-   ** (New)**: Component for generating and displaying reports and insights.
+-   ** (New)**: Likely a utility or component related to frontend PDF interactions.
+-   ** (New)**: Central interface for super admin settings, including the new Clear DB option.
+-   ** (New)**: Scaffolding for managing company locations and bank details.
+-   ** (New)**: Scaffolding for the new project creation flow with metadata table.
+-   ** (New)**: Scaffolding for the new invoice creation flow with advanced GST and RA tracking.
 </code_architecture>
 
 <pending_tasks>
-- **Dashboard Metrics**: Full verification of all role-based views and metrics (Total Invoiced Value, Advance Received, Days Pending).
-- **Logs & Activity**: Detailed implementation beyond a basic component and explicit verification of full logging mechanisms.
-- **Notifications & Alerts**: Email and in-app notifications.
-- **Admin Features**: Beyond logo/e-signature, features like enabling/disabling edit/delete at approval stages and locking approved invoices.
-- **Reviewer/Approver Workflow**: Detailed implementation of specific actions for these roles.
-- **Performa Invoice Options**: Option to select with Tax or without tax when generating Performa Invoice.
-- **Payment Terms**: Inclusion of payment terms for all invoices and an option to check if advance was received against an invoice.
-- **Bank Guarantee**: Full implementation of the Bank Guarantee section with details and upload option.
+-   **Company Details Enhancement**: Full implementation of frontend and integration.
+-   **GST Logic Upgrade**: Complete backend and frontend implementation for item-level GST mapping, dynamic quantity tracking, and validation.
+-   **RA Bill & Quantity Tracking**: Full implementation of dynamic RA table and balance quantity auto-calculation.
+-   **Project Metadata & PO Validation**: Full implementation of the excel-like input table and validation engine.
+-   **Real-time Excel-Like Data Table**: Implement auto-save and validation.
+-   **Integration in Project Workflow**: Fully integrate all new features into existing project and invoice creation workflows.
+-   **Permissions**: Implement role-based access control for new features.
+-   **Audit Logging**: Implement detailed audit logging for company details, metadata, and GST changes.
 </pending_tasks>
 
 <current_work>
-Immediately prior to this summary request, the previous AI engineer was actively engaged in a major feature expansion and critical PDF/UI fixes based on user feedback. The work involved:
+Immediately prior to this summary, the AI engineer completed the initial phase of enhancing the Enterprise Invoice & Project Management Tool as per the MASTER IMPLEMENTATION PROMPT. This involved:
 
-1.  **Addressing PDF Display and UI Alignment Issues**: The user reported that PDFs were displaying as raw code and that the download/print buttons were not visible or were poorly aligned. The engineer moved the buttons directly into the AMOUNT column to ensure visibility and performed extensive fixes on backend PDF generation (headers, content type, currency symbols, text wrapping, company color Hexa#127285) and frontend PDF handling (using  API). UI elements were also refined, leading to a new, clean left sidebar navigation.
-2.  **Implementing Critical Business Logic (GST, Excel)**: Overhauled the GST system to include standard Indian rates (5%, 12%, 18%, 28%) and auto-detection for IGST vs. CGST+SGST based on client state. Improved Excel BOQ parsing to correctly extract Unit/UOM and auto-generate Serial Numbers. Implemented proper calculation and display of Basic, GST, and Grand Totals.
-3.  **Enhancing Project Management**: Started implementing the user's request for a detailed project view. This included adding advance received to project creation, and planning to show number of bills generated, value according to R1, R2, etc., and balance value within each project.
-4.  **Adding New Core Features**: The engineer recently added backend endpoints and frontend components for Item Master, Smart Filters/Search, Reports/Insights, and a User Management system for super admins. The Bank Guarantee section was also just initiated, with endpoints added.
+1.  **Backend Implementation**:
+    *   **Company Profile Management**: Added API endpoints for managing company profiles, locations, and bank details ().
+    *   **GST Logic Upgrade / RA Bill Tracking**: Started the backend implementation for enhanced GST calculation and RA bill tracking functionality, though this was only an initial attempt and required further refinement as indicated by a Summary: I attempted to help... message.
 
-The very last action taken was to update the invoice creation to handle proforma tax options and payment terms, signifying the ongoing work on the comprehensive enhancements requested by the user.
+2.  **Frontend Component Scaffolding**:
+    *   Created new React components for the upcoming features:
+        *   
+        *   
+        *   
+
+The current state is that the backend has initial API endpoints for company profiles, and the frontend has placeholder components for the new modules. The complex logic for GST, RA tracking, and PO validation is still in early stages of implementation. The immediate next step is to continue building out these newly created components and their underlying logic.
 </current_work>
 
 <optional_next_step>
-Continue updating the invoice creation logic in the backend to support Proforma Invoice tax options and payment terms.
+Continue implementing the  component, focusing on the GST logic and RA bill tracking.
 </optional_next_step>
