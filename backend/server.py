@@ -427,7 +427,7 @@ class POPDFParser:
         
         return best_result
 
-# Models
+
 class UserRole(str, Enum):
     SUPER_ADMIN = "super_admin"
     INVOICE_CREATOR = "invoice_creator"
