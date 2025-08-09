@@ -3583,6 +3583,12 @@ async def get_workflow_configs(
             query["active"] = True
         
         workflows = await db.workflow_configs.find(query).sort("created_at", -1).to_list(100)
+        
+        # Convert ObjectIds to strings for JSON serialization
+        for workflow in workflows:
+            if "_id" in workflow:
+                workflow["_id"] = str(workflow["_id"])
+        
         return workflows
         
     except HTTPException:
