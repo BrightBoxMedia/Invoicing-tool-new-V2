@@ -3,6 +3,14 @@ import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } f
 import axios from 'axios';
 import './App.css';
 
+// Import new components
+import ActivityLogs from './components/ActivityLogs';
+import ItemMaster from './components/ItemMaster';
+import SmartSearch from './components/SmartSearch';
+import Reports from './components/Reports';
+import PDFProcessor from './components/PDFProcessor';
+import AdminInterface from './components/AdminInterface';
+
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
