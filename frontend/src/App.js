@@ -2287,6 +2287,33 @@ const Invoices = () => {
     }
   };
 
+  // Filter and search logic for invoices
+  const filteredInvoices = invoices.filter(invoice => {
+    const matchesSearch = !searchTerm || 
+      invoice.invoice_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoice.ra_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoice.project_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoice.client_name?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesType = !typeFilter || (() => {
+      if (typeFilter === 'tax') return invoice.invoice_type === 'tax_invoice' || invoice.ra_number?.startsWith('RA');
+      if (typeFilter === 'proforma') return invoice.invoice_type === 'proforma';
+      return true;
+    })();
+    
+    const matchesProject = !projectFilter || invoice.project_id === projectFilter;
+    
+    const matchesStatus = !statusFilter || invoice.status === statusFilter;
+    
+    const matchesDate = !dateFilter || (() => {
+      const invoiceDate = new Date(invoice.invoice_date);
+      const filterDate = new Date(dateFilter);
+      return invoiceDate >= filterDate;
+    })();
+    
+    return matchesSearch && matchesType && matchesProject && matchesStatus && matchesDate;
+  });
+
   if (loading) return <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>;
 
   return (
