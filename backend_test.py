@@ -690,7 +690,8 @@ class ActivusAPITester:
             "config_type": "number",
             "description": "Default GST rate for new items",
             "is_sensitive": False,
-            "requires_restart": False
+            "requires_restart": False,
+            "created_by": self.user_data['id'] if self.user_data else "test-user-id"
         }
         
         success, result = self.make_request('POST', 'admin/system-config', system_config_data)
