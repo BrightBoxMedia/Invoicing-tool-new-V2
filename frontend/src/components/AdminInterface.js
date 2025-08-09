@@ -11,6 +11,11 @@ const AdminInterface = ({ currentUser }) => {
     const [showCreateConfigModal, setShowCreateConfigModal] = useState(false);
     const [editingWorkflow, setEditingWorkflow] = useState(null);
     const [editingConfig, setEditingConfig] = useState(null);
+    const [showClearDBModal, setShowClearDBModal] = useState(false);
+    const [clearDBConfirmation, setClearDBConfirmation] = useState({
+        confirm_clear: false,
+        confirmation_text: ''
+    });
 
     const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.VITE_REACT_APP_BACKEND_URL;
 
