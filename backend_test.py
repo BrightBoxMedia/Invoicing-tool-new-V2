@@ -1016,6 +1016,9 @@ class ActivusAPITester:
         # Test NEW Admin Configuration System
         self.test_admin_configuration_system()
         
+        # Test NEW Database Clear Functionality (CRITICAL SECURITY FEATURE)
+        self.test_database_clear_functionality()
+        
         # Test authentication and permissions for new endpoints
         self.test_authentication_and_permissions()
         
