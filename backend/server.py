@@ -4307,6 +4307,260 @@ async def get_system_health(current_user: dict = Depends(get_current_user)):
         logger.error(f"Error getting system health: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get system health: {str(e)}")
 
+# Enhanced Invoice Creation and RA Tracking Endpoints
+
+@api_router.get("/projects/{project_id}/ra-tracking")
+async def get_ra_tracking_data(
+    project_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get current RA tracking data for a project"""
+    try:
+        project = await db.projects.find_one({"id": project_id})
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+        
+        # Get all existing invoices for this project to calculate used quantities
+        invoices = await db.invoices.find({"project_id": project_id, "invoice_type": "tax_invoice"}).to_list(None)
+        
+        # Initialize RA tracking data from BOQ
+        ra_tracking = []
+        boq_items = project.get("boq_items", [])
+        
+        for item in boq_items:
+            # Calculate used quantity from all previous RA bills
+            used_quantity = 0
+            ra_usage = {}
+            
+            for invoice in invoices:
+                for invoice_item in invoice.get("items", []):
+                    if invoice_item.get("description") == item.get("description"):
+                        ra_number = invoice.get("ra_number", "")
+                        if ra_number:
+                            ra_usage[ra_number] = invoice_item.get("quantity", 0)
+                            used_quantity += invoice_item.get("quantity", 0)
+            
+            balance_qty = float(item.get("quantity", 0)) - used_quantity
+            
+            tracking_item = {
+                "item_id": item.get("id", str(uuid.uuid4())),
+                "description": item.get("description", ""),
+                "unit": item.get("unit", "nos"),
+                "overall_qty": float(item.get("quantity", 0)),
+                "ra_usage": ra_usage,
+                "balance_qty": max(0, balance_qty),
+                "rate": float(item.get("rate", 0)),
+                "gst_rate": float(item.get("gst_rate", 18)),
+                "gst_type": "cgst_sgst",  # Default, can be overridden
+                "requested_qty": 0,
+                "amount": 0,
+                "validation_error": False
+            }
+            
+            ra_tracking.append(tracking_item)
+        
+        return {
+            "project_id": project_id,
+            "ra_tracking": ra_tracking,
+            "existing_ra_numbers": list(set(ra_usage.keys() for item in ra_tracking for ra_usage in [item["ra_usage"]] if ra_usage))
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting RA tracking data: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get RA tracking data: {str(e)}")
+
+@api_router.post("/invoices/validate-quantities")
+async def validate_invoice_quantities(
+    validation_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Validate invoice quantities against available balance"""
+    try:
+        project_id = validation_data.get("project_id")
+        selected_items = validation_data.get("selected_items", [])
+        
+        if not project_id:
+            raise HTTPException(status_code=400, detail="Project ID is required")
+        
+        # Get current RA tracking data
+        ra_response = await get_ra_tracking_data(project_id, current_user)
+        ra_tracking = ra_response["ra_tracking"]
+        
+        # Create a lookup for balance quantities
+        balance_lookup = {item["description"]: item["balance_qty"] for item in ra_tracking}
+        
+        validation_errors = []
+        is_valid = True
+        
+        for item in selected_items:
+            description = item.get("description", "")
+            requested_qty = float(item.get("requested_qty", 0))
+            balance_qty = balance_lookup.get(description, 0)
+            
+            if requested_qty > balance_qty:
+                validation_errors.append({
+                    "description": description,
+                    "requested_qty": requested_qty,
+                    "available_qty": balance_qty,
+                    "excess_qty": requested_qty - balance_qty,
+                    "error": f"Requested quantity ({requested_qty}) exceeds available balance ({balance_qty})"
+                })
+                is_valid = False
+        
+        return {
+            "valid": is_valid,
+            "errors": validation_errors,
+            "total_errors": len(validation_errors)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error validating invoice quantities: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to validate invoice quantities: {str(e)}")
+
+@api_router.post("/invoices/enhanced")
+async def create_enhanced_invoice(
+    invoice_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create enhanced invoice with GST mapping and RA tracking"""
+    try:
+        # Validate quantities first
+        validation_result = await validate_invoice_quantities({
+            "project_id": invoice_data.get("project_id"),
+            "selected_items": invoice_data.get("invoice_items", [])
+        }, current_user)
+        
+        if not validation_result["valid"]:
+            raise HTTPException(status_code=400, detail={
+                "message": "Quantity validation failed",
+                "errors": validation_result["errors"]
+            })
+        
+        # Get project details
+        project = await db.projects.find_one({"id": invoice_data.get("project_id")})
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+        
+        # Generate RA number for tax invoices
+        ra_number = None
+        if invoice_data.get("invoice_type") == "tax_invoice":
+            # Get next RA number for this project
+            existing_invoices = await db.invoices.find({
+                "project_id": invoice_data.get("project_id"),
+                "invoice_type": "tax_invoice"
+            }).sort("created_at", -1).to_list(None)
+            
+            # Find the highest RA number
+            max_ra_num = 0
+            for inv in existing_invoices:
+                if inv.get("ra_number"):
+                    ra_match = re.search(r'RA(\d+)', inv["ra_number"])
+                    if ra_match:
+                        max_ra_num = max(max_ra_num, int(ra_match.group(1)))
+            
+            ra_number = f"RA{max_ra_num + 1}"
+        
+        # Create enhanced invoice document
+        invoice_id = str(uuid.uuid4())
+        enhanced_invoice = {
+            "id": invoice_id,
+            "project_id": invoice_data.get("project_id"),
+            "client_id": project.get("client_id"),
+            "invoice_type": invoice_data.get("invoice_type"),
+            "invoice_gst_type": invoice_data.get("invoice_gst_type", "cgst_sgst"),
+            "ra_number": ra_number,
+            "company_location_id": invoice_data.get("company_location_id"),
+            "company_bank_id": invoice_data.get("company_bank_id"),
+            "payment_terms": invoice_data.get("payment_terms", ""),
+            "advance_received": float(invoice_data.get("advance_received", 0)),
+            "items": invoice_data.get("invoice_items", []),
+            "item_gst_mappings": invoice_data.get("item_gst_mappings", []),
+            "subtotal": float(invoice_data.get("subtotal", 0)),
+            "cgst_amount": float(invoice_data.get("cgst_amount", 0)),
+            "sgst_amount": float(invoice_data.get("sgst_amount", 0)),
+            "igst_amount": float(invoice_data.get("igst_amount", 0)),
+            "total_gst_amount": float(invoice_data.get("total_gst_amount", 0)),
+            "total_amount": float(invoice_data.get("total_amount", 0)),
+            "status": "draft",
+            "created_by": current_user["id"],
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        
+        # Insert the enhanced invoice
+        await db.invoices.insert_one(enhanced_invoice)
+        
+        # Log activity
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "enhanced_invoice_created",
+            f"Created enhanced invoice {ra_number or 'Proforma'} for project {project.get('project_name', 'Unknown')} with GST type {invoice_data.get('invoice_gst_type', 'cgst_sgst')}"
+        )
+        
+        return {
+            "message": "Enhanced invoice created successfully",
+            "invoice_id": invoice_id,
+            "ra_number": ra_number,
+            "total_amount": enhanced_invoice["total_amount"]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating enhanced invoice: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create enhanced invoice: {str(e)}")
+
+@api_router.get("/projects/{project_id}/metadata-template")
+async def get_project_metadata_template(
+    project_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get project metadata template with calculated values"""
+    try:
+        project = await db.projects.find_one({"id": project_id})
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+        
+        # Calculate BOQ total
+        boq_items = project.get("boq_items", [])
+        boq_total = sum(float(item.get("total_with_gst", 0)) for item in boq_items)
+        
+        # Return template with default values
+        template = {
+            "project_id": project_id,
+            "boq_total": boq_total,
+            "template_row": {
+                "purchase_order_number": "",
+                "type": "Supply",
+                "reference_no": "",
+                "dated": "",
+                "basic": 0.0,
+                "overall_multiplier": 1.0,
+                "po_inv_value": 0.0,
+                "abg_percentage": 10.0,
+                "ra_bill_with_taxes_percentage": 85.0,
+                "erection_percentage": 15.0,
+                "pbg_percentage": 5.0,
+                "abg_amount": 0.0,
+                "ra_bill_amount": 0.0,
+                "erection_amount": 0.0,
+                "pbg_amount": 0.0
+            },
+            "existing_metadata": project.get("project_metadata", [])
+        }
+        
+        return template
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting project metadata template: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get project metadata template: {str(e)}")
+
 # Include router
 app.include_router(api_router)
 
