@@ -608,8 +608,9 @@ class ActivusAPITester:
                 }
             }
             
-            success, result = self.make_request('POST', 'pdf-processor/convert-to-project', 
-                                              {"extraction_id": extraction_id, "project_metadata": project_metadata})
+            # Use query parameter for extraction_id and body for project_metadata
+            success, result = self.make_request('POST', f'pdf-processor/convert-to-project?extraction_id={extraction_id}', 
+                                              project_metadata)
             if success:
                 project_id = result.get('project_id')
                 if project_id:
