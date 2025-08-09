@@ -9,7 +9,7 @@ import json
 from datetime import datetime
 
 class CompletePDFTester:
-    def __init__(self, base_url="https://bff9c4e2-6aac-4648-bb2b-036eb1fa14e5.preview.emergentagent.com"):
+    def __init__(self, base_url="https://0de79f73-880e-4b75-b873-cf862a9b62ec.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.token = None
