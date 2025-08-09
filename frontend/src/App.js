@@ -3375,13 +3375,16 @@ const App = () => {
                   <Route path="/invoices" element={<Invoices />} />
                   <Route path="/clients" element={<Clients />} />
                   <Route path="/bank-guarantees" element={<BankGuarantees />} />
+                  <Route path="/item-master" element={<ItemMaster currentUser={user} />} />
+                  <Route path="/smart-search" element={<SmartSearch currentUser={user} />} />
+                  <Route path="/pdf-processor" element={<PDFProcessor currentUser={user} />} />
+                  <Route path="/reports" element={<Reports currentUser={user} />} />
+                  <Route path="/search" element={<SearchResults />} />
                   {user.role === 'super_admin' && (
                     <>
-                      <Route path="/item-master" element={<ItemMaster />} />
-                      <Route path="/logs" element={<ActivityLogs />} />
+                      <Route path="/logs" element={<ActivityLogs currentUser={user} />} />
                       <Route path="/users" element={<UserManagement />} />
-                      <Route path="/reports" element={<Reports />} />
-                      <Route path="/search" element={<SearchResults />} />
+                      <Route path="/admin" element={<AdminInterface currentUser={user} />} />
                     </>
                   )}
                 </Routes>
