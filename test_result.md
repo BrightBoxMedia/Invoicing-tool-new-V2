@@ -372,39 +372,48 @@
 
   - task: "Proforma Invoice Tax Options"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
         - agent: "main"
         - comment: "COMPLETED: Added frontend UI for tax/without tax option selection for proforma invoices. Backend already supports include_tax parameter."
+        - working: true
+        - agent: "testing"
+        - comment: "✅ TESTED: Tax options functionality integrated in invoice creation modal. Include tax checkbox and tax selection controls working correctly as part of comprehensive 100% frontend testing."
 
   - task: "Payment Terms Integration"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
         - agent: "main"
         - comment: "COMPLETED: Added payment terms input field in invoice creation modal. Backend already supports payment_terms parameter."
+        - working: true
+        - agent: "testing"
+        - comment: "✅ TESTED: Payment terms integration working correctly in invoice creation modal. Payment terms input field properly integrated as part of comprehensive 100% frontend testing."
 
   - task: "Advance Received Against Invoice"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
         - agent: "main"
         - comment: "COMPLETED: Added advance received input field in invoice creation modal. Backend already supports advance_received parameter. Also shows net amount due calculation."
+        - working: true
+        - agent: "testing"
+        - comment: "✅ TESTED: Advance received functionality working correctly in invoice creation modal. Advance received input field and net amount calculation properly integrated as part of comprehensive 100% frontend testing."
 
   - task: "BOQ Unit/UOM Column Extraction Fix"
     implemented: true
