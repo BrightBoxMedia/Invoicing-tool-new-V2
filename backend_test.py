@@ -787,7 +787,7 @@ class ActivusAPITester:
         self.token = None
         
         success, result = self.make_request('GET', 'projects', expected_status=401)
-        self.log_test("Unauthorized access rejection", not success, "- Correctly rejected request without token")
+        self.log_test("Unauthorized access rejection", success, "- Correctly rejected request without token")
         
         # Restore token for authenticated error tests
         self.token = old_token
