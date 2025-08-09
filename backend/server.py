@@ -4064,7 +4064,15 @@ async def get_company_profiles(
     """Get all company profiles"""
     try:
         profiles = await db.company_profiles.find().sort("created_at", -1).to_list(100)
-        return profiles
+        
+        # Clean profiles for JSON serialization
+        clean_profiles = []
+        for profile in profiles:
+            if '_id' in profile:
+                del profile['_id']
+            clean_profiles.append(profile)
+        
+        return clean_profiles
         
     except Exception as e:
         logger.error(f"Error fetching company profiles: {str(e)}")
