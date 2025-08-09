@@ -1665,7 +1665,31 @@ async def get_invoices(
     client_id: Optional[str] = None
 ):
     try:
-        invoices = await db.invoices.find().to_list(1000)
+        # Build query filters
+        query_filter = {}
+        
+        if type:
+            query_filter["invoice_type"] = type
+        if project_id:
+            query_filter["project_id"] = project_id
+        if status:
+            query_filter["status"] = status
+        if client_id:
+            query_filter["client_id"] = client_id
+        
+        invoices = await db.invoices.find(query_filter).to_list(1000)
+        
+        # Apply search filter if provided
+        if search:
+            search_lower = search.lower()
+            filtered_invoices = []
+            for invoice in invoices:
+                if (search_lower in invoice.get("project_name", "").lower() or
+                    search_lower in invoice.get("client_name", "").lower() or
+                    search_lower in invoice.get("invoice_number", "").lower() or
+                    search_lower in invoice.get("ra_number", "").lower()):
+                    filtered_invoices.append(invoice)
+            invoices = filtered_invoices
         
         # Filter and validate invoices to prevent validation errors
         valid_invoices = []
