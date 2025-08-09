@@ -815,7 +815,11 @@ const Projects = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      alert(`Invoice ${response.data.ra_number} created successfully! Billing ${response.data.billing_percentage?.toFixed(1)}% of project.`);
+      alert(`Invoice ${response.data.ra_number || response.data.invoice_number} created successfully! Billing ${response.data.billing_percentage?.toFixed(1)}% of project.`);
+      
+      // Refresh project details immediately
+      await fetchProjectDetails(selectedProject.id);
+      
       setShowInvoiceModal(false);
       setSelectedProject(null);
       setBOQStatus(null);
@@ -825,7 +829,7 @@ const Projects = () => {
       setIncludeTax(true);
       setPaymentTerms('Payment due within 30 days from invoice date');
       setAdvanceReceived(0);
-      fetchProjects(); // Refresh projects
+      fetchProjects(); // Refresh projects list
     } catch (error) {
       console.error('Invoice creation error:', error);
       let errorMessage = 'Unknown error occurred';
