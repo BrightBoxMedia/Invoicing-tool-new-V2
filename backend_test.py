@@ -794,34 +794,34 @@ class ActivusAPITester:
         
         # Test invalid project ID (with authentication)
         success, result = self.make_request('GET', 'projects/invalid-id', expected_status=404)
-        self.log_test("Invalid project ID handling", not success, "- Correctly returned 404 for invalid ID")
+        self.log_test("Invalid project ID handling", success, "- Correctly returned 404 for invalid ID")
         
         # Test invalid file upload (with authentication)
         files = {'file': ('test.txt', b'not an excel file', 'text/plain')}
         success, result = self.make_request('POST', 'upload-boq', files=files, expected_status=400)
-        self.log_test("Invalid file type rejection", not success, "- Correctly rejected non-Excel file")
+        self.log_test("Invalid file type rejection", success, "- Correctly rejected non-Excel file")
         
         # Test invalid PDF file upload (with authentication)
         files = {'file': ('test.txt', b'not a pdf file', 'text/plain')}
         success, result = self.make_request('POST', 'pdf-processor/extract', files=files, expected_status=400)
-        self.log_test("Invalid PDF file rejection", not success, "- Correctly rejected non-PDF file")
+        self.log_test("Invalid PDF file rejection", success, "- Correctly rejected non-PDF file")
         
         # Test empty PDF file (with authentication)
         files = {'file': ('empty.pdf', b'', 'application/pdf')}
         success, result = self.make_request('POST', 'pdf-processor/extract', files=files, expected_status=400)
-        self.log_test("Empty PDF file rejection", not success, "- Correctly rejected empty file")
+        self.log_test("Empty PDF file rejection", success, "- Correctly rejected empty file")
         
         # Test invalid extraction ID (with authentication)
         success, result = self.make_request('GET', 'pdf-processor/extractions/invalid-id', expected_status=404)
-        self.log_test("Invalid extraction ID handling", not success, "- Correctly returned 404 for invalid extraction ID")
+        self.log_test("Invalid extraction ID handling", success, "- Correctly returned 404 for invalid extraction ID")
         
         # Test invalid workflow ID (with authentication)
         success, result = self.make_request('PUT', 'admin/workflows/invalid-id', {"active": False}, expected_status=404)
-        self.log_test("Invalid workflow ID handling", not success, "- Correctly returned 404 for invalid workflow ID")
+        self.log_test("Invalid workflow ID handling", success, "- Correctly returned 404 for invalid workflow ID")
         
         # Test invalid system config ID (with authentication)
         success, result = self.make_request('PUT', 'admin/system-config/invalid-id', {"config_value": "test"}, expected_status=404)
-        self.log_test("Invalid system config ID handling", not success, "- Correctly returned 404 for invalid config ID")
+        self.log_test("Invalid system config ID handling", success, "- Correctly returned 404 for invalid config ID")
         
         # Test invalid master item creation (duplicate) (with authentication)
         master_item_data = {
@@ -833,11 +833,11 @@ class ActivusAPITester:
         self.make_request('POST', 'item-master', master_item_data)
         # Try to create duplicate
         success, result = self.make_request('POST', 'item-master', master_item_data, expected_status=400)
-        self.log_test("Duplicate master item rejection", not success, "- Correctly rejected duplicate item")
+        self.log_test("Duplicate master item rejection", success, "- Correctly rejected duplicate item")
         
         # Test invalid client summary (with authentication)
         success, result = self.make_request('GET', 'reports/client-summary/invalid-client-id', expected_status=404)
-        self.log_test("Invalid client summary handling", not success, "- Correctly returned 404 for invalid client ID")
+        self.log_test("Invalid client summary handling", success, "- Correctly returned 404 for invalid client ID")
 
     def run_all_tests(self):
         """Run complete test suite"""
