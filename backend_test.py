@@ -928,6 +928,7 @@ class ActivusAPITester:
         # Test creating a company profile with locations and bank details
         company_profile_data = {
             "company_name": "Activus Test Branch Ltd",
+            "created_by": self.user_data['id'] if self.user_data else "test-user-id",
             "locations": [
                 {
                     "location_name": "Head Office",
@@ -1044,6 +1045,7 @@ class ActivusAPITester:
             "client_id": client_id,
             "client_name": "Test Client Ltd",
             "company_profile_id": company_profile_id,
+            "created_by": self.user_data['id'] if self.user_data else "test-user-id",
             "metadata": [
                 {
                     "purchase_order_number": "PO-2024-ENH-001",
@@ -1184,6 +1186,7 @@ class ActivusAPITester:
             "client_name": "Test Client Ltd",
             "invoice_type": "tax_invoice",
             "invoice_gst_type": "CGST_SGST",  # Karnataka to Karnataka
+            "created_by": self.user_data['id'] if self.user_data else "test-user-id",
             "invoice_items": [
                 {
                     "boq_item_id": "1",
