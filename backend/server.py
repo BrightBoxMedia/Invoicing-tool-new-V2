@@ -3925,6 +3925,251 @@ async def update_system_config(
         logger.error(f"Error updating system config: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to update system config: {str(e)}")
 
+# Company Profile Management Endpoints
+@api_router.post("/company-profiles", response_model=dict)
+async def create_company_profile(
+    profile_data: CompanyProfile,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a new company profile - Admin/Super Admin only"""
+    try:
+        if current_user["role"] not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+            raise HTTPException(status_code=403, detail="Only admin/super admin can create company profiles")
+        
+        profile_data.created_by = current_user["id"]
+        profile_data.updated_at = datetime.utcnow()
+        
+        # Ensure only one default location and bank
+        default_location_count = sum(1 for loc in profile_data.locations if loc.is_default)
+        default_bank_count = sum(1 for bank in profile_data.bank_details if bank.is_default)
+        
+        if default_location_count > 1:
+            raise HTTPException(status_code=400, detail="Only one location can be set as default")
+        if default_bank_count > 1:
+            raise HTTPException(status_code=400, detail="Only one bank account can be set as default")
+        
+        # Set default IDs if defaults are specified
+        for loc in profile_data.locations:
+            if loc.is_default:
+                profile_data.default_location_id = loc.id
+        for bank in profile_data.bank_details:
+            if bank.is_default:
+                profile_data.default_bank_id = bank.id
+        
+        await db.company_profiles.insert_one(profile_data.dict())
+        
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "company_profile_created", 
+            f"Created company profile: {profile_data.company_name} with {len(profile_data.locations)} locations and {len(profile_data.bank_details)} bank accounts"
+        )
+        
+        return {"message": "Company profile created successfully", "profile_id": profile_data.id}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating company profile: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create company profile: {str(e)}")
+
+@api_router.get("/company-profiles")
+async def get_company_profiles(
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all company profiles"""
+    try:
+        profiles = await db.company_profiles.find().sort("created_at", -1).to_list(100)
+        return profiles
+        
+    except Exception as e:
+        logger.error(f"Error fetching company profiles: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch company profiles: {str(e)}")
+
+@api_router.get("/company-profiles/{profile_id}")
+async def get_company_profile(
+    profile_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get specific company profile"""
+    try:
+        profile = await db.company_profiles.find_one({"id": profile_id})
+        if not profile:
+            raise HTTPException(status_code=404, detail="Company profile not found")
+        
+        return profile
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching company profile: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch company profile: {str(e)}")
+
+@api_router.put("/company-profiles/{profile_id}")
+async def update_company_profile(
+    profile_id: str,
+    update_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update company profile - Admin/Super Admin only"""
+    try:
+        if current_user["role"] not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+            raise HTTPException(status_code=403, detail="Only admin/super admin can update company profiles")
+        
+        profile = await db.company_profiles.find_one({"id": profile_id})
+        if not profile:
+            raise HTTPException(status_code=404, detail="Company profile not found")
+        
+        update_data["updated_at"] = datetime.utcnow()
+        
+        # Validate defaults if provided
+        if "locations" in update_data:
+            default_location_count = sum(1 for loc in update_data["locations"] if loc.get("is_default", False))
+            if default_location_count > 1:
+                raise HTTPException(status_code=400, detail="Only one location can be set as default")
+        
+        if "bank_details" in update_data:
+            default_bank_count = sum(1 for bank in update_data["bank_details"] if bank.get("is_default", False))
+            if default_bank_count > 1:
+                raise HTTPException(status_code=400, detail="Only one bank account can be set as default")
+        
+        await db.company_profiles.update_one(
+            {"id": profile_id},
+            {"$set": update_data}
+        )
+        
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "company_profile_updated", 
+            f"Updated company profile: {profile.get('company_name', 'Unknown')}"
+        )
+        
+        return {"message": "Company profile updated successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating company profile: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to update company profile: {str(e)}")
+
+@api_router.delete("/company-profiles/{profile_id}")
+async def delete_company_profile(
+    profile_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Delete company profile - Super Admin only"""
+    try:
+        if current_user["role"] != UserRole.SUPER_ADMIN:
+            raise HTTPException(status_code=403, detail="Only super admin can delete company profiles")
+        
+        profile = await db.company_profiles.find_one({"id": profile_id})
+        if not profile:
+            raise HTTPException(status_code=404, detail="Company profile not found")
+        
+        # Check if profile is being used in any projects
+        projects_using_profile = await db.projects.count_documents({"company_profile_id": profile_id})
+        if projects_using_profile > 0:
+            raise HTTPException(status_code=400, detail=f"Cannot delete company profile. It is being used in {projects_using_profile} projects")
+        
+        await db.company_profiles.delete_one({"id": profile_id})
+        
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "company_profile_deleted", 
+            f"Deleted company profile: {profile.get('company_name', 'Unknown')}"
+        )
+        
+        return {"message": "Company profile deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting company profile: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete company profile: {str(e)}")
+
+# Project Metadata Validation Engine
+class ProjectMetadataValidator:
+    """Validates project metadata against BOQ data"""
+    
+    def __init__(self):
+        self.validation_errors = []
+    
+    async def validate_project_metadata(self, metadata: List[dict], boq_items: List[dict]) -> dict:
+        """Validate project metadata against BOQ items"""
+        self.validation_errors = []
+        
+        if not metadata or len(metadata) == 0:
+            self.validation_errors.append("At least one Purchase Order entry is required")
+            return {"valid": False, "errors": self.validation_errors}
+        
+        # Check mandatory fields
+        for i, po_entry in enumerate(metadata):
+            if not po_entry.get("purchase_order_number"):
+                self.validation_errors.append(f"Row {i+1}: Purchase Order Number is mandatory")
+        
+        # Calculate totals from BOQ
+        boq_total = sum(item.get("total_with_gst", 0) for item in boq_items)
+        
+        # Calculate totals from metadata
+        metadata_total = sum(po_entry.get("po_inv_value", 0) for po_entry in metadata)
+        
+        # Validate total value match (allow 5% variance)
+        if abs(boq_total - metadata_total) > (boq_total * 0.05):
+            self.validation_errors.append(
+                f"Total value mismatch: BOQ total (₹{boq_total:,.2f}) vs PO total (₹{metadata_total:,.2f}). "
+                f"Difference: ₹{abs(boq_total - metadata_total):,.2f}"
+            )
+        
+        # Validate percentage calculations
+        for i, po_entry in enumerate(metadata):
+            po_value = po_entry.get("po_inv_value", 0)
+            if po_value > 0:
+                # Validate ABG percentage
+                abg_percent = po_entry.get("abg_percentage", 0)
+                if abg_percent < 0 or abg_percent > 100:
+                    self.validation_errors.append(f"Row {i+1}: ABG percentage must be between 0-100%")
+                
+                # Validate RA Bill percentage
+                ra_percent = po_entry.get("ra_bill_with_taxes_percentage", 0)
+                if ra_percent < 0 or ra_percent > 100:
+                    self.validation_errors.append(f"Row {i+1}: RA Bill percentage must be between 0-100%")
+                
+                # Validate Erection percentage
+                erection_percent = po_entry.get("erection_percentage", 0)
+                if erection_percent < 0 or erection_percent > 100:
+                    self.validation_errors.append(f"Row {i+1}: Erection percentage must be between 0-100%")
+                
+                # Validate PBG percentage
+                pbg_percent = po_entry.get("pbg_percentage", 0)
+                if pbg_percent < 0 or pbg_percent > 100:
+                    self.validation_errors.append(f"Row {i+1}: PBG percentage must be between 0-100%")
+        
+        return {
+            "valid": len(self.validation_errors) == 0,
+            "errors": self.validation_errors,
+            "boq_total": boq_total,
+            "metadata_total": metadata_total,
+            "variance": abs(boq_total - metadata_total)
+        }
+
+@api_router.post("/projects/validate-metadata")
+async def validate_project_metadata(
+    validation_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Validate project metadata against BOQ data"""
+    try:
+        metadata = validation_data.get("metadata", [])
+        boq_items = validation_data.get("boq_items", [])
+        
+        validator = ProjectMetadataValidator()
+        result = await validator.validate_project_metadata(metadata, boq_items)
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error validating project metadata: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to validate project metadata: {str(e)}")
+
 @api_router.post("/admin/clear-database")
 async def clear_database(
     confirmation: dict,
