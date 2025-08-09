@@ -695,9 +695,25 @@ const Projects = () => {
       });
       const allProjectInvoices = invoicesResponse.data.filter(invoice => invoice.project_id === projectId);
       
+      console.log('All project invoices:', allProjectInvoices);
+      console.log('Invoice types found:', allProjectInvoices.map(inv => ({ id: inv.id, type: inv.invoice_type, ra: inv.ra_number })));
+      
       // Separate Tax invoices (RA invoices) from Proforma invoices
-      const taxInvoices = allProjectInvoices.filter(invoice => invoice.invoice_type === 'tax_invoice');
-      const proformaInvoices = allProjectInvoices.filter(invoice => invoice.invoice_type === 'proforma');
+      // Check for multiple possible values
+      const taxInvoices = allProjectInvoices.filter(invoice => 
+        invoice.invoice_type === 'tax_invoice' || 
+        invoice.invoice_type === 'tax' ||
+        invoice.ra_number?.startsWith('RA') ||
+        (!invoice.invoice_type && invoice.ra_number) // fallback for invoices with RA numbers
+      );
+      
+      const proformaInvoices = allProjectInvoices.filter(invoice => 
+        invoice.invoice_type === 'proforma' ||
+        (invoice.invoice_type !== 'tax_invoice' && invoice.invoice_type !== 'tax' && !invoice.ra_number?.startsWith('RA'))
+      );
+      
+      console.log('Tax invoices found:', taxInvoices);
+      console.log('Proforma invoices found:', proformaInvoices);
       
       // Sort tax invoices by RA number for proper RA1, RA2, RA3 display
       const sortedTaxInvoices = taxInvoices.sort((a, b) => {
