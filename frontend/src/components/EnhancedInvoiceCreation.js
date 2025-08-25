@@ -675,13 +675,25 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
                                                         step="0.01"
                                                         min="0"
                                                         max={balanceQty}
-                                                        className={`w-24 px-2 py-1 border-2 rounded text-sm font-bold focus:outline-none focus:ring-2 ${
+                                                        className={`w-24 px-2 py-1 border-2 rounded text-sm font-bold focus:outline-none focus:ring-2 no-spinner ${
                                                             exceedsBalance 
                                                                 ? 'border-red-600 focus:ring-red-600 bg-red-50 text-red-800' 
                                                                 : 'border-green-500 focus:ring-green-500 bg-white'
                                                         }`}
+                                                        style={{
+                                                            appearance: 'textfield',
+                                                            MozAppearance: 'textfield',
+                                                            WebkitAppearance: 'none'
+                                                        }}
                                                         value={item.requested_qty || ''}
                                                         onChange={(e) => updateItemQuantity(index, e.target.value)}
+                                                        onInput={(e) => {
+                                                            // Real-time update without lag
+                                                            const value = e.target.value;
+                                                            if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                                                                updateItemQuantity(index, value);
+                                                            }
+                                                        }}
                                                         placeholder="0.00"
                                                     />
                                                     {exceedsBalance && (
