@@ -137,13 +137,16 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
                     quantity: item.requested_qty
                 }));
 
-            const response = await fetch(`${backendUrl}/api/projects/${projectId}/validate-ra-quantities`, {
+            const response = await fetch(`${backendUrl}/api/invoices/validate-quantities`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(itemsToValidate)
+                body: JSON.stringify({
+                    project_id: projectId,
+                    selected_items: itemsToValidate
+                })
             });
 
             if (response.ok) {
