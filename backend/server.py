@@ -1935,11 +1935,25 @@ async def get_projects(current_user: dict = Depends(get_current_user)):
                 "architect": project.get("architect", "Unknown Architect"),
                 "client_id": project.get("client_id", ""),
                 "client_name": project.get("client_name", "Unknown Client"),
-                "metadata": project.get("metadata", {}),
+                "location": project.get("location"),
+                
+                # Unified metadata structure
+                "project_metadata": project.get("project_metadata", {}),
+                "metadata_validated": project.get("metadata_validated", False),
+                "validation_errors": project.get("validation_errors", []),
+                
+                # Company profile integration
+                "company_profile_id": project.get("company_profile_id"),
+                "selected_location_id": project.get("selected_location_id"),
+                "selected_bank_id": project.get("selected_bank_id"),
+                
+                # BOQ and financial data
                 "boq_items": project.get("boq_items", []),
                 "total_project_value": float(project.get("total_project_value", 0)),
                 "advance_received": float(project.get("advance_received", 0)),
                 "pending_payment": float(project.get("pending_payment", 0)),
+                
+                # Audit fields
                 "created_by": project.get("created_by"),
                 "created_at": project.get("created_at", datetime.utcnow()),
                 "updated_at": project.get("updated_at", datetime.utcnow())
