@@ -1830,6 +1830,59 @@ async def get_clients(current_user: dict = Depends(get_current_user)):
     clients = await db.clients.find().to_list(1000)
     return [ClientInfo(**client) for client in clients]
 
+@api_router.post("/admin/fix-project-metadata")
+async def fix_project_metadata_format(
+    current_user: dict = Depends(get_current_user)
+):
+    """Fix project_metadata format from list to dict for existing projects"""
+    try:
+        # Check if user is super admin
+        if current_user.get("role") != "super_admin":
+            raise HTTPException(status_code=403, detail="Only super admin can perform this operation")
+        
+        # Find projects with project_metadata as list
+        projects_to_fix = await db.projects.find({
+            "project_metadata": {"$type": "array"}  # MongoDB type check for arrays
+        }).to_list(None)
+        
+        fixed_count = 0
+        for project in projects_to_fix:
+            project_id = project.get("id")
+            old_metadata = project.get("project_metadata", [])
+            
+            # Convert list to dict
+            new_metadata = {"entries": old_metadata} if old_metadata else {}
+            
+            # Update the project
+            await db.projects.update_one(
+                {"id": project_id},
+                {
+                    "$set": {
+                        "project_metadata": new_metadata,
+                        "updated_at": datetime.utcnow()
+                    }
+                }
+            )
+            fixed_count += 1
+        
+        # Log the operation
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "fix_project_metadata",
+            f"Fixed project_metadata format for {fixed_count} projects"
+        )
+        
+        return {
+            "message": f"Successfully fixed project_metadata format for {fixed_count} projects",
+            "fixed_count": fixed_count
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fixing project metadata: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fix project metadata: {str(e)}")
+
 # Enhanced Invoice Creation and RA Tracking Endpoints
 
 @api_router.post("/projects", response_model=dict)
