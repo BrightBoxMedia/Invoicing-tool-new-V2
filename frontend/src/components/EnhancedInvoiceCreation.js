@@ -916,10 +916,10 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
                                         <td className="px-3 py-3 border-r font-bold text-blue-900">₹{(project.total_project_value / 1.18).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
                                         <td className="px-3 py-3 border-r font-bold text-blue-900">₹{(project.total_project_value * 0.18 / 1.18).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
                                         <td className="px-3 py-3 border-r font-bold text-blue-900">₹{project.total_project_value.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                                        <td className="px-3 py-3 border-r font-bold text-green-800">₹{(project.total_project_value * 0.30).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                                        <td className="px-3 py-3 border-r font-bold text-green-800">₹{(project.total_project_value * 0.45).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                                        <td className="px-3 py-3 border-r font-bold text-green-800">₹{(project.total_project_value * 0.20).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                                        <td className="px-3 py-3 font-bold text-green-800">₹{(project.total_project_value * 0.05).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                                        <td className="px-3 py-3 border-r font-bold text-green-800">₹{(project.total_project_value * (project.cash_flow_percentages?.abg_percentage || project.project_metadata?.abg_percentage || 30) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                                        <td className="px-3 py-3 border-r font-bold text-green-800">₹{(project.total_project_value * (project.cash_flow_percentages?.ra_bill_percentage || project.project_metadata?.ra_bill_percentage || 45) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                                        <td className="px-3 py-3 border-r font-bold text-green-800">₹{(project.total_project_value * (project.cash_flow_percentages?.erection_percentage || project.project_metadata?.erection_percentage || 20) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                                        <td className="px-3 py-3 font-bold text-green-800">₹{(project.total_project_value * (project.cash_flow_percentages?.pbg_percentage || project.project_metadata?.pbg_percentage || 5) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
                                     </tr>
                                     
                                     {/* Amount Left to Claim Row - Since we don't have existing invoices data, show full amounts */}
