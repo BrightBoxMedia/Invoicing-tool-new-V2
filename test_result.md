@@ -360,12 +360,11 @@
 
 ## test_plan:
   current_focus:
-    - "Company Profile Management"
-    - "Enhanced Project Creation"
     - "Enhanced Invoice Creation"
-    - "Navigation & UI/UX"
-    - "Role-based Access Control"
-  stuck_tasks: []
+    - "Enhanced Project Creation"
+    - "Company Profile Management"
+  stuck_tasks:
+    - "Enhanced Invoice Creation & RA Tracking APIs"
   test_all: false
   test_priority: "high_first"
 
