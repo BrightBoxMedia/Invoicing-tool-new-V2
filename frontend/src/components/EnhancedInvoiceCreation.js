@@ -840,10 +840,17 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
                             </button>
                             <button
                                 onClick={createInvoice}
-                                disabled={loading}
-                                className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 transition-colors"
+                                disabled={loading || invoiceData.selected_items.some(item => parseFloat(item.requested_qty || 0) > parseFloat(item.balance_qty || 0))}
+                                className={`px-6 py-2 rounded-md font-bold transition-colors ${
+                                    loading || invoiceData.selected_items.some(item => parseFloat(item.requested_qty || 0) > parseFloat(item.balance_qty || 0))
+                                        ? 'bg-red-400 text-white cursor-not-allowed' 
+                                        : 'bg-green-600 text-white hover:bg-green-700'
+                                }`}
                             >
-                                {loading ? 'Creating Invoice...' : 'Create Invoice'}
+                                {loading ? 'Creating Invoice...' : 
+                                 invoiceData.selected_items.some(item => parseFloat(item.requested_qty || 0) > parseFloat(item.balance_qty || 0)) 
+                                    ? '❌ FIX QUANTITY ERRORS FIRST' 
+                                    : '✅ Create Invoice'}
                             </button>
                         </div>
                     </div>
