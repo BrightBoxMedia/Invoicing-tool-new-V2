@@ -2514,20 +2514,27 @@ async def download_invoice_pdf(invoice_id: str, current_user: dict = Depends(get
                 "updated_at": invoice_data.get("updated_at", datetime.utcnow())
             }
             
-            # Clean items data
+            # Clean items data - handle both regular and enhanced invoice items
             for item in invoice_data.get("items", []):
                 if isinstance(item, dict):
+                    # Calculate missing fields if not present
+                    quantity = float(item.get("quantity", 0))
+                    rate = float(item.get("rate", 0))
+                    amount = float(item.get("amount", quantity * rate))
+                    gst_rate = float(item.get("gst_rate", 18.0))
+                    gst_amount = (amount * gst_rate) / 100
+                    
                     cleaned_item = {
-                        "boq_item_id": item.get("boq_item_id", item.get("serial_number", str(len(cleaned_invoice["items"]) + 1))),
+                        "boq_item_id": item.get("boq_item_id", item.get("id", str(len(cleaned_invoice["items"]) + 1))),
                         "serial_number": str(item.get("serial_number", len(cleaned_invoice["items"]) + 1)),
                         "description": str(item.get("description", "Unknown Item")),
                         "unit": str(item.get("unit", "nos")),
-                        "quantity": float(item.get("quantity", 0)),
-                        "rate": float(item.get("rate", 0)),
-                        "amount": float(item.get("amount", 0)),
-                        "gst_rate": float(item.get("gst_rate", 18.0)),
-                        "gst_amount": float(item.get("gst_amount", 0)),
-                        "total_with_gst": float(item.get("total_with_gst", 0))
+                        "quantity": quantity,
+                        "rate": rate,
+                        "amount": amount,
+                        "gst_rate": gst_rate,
+                        "gst_amount": gst_amount,
+                        "total_with_gst": amount + gst_amount
                     }
                     cleaned_invoice["items"].append(cleaned_item)
             
