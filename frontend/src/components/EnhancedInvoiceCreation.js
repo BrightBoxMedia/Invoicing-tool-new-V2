@@ -249,26 +249,21 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
         try {
             setLoading(true);
             
-            // Check for validation errors BEFORE proceeding
-            const hasValidationErrors = invoiceData.selected_items.some(item => 
-                item.requested_qty > 0 && item.requested_qty > item.balance_qty
+            // CRITICAL VALIDATION - Block if ANY item exceeds quantity
+            const errorItems = invoiceData.selected_items.filter(item => 
+                parseFloat(item.requested_qty || 0) > parseFloat(item.balance_qty || 0)
             );
             
-            if (hasValidationErrors) {
-                setError('❌ CRITICAL ERROR: Some items exceed available balance quantity. Please reduce quantities for highlighted items in red before proceeding.');
+            if (errorItems.length > 0) {
+                const errorMessages = errorItems.map(item => 
+                    `${item.description}: Requested ${item.requested_qty} > Available ${item.balance_qty}`
+                );
+                setError(`❌ INVOICE CREATION BLOCKED! The following items exceed available quantity:\n${errorMessages.join('\n')}`);
                 setLoading(false);
-                return;
+                return; // HARD STOP - Don't proceed
             }
 
-            // Validate quantities with backend
-            const isValid = await validateQuantities();
-            if (!isValid) {
-                setError('❌ Quantity validation failed. Please check the highlighted items and ensure you do not exceed available balance.');
-                setLoading(false);
-                return;
-            }
-
-            const selectedItems = invoiceData.selected_items.filter(item => item.requested_qty > 0);
+            const selectedItems = invoiceData.selected_items.filter(item => parseFloat(item.requested_qty || 0) > 0);
             
             if (selectedItems.length === 0) {
                 setError('❌ Please select at least one item with quantity greater than 0.');
@@ -276,7 +271,28 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
                 return;
             }
 
-            const totals = calculateTotals();
+            // Calculate everything dynamically - NEVER use Excel values
+            let subtotal = 0;
+            let totalCGST = 0;
+            let totalSGST = 0;
+            let totalIGST = 0;
+            
+            selectedItems.forEach(item => {
+                const amount = parseFloat(item.requested_qty) * parseFloat(item.rate);
+                subtotal += amount;
+                
+                const gstRate = parseFloat(item.gst_rate || 18);
+                if (item.gst_type === 'cgst_sgst') {
+                    const halfGST = (amount * gstRate) / 200; // Divide by 200 for half of percentage
+                    totalCGST += halfGST;
+                    totalSGST += halfGST;
+                } else {
+                    totalIGST += (amount * gstRate) / 100;
+                }
+            });
+
+            const totalGST = totalCGST + totalSGST + totalIGST;
+            const grandTotal = subtotal + totalGST;
             
             const invoicePayload = {
                 project_id: projectId,
@@ -284,25 +300,24 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
                 invoice_gst_type: invoiceData.invoice_gst_type,
                 company_location_id: invoiceData.company_location_id,
                 company_bank_id: invoiceData.company_bank_id,
-                payment_terms: invoiceData.payment_terms,
+                payment_terms: invoiceData.payment_terms || 'Net 30 Days',
                 advance_received: parseFloat(invoiceData.advance_received) || 0,
                 invoice_items: selectedItems.map(item => ({
                     id: item.id,
                     description: item.description,
-                    quantity: item.requested_qty,
+                    quantity: parseFloat(item.requested_qty),
                     unit: item.unit,
-                    rate: item.rate,
-                    amount: item.requested_qty * item.rate, // Calculate dynamically
-                    gst_rate: item.gst_rate,
-                    gst_type: item.gst_type
+                    rate: parseFloat(item.rate),
+                    amount: parseFloat(item.requested_qty) * parseFloat(item.rate),
+                    gst_rate: parseFloat(item.gst_rate || 18),
+                    gst_type: item.gst_type || 'cgst_sgst'
                 })),
-                item_gst_mappings: invoiceData.item_gst_mappings,
-                subtotal: totals.subtotal,
-                cgst_amount: totals.totalCGST,
-                sgst_amount: totals.totalSGST,
-                igst_amount: totals.totalIGST,
-                total_gst_amount: totals.totalGST,
-                total_amount: totals.grandTotal
+                subtotal: subtotal,
+                cgst_amount: totalCGST,
+                sgst_amount: totalSGST,
+                igst_amount: totalIGST,
+                total_gst_amount: totalGST,
+                total_amount: grandTotal
             };
 
             const token = localStorage.getItem('token');
@@ -317,15 +332,24 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
 
             if (response.ok) {
                 const result = await response.json();
-                alert(`✅ Invoice created successfully! RA Number: ${result.ra_number || 'Proforma'}`);
-                onSuccess?.();
-                onClose?.();
+                alert(`✅ SUCCESS! Invoice created: ${result.ra_number || 'Proforma'}\nTotal: ₹${grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2})}`);
+                
+                // Force refresh of parent component
+                if (onSuccess) {
+                    await onSuccess();
+                }
+                if (onClose) {
+                    onClose();
+                }
+                
+                // Force page reload to show updated data
+                window.location.reload();
             } else {
                 const errorData = await response.json();
                 setError(`❌ Failed to create invoice: ${errorData.detail || 'Unknown error'}`);
             }
         } catch (err) {
-            setError(`❌ Network error creating invoice: ${err.message}`);
+            setError(`❌ Network error: ${err.message}`);
             console.error('Error creating invoice:', err);
         } finally {
             setLoading(false);
