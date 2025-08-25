@@ -901,10 +901,10 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
                                         <td className="px-3 py-2 border-r text-blue-800">100%</td>
                                         <td className="px-3 py-2 border-r text-blue-800">18%</td>
                                         <td className="px-3 py-2 border-r text-blue-800">118%</td>
-                                        <td className="px-3 py-2 border-r text-green-800">30%</td>
-                                        <td className="px-3 py-2 border-r text-green-800">45%</td>
-                                        <td className="px-3 py-2 border-r text-green-800">20%</td>
-                                        <td className="px-3 py-2 text-green-800">5%</td>
+                                        <td className="px-3 py-2 border-r text-green-800">{project.cash_flow_percentages?.abg_percentage || project.project_metadata?.abg_percentage || 30}%</td>
+                                        <td className="px-3 py-2 border-r text-green-800">{project.cash_flow_percentages?.ra_bill_percentage || project.project_metadata?.ra_bill_percentage || 45}%</td>
+                                        <td className="px-3 py-2 border-r text-green-800">{project.cash_flow_percentages?.erection_percentage || project.project_metadata?.erection_percentage || 20}%</td>
+                                        <td className="px-3 py-2 text-green-800">{project.cash_flow_percentages?.pbg_percentage || project.project_metadata?.pbg_percentage || 5}%</td>
                                     </tr>
                                     
                                     {/* Overall Row */}
