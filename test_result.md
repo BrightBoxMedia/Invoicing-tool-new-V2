@@ -542,15 +542,18 @@
 
   - task: "Enhanced Invoice Creation & RA Tracking APIs"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
         - working: true
         - agent: "testing"
         - comment: "✅ TESTED: Enhanced Invoice Creation & RA Tracking APIs working correctly. GET /api/projects/{id}/ra-tracking provides current RA tracking data. POST /api/invoices/validate-quantities validates invoice quantities against balance. POST /api/invoices/enhanced creates enhanced invoices with GST mapping (CGST+SGST vs IGST logic) and RA tracking. RA number assignment working (RA1, RA2, etc.), quantity validation preventing over-billing, GST calculations accurate for interstate vs intrastate transactions. Enhanced invoices properly integrate with company profiles and maintain quantity balances."
+        - working: false
+        - agent: "testing"
+        - comment: "🚨 CRITICAL ISSUES FOUND in Enhanced Invoice System: 1) QUANTITY VALIDATION NOT BLOCKING - The enhanced invoice creation endpoint is NOT properly validating quantities against BOQ balance. Root cause: Data mapping issue in line 4536-4539 of server.py where invoice_items with 'quantity' field are passed to validation function expecting 'selected_items' with 'requested_qty' field. This allows over-quantity invoices to be created successfully when they should be blocked. 2) PROJECT DETAILS 500 ERROR - Enhanced projects cannot be retrieved due to Pydantic validation error: metadata field expects dict but receives list. Enhanced project creation stores metadata as list but Project model expects dict. 3) MISSING GST BREAKDOWN - Enhanced invoices missing cgst_amount and sgst_amount fields in response, only showing total_gst_amount. These are CRITICAL bugs that prevent the enhanced invoice system from working as intended for user showcase."
 
 ## agent_communication:
     - agent: "main"
