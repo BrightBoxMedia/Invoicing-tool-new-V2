@@ -541,9 +541,9 @@
 
   - task: "Enhanced Invoice Creation & RA Tracking APIs"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
@@ -553,6 +553,9 @@
         - working: false
         - agent: "testing"
         - comment: "🚨 CRITICAL ISSUES FOUND in Enhanced Invoice System: 1) QUANTITY VALIDATION NOT BLOCKING - The enhanced invoice creation endpoint is NOT properly validating quantities against BOQ balance. Root cause: Data mapping issue in line 4536-4539 of server.py where invoice_items with 'quantity' field are passed to validation function expecting 'selected_items' with 'requested_qty' field. This allows over-quantity invoices to be created successfully when they should be blocked. 2) PROJECT DETAILS 500 ERROR - Enhanced projects cannot be retrieved due to Pydantic validation error: metadata field expects dict but receives list. Enhanced project creation stores metadata as list but Project model expects dict. 3) MISSING GST BREAKDOWN - Enhanced invoices missing cgst_amount and sgst_amount fields in response, only showing total_gst_amount. These are CRITICAL bugs that prevent the enhanced invoice system from working as intended for user showcase."
+        - working: true
+        - agent: "testing"
+        - comment: "🎉 ALL CRITICAL FIXES VERIFIED WORKING! Comprehensive testing completed with 100% success rate (6/6 tests passed). ✅ QUANTITY VALIDATION BLOCKING: Over-quantity invoices (150 when balance is 100) are now correctly blocked with proper error messages. The data mapping fix in enhanced invoice creation properly converts 'quantity' to 'requested_qty' for validation. ✅ VALID QUANTITY INVOICES: Valid invoices (50 when balance is 100) are successfully created with proper RA number assignment (RA1, RA2, etc.). ✅ PROJECT DETAILS 500 ERROR FIXED: Enhanced projects can now be retrieved without 500 errors. The metadata field handling has been corrected. ✅ INVOICE VISIBILITY: Created invoices now appear correctly in project details view. ✅ GST BREAKDOWN COMPLETE: Enhanced invoice responses now include separate cgst_amount and sgst_amount fields with correct calculations (CGST: ₹9000, SGST: ₹9000, Total: ₹18000). ✅ PDF GENERATION: Enhanced invoices generate valid PDFs successfully. Fixed RA tracking bug (unhashable dict_keys error) in line 4469. All critical functionality is now working correctly and ready for user showcase."
 
 ## agent_communication:
     - agent: "main"
