@@ -625,7 +625,11 @@ const Projects = () => {
     project_name: '',
     client: '',
     architect: '',
-    location: ''
+    location: '',
+    abg_percentage: 30,
+    ra_bill_percentage: 45,
+    erection_percentage: 20,
+    pbg_percentage: 5
   });
 
   useEffect(() => {
