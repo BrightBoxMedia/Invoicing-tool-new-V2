@@ -236,14 +236,33 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
         try {
             setLoading(true);
             
-            // Validate quantities first
+            // Check for validation errors BEFORE proceeding
+            const hasValidationErrors = invoiceData.selected_items.some(item => 
+                item.requested_qty > 0 && item.requested_qty > item.balance_qty
+            );
+            
+            if (hasValidationErrors) {
+                setError('❌ CRITICAL ERROR: Some items exceed available balance quantity. Please reduce quantities for highlighted items in red before proceeding.');
+                setLoading(false);
+                return;
+            }
+
+            // Validate quantities with backend
             const isValid = await validateQuantities();
             if (!isValid) {
-                setError('Quantity validation failed. Please check the highlighted items.');
+                setError('❌ Quantity validation failed. Please check the highlighted items and ensure you do not exceed available balance.');
+                setLoading(false);
                 return;
             }
 
             const selectedItems = invoiceData.selected_items.filter(item => item.requested_qty > 0);
+            
+            if (selectedItems.length === 0) {
+                setError('❌ Please select at least one item with quantity greater than 0.');
+                setLoading(false);
+                return;
+            }
+
             const totals = calculateTotals();
             
             const invoicePayload = {
@@ -260,7 +279,7 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
                     quantity: item.requested_qty,
                     unit: item.unit,
                     rate: item.rate,
-                    amount: item.amount,
+                    amount: item.requested_qty * item.rate, // Calculate dynamically
                     gst_rate: item.gst_rate,
                     gst_type: item.gst_type
                 })),
@@ -284,14 +303,16 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
             });
 
             if (response.ok) {
+                const result = await response.json();
+                alert(`✅ Invoice created successfully! RA Number: ${result.ra_number || 'Proforma'}`);
                 onSuccess?.();
                 onClose?.();
             } else {
                 const errorData = await response.json();
-                setError(errorData.detail || 'Failed to create invoice');
+                setError(`❌ Failed to create invoice: ${errorData.detail || 'Unknown error'}`);
             }
         } catch (err) {
-            setError('Network error creating invoice');
+            setError(`❌ Network error creating invoice: ${err.message}`);
             console.error('Error creating invoice:', err);
         } finally {
             setLoading(false);
