@@ -661,10 +661,11 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
                                                 ))}
                                                 
                                                 <td className="px-4 py-4">
-                                                    <span className={`text-sm font-medium ${
-                                                        item.balance_qty <= 0 ? 'text-red-600' : 'text-green-600'
+                                                    <span className={`text-sm font-bold px-2 py-1 rounded ${
+                                                        balanceQty <= 0 ? 'text-red-800 bg-red-200' : 
+                                                        exceedsBalance ? 'text-red-800 bg-red-200' : 'text-green-800 bg-green-200'
                                                     }`}>
-                                                        {item.balance_qty}
+                                                        {balanceQty.toFixed(2)} {item.unit}
                                                     </span>
                                                 </td>
                                                 
@@ -673,22 +674,29 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
                                                         type="number"
                                                         step="0.01"
                                                         min="0"
-                                                        className={`w-20 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-1 ${
+                                                        max={balanceQty}
+                                                        className={`w-24 px-2 py-1 border-2 rounded text-sm font-bold focus:outline-none focus:ring-2 ${
                                                             exceedsBalance 
-                                                                ? 'border-red-500 focus:ring-red-500 bg-red-50' 
-                                                                : 'border-gray-300 focus:ring-blue-500'
+                                                                ? 'border-red-600 focus:ring-red-600 bg-red-50 text-red-800' 
+                                                                : 'border-green-500 focus:ring-green-500 bg-white'
                                                         }`}
-                                                        value={item.requested_qty}
+                                                        value={item.requested_qty || ''}
                                                         onChange={(e) => updateItemQuantity(index, e.target.value)}
+                                                        placeholder="0.00"
                                                     />
+                                                    {exceedsBalance && (
+                                                        <div className="text-xs text-red-700 mt-1 font-bold">
+                                                            MAX: {balanceQty.toFixed(2)}
+                                                        </div>
+                                                    )}
                                                 </td>
                                                 
-                                                <td className="px-4 py-4 text-sm text-gray-900">
-                                                    ₹{item.rate?.toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                                                <td className={`px-4 py-4 text-sm ${exceedsBalance ? 'text-red-800 font-bold' : 'text-gray-900'}`}>
+                                                    ₹{parseFloat(item.rate || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}
                                                 </td>
                                                 
-                                                <td className="px-4 py-4 text-sm font-medium text-gray-900">
-                                                    ₹{item.amount?.toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                                                <td className={`px-4 py-4 text-sm font-bold ${exceedsBalance ? 'text-red-800' : 'text-gray-900'}`}>
+                                                    ₹{((parseFloat(item.requested_qty || 0)) * parseFloat(item.rate || 0)).toLocaleString('en-IN', {minimumFractionDigits: 2})}
                                                 </td>
                                                 
                                                 <td className="px-4 py-4">
