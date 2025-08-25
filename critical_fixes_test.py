@@ -261,7 +261,7 @@ class CriticalFixesTester:
                 {
                     "boq_item_id": "1",
                     "serial_number": "1",
-                    "description": "Foundation Excavation - Valid Quantity",
+                    "description": "Foundation Excavation",  # Exact match with BOQ
                     "unit": "Cum", 
                     "quantity": 50.0,  # LESS than available (100)
                     "rate": 1500.0,
