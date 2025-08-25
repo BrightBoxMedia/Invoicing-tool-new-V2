@@ -707,8 +707,8 @@ class Project(BaseModel):
     selected_location_id: Optional[str] = None
     selected_bank_id: Optional[str] = None
     
-    # Enhanced project metadata
-    project_metadata: List[dict] = Field(default_factory=list)
+    # Enhanced project metadata - CHANGED TO OPTIONAL DICT TO FIX ERROR
+    project_metadata: Optional[dict] = Field(default_factory=dict)  # Changed from List[dict] to dict
     metadata_validated: bool = False
     validation_errors: List[str] = Field(default_factory=list)
     
