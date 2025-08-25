@@ -169,7 +169,8 @@ class CriticalFixesTester:
                     "quantity": 100.0,  # Total available quantity
                     "rate": 1500.0,
                     "amount": 150000.0,
-                    "gst_rate": 18.0
+                    "gst_rate": 18.0,
+                    "total_with_gst": 177000.0  # amount + GST
                 },
                 {
                     "id": "2",  # Add ID field
@@ -179,7 +180,8 @@ class CriticalFixesTester:
                     "quantity": 50.0,
                     "rate": 4000.0,
                     "amount": 200000.0,
-                    "gst_rate": 18.0
+                    "gst_rate": 18.0,
+                    "total_with_gst": 236000.0  # amount + GST
                 }
             ]
         }
