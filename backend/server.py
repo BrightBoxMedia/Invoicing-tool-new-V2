@@ -1905,32 +1905,86 @@ async def create_enhanced_project(
         raise HTTPException(status_code=500, detail=f"Failed to create enhanced project: {str(e)}")
 
 @api_router.post("/projects", response_model=dict)
-async def create_project(project_data: Project, current_user: dict = Depends(get_current_user)):
+async def create_project(
+    project_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create unified project with all enhanced features"""
     try:
-        # Set additional fields
-        project_data.created_by = current_user["id"]
-        project_data.pending_payment = project_data.total_project_value - project_data.advance_received
-        project_data.updated_at = datetime.utcnow()
+        # Validate metadata if provided
+        metadata = project_data.get("project_metadata", [])
+        boq_items = project_data.get("boq_items", [])
         
-        # Validate BOQ items are properly formed
-        if not project_data.boq_items:
-            raise HTTPException(status_code=400, detail="BOQ items cannot be empty")
+        validation_result = {"valid": True, "errors": []}
+        if metadata and isinstance(metadata, list) and len(metadata) > 0:
+            validator = ProjectMetadataValidator()
+            validation_result = await validator.validate_project_metadata(metadata, boq_items)
         
-        # Insert into database
-        await db.projects.insert_one(project_data.dict())
+        # Create unified project with all features
+        project_id = str(uuid.uuid4())
+        
+        # Convert list metadata to dict for storage if needed
+        if isinstance(metadata, list):
+            metadata_dict = {"entries": metadata} if metadata else {}
+        else:
+            metadata_dict = metadata or {}
+        
+        unified_project = {
+            "id": project_id,
+            "project_name": project_data.get("project_name", ""),
+            "architect": project_data.get("architect", ""),
+            "client_id": project_data.get("client_id"),
+            "client_name": project_data.get("client_name", ""),
+            "location": project_data.get("location", ""),
+            
+            # Unified metadata structure
+            "project_metadata": metadata_dict,
+            "metadata_validated": validation_result["valid"],
+            "validation_errors": validation_result.get("errors", []),
+            
+            # Company profile integration (always available)
+            "company_profile_id": project_data.get("company_profile_id"),
+            "selected_location_id": project_data.get("selected_location_id"),
+            "selected_bank_id": project_data.get("selected_bank_id"),
+            
+            # BOQ and financial data
+            "boq_items": boq_items,
+            "total_project_value": float(project_data.get("total_project_value", 0)),
+            "advance_received": float(project_data.get("advance_received", 0)),
+            "pending_payment": float(project_data.get("total_project_value", 0)) - float(project_data.get("advance_received", 0)),
+            
+            # Audit fields
+            "created_by": current_user["id"],
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        
+        # Block project creation if metadata validation failed and it's mandatory
+        if metadata and not validation_result["valid"]:
+            return {
+                "success": False,
+                "message": "Project metadata validation failed",
+                "validation_result": validation_result,
+                "can_proceed": False
+            }
+        
+        # Insert unified project
+        await db.projects.insert_one(unified_project)
         
         # Log activity
         await log_activity(
             current_user["id"], current_user["email"], current_user["role"],
-            "project_created", 
-            f"Created project: {project_data.project_name} (Value: ₹{project_data.total_project_value:,.2f}, Advance: ₹{project_data.advance_received:,.2f})",
-            project_id=project_data.id
+            "project_created",
+            f"Created project: {unified_project['project_name']} with unified enhanced features"
         )
         
-        return {"message": "Project created successfully", "project_id": project_data.id}
+        return {
+            "success": True,
+            "message": "Project created successfully",
+            "project_id": project_id,
+            "validation_result": validation_result
+        }
         
-    except HTTPException:
-        raise
     except Exception as e:
         logger.error(f"Error creating project: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to create project: {str(e)}")
