@@ -4466,7 +4466,7 @@ async def get_ra_tracking_data(
         return {
             "project_id": project_id,
             "ra_tracking": ra_tracking,
-            "existing_ra_numbers": list(set(ra_usage.keys() for item in ra_tracking for ra_usage in [item["ra_usage"]] if ra_usage))
+            "existing_ra_numbers": list(set(ra_number for item in ra_tracking for ra_number in item["ra_usage"].keys()))
         }
         
     except HTTPException:
