@@ -4563,10 +4563,18 @@ async def create_enhanced_invoice(
         
         # Create enhanced invoice document
         invoice_id = str(uuid.uuid4())
+        
+        # Generate invoice number
+        invoice_number_counter = await db.invoices.count_documents({}) + 1
+        invoice_number = f"INV-{invoice_number_counter:06d}"
+        
         enhanced_invoice = {
             "id": invoice_id,
+            "invoice_number": invoice_number,
             "project_id": invoice_data.get("project_id"),
+            "project_name": project.get("project_name", ""),
             "client_id": project.get("client_id"),
+            "client_name": project.get("client_name", ""),
             "invoice_type": invoice_data.get("invoice_type"),
             "invoice_gst_type": invoice_data.get("invoice_gst_type", "cgst_sgst"),
             "ra_number": ra_number,
