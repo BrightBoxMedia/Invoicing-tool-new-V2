@@ -4532,16 +4532,25 @@ async def create_enhanced_invoice(
 ):
     """Create enhanced invoice with GST mapping and RA tracking"""
     try:
-        # Validate quantities first
+        # Validate quantities first - FIX CRITICAL BUG
+        # Convert invoice_items to expected format for validation
+        selected_items_for_validation = []
+        for item in invoice_data.get("invoice_items", []):
+            selected_items_for_validation.append({
+                "description": item.get("description", ""),
+                "requested_qty": item.get("quantity", 0)  # Map quantity to requested_qty
+            })
+        
         validation_result = await validate_invoice_quantities({
             "project_id": invoice_data.get("project_id"),
-            "selected_items": invoice_data.get("invoice_items", [])
+            "selected_items": selected_items_for_validation  # Use correct field name
         }, current_user)
         
         if not validation_result["valid"]:
             raise HTTPException(status_code=400, detail={
-                "message": "Quantity validation failed",
-                "errors": validation_result["errors"]
+                "message": "❌ QUANTITY VALIDATION FAILED - Some items exceed available balance",
+                "errors": validation_result["errors"],
+                "validation_details": "Invoice creation blocked to prevent over-billing"
             })
         
         # Get project details
