@@ -360,12 +360,11 @@
 
 ## test_plan:
   current_focus:
-    - "Expandable Project Dashboard"
-    - "Smart Invoice Creation System"
-    - "Enhanced Invoice Breakdown Display"
-    - "Project Summary & Filters"
-    - "Bank Guarantee Dashboard"
-    - "UI/UX Improvements"
+    - "Company Profile Management"
+    - "Enhanced Project Creation"
+    - "Enhanced Invoice Creation"
+    - "Navigation & UI/UX"
+    - "Role-based Access Control"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
