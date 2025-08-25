@@ -143,7 +143,7 @@ class CriticalFixesTester:
             self.log_test("Create company profile", False, f"- {result}")
             return False
 
-        # Create enhanced project with BOQ items
+        # Create enhanced project with BOQ items - use correct field names
         project_data = {
             "project_name": "Foundation Excavation Project",
             "architect": "Test Architect",
@@ -151,7 +151,9 @@ class CriticalFixesTester:
             "client_name": "Foundation Test Client Ltd",
             "company_profile_id": self.test_resources['company_profile_id'],
             "created_by": self.user_data['id'],
-            "metadata": [{
+            "total_project_value": 350000.0,
+            "advance_received": 0.0,
+            "project_metadata": [{  # Use project_metadata instead of metadata
                 "purchase_order_number": "PO-FOUNDATION-001",
                 "type": "Construction",
                 "basic": 500000.0,
@@ -160,6 +162,7 @@ class CriticalFixesTester:
             }],
             "boq_items": [
                 {
+                    "id": "1",  # Add ID field
                     "serial_number": "1",
                     "description": "Foundation Excavation",
                     "unit": "Cum",
@@ -169,6 +172,7 @@ class CriticalFixesTester:
                     "gst_rate": 18.0
                 },
                 {
+                    "id": "2",  # Add ID field
                     "serial_number": "2", 
                     "description": "Concrete Pouring",
                     "unit": "Cum",
