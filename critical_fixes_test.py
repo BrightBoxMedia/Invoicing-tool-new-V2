@@ -156,9 +156,9 @@ class CriticalFixesTester:
             "project_metadata": [{  # Use project_metadata instead of metadata
                 "purchase_order_number": "PO-FOUNDATION-001",
                 "type": "Construction",
-                "basic": 500000.0,
+                "basic": 350000.0,  # Match BOQ total
                 "overall_multiplier": 1.0,
-                "po_inv_value": 500000.0
+                "po_inv_value": 350000.0  # Match BOQ total
             }],
             "boq_items": [
                 {
