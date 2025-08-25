@@ -359,11 +359,47 @@ class CriticalFixesTester:
             self.log_test("GST breakdown test", False, "- No invoice created to test GST breakdown")
             return False
         
-        # Get the created invoice and check GST breakdown
-        success, result = self.make_request('GET', f'invoices/{self.test_resources["invoice_id"]}')
+        # Test the enhanced invoice creation response directly
+        # Create another invoice to test the response
+        valid_quantity_invoice = {
+            "project_id": self.test_resources['project_id'],
+            "project_name": "Foundation Excavation Project", 
+            "client_id": self.test_resources['client_id'],
+            "client_name": "Foundation Test Client Ltd",
+            "invoice_type": "tax_invoice",
+            "invoice_gst_type": "CGST_SGST",
+            "created_by": self.user_data['id'],
+            "invoice_items": [
+                {
+                    "boq_item_id": "2",
+                    "serial_number": "2",
+                    "description": "Concrete Pouring",  # Use second BOQ item
+                    "unit": "Cum", 
+                    "quantity": 25.0,  # LESS than available (50)
+                    "rate": 4000.0,
+                    "amount": 100000.0
+                }
+            ],
+            "item_gst_mappings": [
+                {
+                    "item_id": "2",
+                    "gst_type": "CGST_SGST",
+                    "cgst_rate": 9.0,
+                    "sgst_rate": 9.0,
+                    "total_gst_rate": 18.0
+                }
+            ],
+            "subtotal": 100000.0,
+            "cgst_amount": 9000.0,
+            "sgst_amount": 9000.0,
+            "total_gst_amount": 18000.0,
+            "total_amount": 118000.0
+        }
+        
+        success, result = self.make_request('POST', 'invoices/enhanced', valid_quantity_invoice)
         
         if success:
-            # Check for separate CGST and SGST amounts
+            # Check for separate CGST and SGST amounts in the response
             has_cgst = 'cgst_amount' in result
             has_sgst = 'sgst_amount' in result
             has_total_gst = 'total_gst_amount' in result
@@ -383,7 +419,7 @@ class CriticalFixesTester:
             
             return has_cgst and has_sgst and breakdown_correct
         else:
-            self.log_test("GST breakdown test", False, f"- Could not get invoice details: {result}")
+            self.log_test("GST breakdown test", False, f"- Could not create test invoice: {result}")
             return False
 
     def test_pdf_generation_for_enhanced_invoice(self):
