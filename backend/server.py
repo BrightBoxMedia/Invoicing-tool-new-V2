@@ -700,22 +700,24 @@ class Project(BaseModel):
     client_id: Optional[str] = None
     client_name: str
     location: Optional[str] = None
-    metadata: Optional[dict] = Field(default_factory=dict)
     
-    # Enhanced company profile integration
+    # Unified metadata structure (combining old metadata and project_metadata)
+    project_metadata: Optional[dict] = Field(default_factory=dict)
+    metadata_validated: bool = False
+    validation_errors: List[str] = Field(default_factory=list)
+    
+    # Company profile integration (always available)
     company_profile_id: Optional[str] = None
     selected_location_id: Optional[str] = None
     selected_bank_id: Optional[str] = None
     
-    # Enhanced project metadata - CHANGED TO OPTIONAL DICT TO FIX ERROR
-    project_metadata: Optional[dict] = Field(default_factory=dict)  # Changed from List[dict] to dict
-    metadata_validated: bool = False
-    validation_errors: List[str] = Field(default_factory=list)
-    
+    # BOQ and financial data
     boq_items: List[dict] = Field(default_factory=list)
     total_project_value: float = 0.0
     advance_received: float = 0.0
     pending_payment: float = 0.0
+    
+    # Audit fields
     created_by: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
