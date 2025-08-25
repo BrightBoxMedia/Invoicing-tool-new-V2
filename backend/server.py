@@ -4561,26 +4561,30 @@ async def create_enhanced_invoice(
             
             ra_number = f"RA{max_ra_num + 1}"
         
-        # Create enhanced invoice document
+        # Create enhanced invoice document with ALL required fields
         invoice_id = str(uuid.uuid4())
         
-        # Generate invoice number
+        # Generate proper invoice number
         invoice_number_counter = await db.invoices.count_documents({}) + 1
         invoice_number = f"INV-{invoice_number_counter:06d}"
+        
+        # Get client information
+        client = await db.clients.find_one({"id": project.get("client_id")})
+        client_name = client.get("client_name", "Unknown Client") if client else project.get("client_name", "Unknown Client")
         
         enhanced_invoice = {
             "id": invoice_id,
             "invoice_number": invoice_number,
             "project_id": invoice_data.get("project_id"),
-            "project_name": project.get("project_name", ""),
-            "client_id": project.get("client_id"),
-            "client_name": project.get("client_name", ""),
+            "project_name": project.get("project_name", "Unknown Project"),
+            "client_id": project.get("client_id", ""),
+            "client_name": client_name,
             "invoice_type": invoice_data.get("invoice_type"),
             "invoice_gst_type": invoice_data.get("invoice_gst_type", "cgst_sgst"),
-            "ra_number": ra_number,
+            "ra_number": ra_number if invoice_data.get("invoice_type") == "tax_invoice" else "",
             "company_location_id": invoice_data.get("company_location_id"),
             "company_bank_id": invoice_data.get("company_bank_id"),
-            "payment_terms": invoice_data.get("payment_terms", ""),
+            "payment_terms": invoice_data.get("payment_terms", "Net 30 Days"),
             "advance_received": float(invoice_data.get("advance_received", 0)),
             "items": invoice_data.get("invoice_items", []),
             "item_gst_mappings": invoice_data.get("item_gst_mappings", []),
@@ -4591,7 +4595,14 @@ async def create_enhanced_invoice(
             "total_gst_amount": float(invoice_data.get("total_gst_amount", 0)),
             "total_amount": float(invoice_data.get("total_amount", 0)),
             "status": "draft",
+            "is_partial": True,
+            "billing_percentage": None,
+            "cumulative_billed": None,
+            "invoice_date": datetime.utcnow(),
+            "due_date": None,
             "created_by": current_user["id"],
+            "reviewed_by": None,
+            "approved_by": None,
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow()
         }
