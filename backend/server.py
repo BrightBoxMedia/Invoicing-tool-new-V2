@@ -3049,13 +3049,20 @@ async def get_filtered_projects(
             if not project or not isinstance(project, dict):
                 continue
                 
+            # FIX: Ensure project_metadata is always a dict
+            project_metadata = project.get("project_metadata", {})
+            if isinstance(project_metadata, list):
+                project_metadata = {"entries": project_metadata}
+            elif project_metadata is None:
+                project_metadata = {}
+                
             cleaned_project = {
                 "id": project.get("id", str(uuid.uuid4())),
                 "project_name": project.get("project_name", "Untitled Project"),
                 "architect": project.get("architect", "Unknown Architect"),
                 "client_id": project.get("client_id", ""),
                 "client_name": project.get("client_name", "Unknown Client"),
-                "metadata": project.get("metadata", {}),
+                "project_metadata": project_metadata,
                 "boq_items": project.get("boq_items", []),
                 "total_project_value": float(project.get("total_project_value", 0)),
                 "advance_received": float(project.get("advance_received", 0)),
