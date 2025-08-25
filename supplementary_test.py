@@ -134,9 +134,9 @@ class SupplementaryTester:
         # Test RA tracking endpoint
         success, ra_tracking = self.make_request('GET', f'projects/{project_id}/ra-tracking')
         if success:
-            has_tracking_structure = 'project_id' in ra_tracking and 'items' in ra_tracking
+            has_tracking_structure = 'project_id' in ra_tracking and 'ra_tracking' in ra_tracking
             self.log_test("RA tracking endpoint", has_tracking_structure,
-                        f"- Project {project_id} has RA tracking data")
+                        f"- Project {project_id} has RA tracking structure")
         else:
             self.log_test("RA tracking endpoint", False, f"- {ra_tracking}")
         
