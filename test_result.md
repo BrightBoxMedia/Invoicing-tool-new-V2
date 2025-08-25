@@ -360,11 +360,10 @@
 
 ## test_plan:
   current_focus:
+    - "Unified Project System Testing"
     - "Enhanced Invoice Creation"
-    - "Enhanced Project Creation"
     - "Company Profile Management"
-  stuck_tasks:
-    - "Enhanced Invoice Creation & RA Tracking APIs"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
