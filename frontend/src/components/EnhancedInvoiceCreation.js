@@ -885,10 +885,10 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
                                         <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">Basic</th>
                                         <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">GST (18%)</th>
                                         <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">PO/Inv Value</th>
-                                        <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">ABG (30%)</th>
-                                        <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">RA Bill (45%)</th>
-                                        <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">Erection (20%)</th>
-                                        <th className="px-3 py-3 text-left text-xs font-bold uppercase">PBG (5%)</th>
+                                        <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">ABG ({project.cash_flow_percentages?.abg_percentage || project.project_metadata?.abg_percentage || 30}%)</th>
+                                        <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">RA Bill ({project.cash_flow_percentages?.ra_bill_percentage || project.project_metadata?.ra_bill_percentage || 45}%)</th>
+                                        <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">Erection ({project.cash_flow_percentages?.erection_percentage || project.project_metadata?.erection_percentage || 20}%)</th>
+                                        <th className="px-3 py-3 text-left text-xs font-bold uppercase">PBG ({project.cash_flow_percentages?.pbg_percentage || project.project_metadata?.pbg_percentage || 5}%)</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
