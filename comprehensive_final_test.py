@@ -288,7 +288,7 @@ class ComprehensiveFinalTester:
         else:
             self.log_test("Valid quantity invoice creation", False, f"- {result}", is_critical=True)
         
-        # Test 2: Over-quantity invoice (should be blocked)
+        # Test 2: Over-quantity invoice (should be blocked) - Use enhanced endpoint for quantity validation
         print("\n  🚫 Testing Over-Quantity Blocking...")
         over_quantity_invoice_data = {
             "project_id": project_id,
@@ -296,7 +296,8 @@ class ComprehensiveFinalTester:
             "client_id": client_id,
             "client_name": "Enterprise Test Client Ltd",
             "invoice_type": "tax_invoice",
-            "items": [
+            "invoice_gst_type": "CGST_SGST",
+            "invoice_items": [  # Use invoice_items for enhanced endpoint
                 {
                     "boq_item_id": "1",
                     "serial_number": "1",
@@ -304,20 +305,27 @@ class ComprehensiveFinalTester:
                     "unit": "Cum",
                     "quantity": 400.0,  # Invalid: 400 + 200 (already billed) = 600 > 500 available
                     "rate": 2500.0,
-                    "amount": 1000000.0,
-                    "gst_rate": 18.0,
-                    "gst_amount": 180000.0,
-                    "total_with_gst": 1180000.0
+                    "amount": 1000000.0
+                }
+            ],
+            "item_gst_mappings": [
+                {
+                    "item_id": "1",
+                    "gst_type": "CGST_SGST",
+                    "cgst_rate": 9.0,
+                    "sgst_rate": 9.0,
+                    "total_gst_rate": 18.0
                 }
             ],
             "subtotal": 1000000.0,
+            "cgst_amount": 90000.0,
+            "sgst_amount": 90000.0,
             "total_gst_amount": 180000.0,
             "total_amount": 1180000.0,
-            "status": "draft",
             "created_by": self.user_data['id'] if self.user_data else "test-user-id"
         }
         
-        success, result = self.make_request('POST', 'invoices', over_quantity_invoice_data, expected_status=400)
+        success, result = self.make_request('POST', 'invoices/enhanced', over_quantity_invoice_data, expected_status=400)
         
         # This should fail (success=True means it correctly returned 400)
         if success:
