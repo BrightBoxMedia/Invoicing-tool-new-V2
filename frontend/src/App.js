@@ -1922,6 +1922,104 @@ const Projects = () => {
                       placeholder="Enter project location"
                     />
                   </div>
+                  
+                  {/* Cash Flow Percentages Section */}
+                  <div className="col-span-2">
+                    <h4 className="text-sm font-semibold text-gray-800 mb-3 border-b border-gray-200 pb-2">
+                      💰 Cash Flow Management Percentages
+                    </h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div>
+                        <label className="block text-xs font-medium text-blue-700 mb-1">
+                          ABG %
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.1"
+                          value={editableMetadata.abg_percentage}
+                          onChange={(e) => setEditableMetadata({...editableMetadata, abg_percentage: parseFloat(e.target.value) || 0})}
+                          className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 no-spinner"
+                          style={{
+                            appearance: 'textfield',
+                            MozAppearance: 'textfield',
+                            WebkitAppearance: 'none'
+                          }}
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Advance Bank Guarantee</p>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-xs font-medium text-green-700 mb-1">
+                          RA Bill %
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.1"
+                          value={editableMetadata.ra_bill_percentage}
+                          onChange={(e) => setEditableMetadata({...editableMetadata, ra_bill_percentage: parseFloat(e.target.value) || 0})}
+                          className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-green-500 no-spinner"
+                          style={{
+                            appearance: 'textfield',
+                            MozAppearance: 'textfield',
+                            WebkitAppearance: 'none'
+                          }}
+                        />
+                        <p className="text-xs text-gray-500 mt-1">RA Bill with Taxes</p>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-xs font-medium text-orange-700 mb-1">
+                          Erection %
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.1"
+                          value={editableMetadata.erection_percentage}
+                          onChange={(e) => setEditableMetadata({...editableMetadata, erection_percentage: parseFloat(e.target.value) || 0})}
+                          className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-orange-500 no-spinner"
+                          style={{
+                            appearance: 'textfield',
+                            MozAppearance: 'textfield',
+                            WebkitAppearance: 'none'
+                          }}
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Erection Work</p>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-xs font-medium text-purple-700 mb-1">
+                          PBG %
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.1"
+                          value={editableMetadata.pbg_percentage}
+                          onChange={(e) => setEditableMetadata({...editableMetadata, pbg_percentage: parseFloat(e.target.value) || 0})}
+                          className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 no-spinner"
+                          style={{
+                            appearance: 'textfield',
+                            MozAppearance: 'textfield',
+                            WebkitAppearance: 'none'
+                          }}
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Performance Bank Guarantee</p>
+                      </div>
+                    </div>
+                    <div className="mt-2 p-2 bg-blue-50 rounded text-xs text-blue-700">
+                      <strong>Total: {(editableMetadata.abg_percentage + editableMetadata.ra_bill_percentage + editableMetadata.erection_percentage + editableMetadata.pbg_percentage).toFixed(1)}%</strong>
+                      {(editableMetadata.abg_percentage + editableMetadata.ra_bill_percentage + editableMetadata.erection_percentage + editableMetadata.pbg_percentage) !== 100 && 
+                        " ⚠️ Note: Total doesn't equal 100%"
+                      }
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="mt-4 p-3 bg-blue-50 rounded-lg">
