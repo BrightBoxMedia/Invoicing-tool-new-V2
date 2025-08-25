@@ -151,14 +151,14 @@ class CriticalFixesTester:
             "client_name": "Foundation Test Client Ltd",
             "company_profile_id": self.test_resources['company_profile_id'],
             "created_by": self.user_data['id'],
-            "total_project_value": 350000.0,
+            "total_project_value": 413000.0,  # 177000 + 236000
             "advance_received": 0.0,
             "project_metadata": [{  # Use project_metadata instead of metadata
                 "purchase_order_number": "PO-FOUNDATION-001",
                 "type": "Construction",
-                "basic": 350000.0,  # Match BOQ total
+                "basic": 413000.0,  # Match BOQ total with GST
                 "overall_multiplier": 1.0,
-                "po_inv_value": 350000.0  # Match BOQ total
+                "po_inv_value": 413000.0  # Match BOQ total with GST
             }],
             "boq_items": [
                 {
