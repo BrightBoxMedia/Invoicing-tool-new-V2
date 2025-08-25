@@ -631,20 +631,28 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {invoiceData.selected_items.map((item, index) => {
-                                        const exceedsBalance = item.requested_qty > item.balance_qty;
+                                        const requestedQty = parseFloat(item.requested_qty || 0);
+                                        const balanceQty = parseFloat(item.balance_qty || 0);
+                                        const exceedsBalance = requestedQty > balanceQty;
                                         
                                         return (
-                                            <tr key={item.id} className={exceedsBalance ? 'bg-red-50' : 'hover:bg-gray-50'}>
+                                            <tr key={item.id} className={exceedsBalance ? 'bg-red-100 border-2 border-red-500' : 'hover:bg-gray-50'}>
                                                 <td className="px-4 py-4">
-                                                    <div className="text-sm text-gray-900">{item.description}</div>
+                                                    <div className={`text-sm font-medium ${exceedsBalance ? 'text-red-800' : 'text-gray-900'}`}>
+                                                        {item.description}
+                                                    </div>
                                                     {exceedsBalance && (
-                                                        <div className="text-xs text-red-600 mt-1">
-                                                            Exceeds balance by {(item.requested_qty - item.balance_qty).toFixed(2)}
+                                                        <div className="text-xs font-bold text-red-700 mt-1 bg-red-200 px-2 py-1 rounded">
+                                                            ❌ EXCEEDS by {(requestedQty - balanceQty).toFixed(2)} - REDUCE QUANTITY!
                                                         </div>
                                                     )}
                                                 </td>
-                                                <td className="px-4 py-4 text-sm text-gray-900">{item.unit}</td>
-                                                <td className="px-4 py-4 text-sm font-medium text-gray-900">{item.overall_qty}</td>
+                                                <td className={`px-4 py-4 text-sm ${exceedsBalance ? 'text-red-800 font-bold' : 'text-gray-900'}`}>
+                                                    {item.unit}
+                                                </td>
+                                                <td className={`px-4 py-4 text-sm font-medium ${exceedsBalance ? 'text-red-800' : 'text-gray-900'}`}>
+                                                    {item.overall_qty}
+                                                </td>
                                                 
                                                 {raColumns.map(raNum => (
                                                     <td key={raNum} className="px-4 py-4 text-sm text-gray-600">
