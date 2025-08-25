@@ -4634,10 +4634,19 @@ async def create_enhanced_invoice(
         )
         
         return {
-            "message": "Enhanced invoice created successfully",
+            "message": "✅ Enhanced invoice created successfully",
             "invoice_id": invoice_id,
-            "ra_number": ra_number,
-            "total_amount": enhanced_invoice["total_amount"]
+            "invoice_number": invoice_number,
+            "ra_number": ra_number if invoice_data.get("invoice_type") == "tax_invoice" else None,
+            "subtotal": float(invoice_data.get("subtotal", 0)),
+            "cgst_amount": float(invoice_data.get("cgst_amount", 0)),
+            "sgst_amount": float(invoice_data.get("sgst_amount", 0)),
+            "igst_amount": float(invoice_data.get("igst_amount", 0)),
+            "total_gst_amount": float(invoice_data.get("total_gst_amount", 0)),
+            "total_amount": float(invoice_data.get("total_amount", 0)),
+            "invoice_type": invoice_data.get("invoice_type"),
+            "invoice_gst_type": invoice_data.get("invoice_gst_type", "cgst_sgst"),
+            "project_name": project.get("project_name", "Unknown Project")
         }
         
     except HTTPException:
