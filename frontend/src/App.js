@@ -124,7 +124,6 @@ const Sidebar = ({ user }) => {
   
   const enhancedItems = [
     { path: '/company-profiles', icon: '🏢', label: 'Company Profiles' },
-    { path: '/enhanced-project-creation', icon: '🚀', label: 'Enhanced Projects' },
     { path: '/enhanced-invoice-creation', icon: '✨', label: 'Enhanced Invoices' },
   ];
   
