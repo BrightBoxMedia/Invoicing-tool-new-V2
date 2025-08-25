@@ -2448,7 +2448,7 @@ async def download_invoice_pdf(invoice_id: str, current_user: dict = Depends(get
         if not invoice_data:
             raise HTTPException(status_code=404, detail=f"Invoice with ID {invoice_id} not found")
         
-        # Get related project data
+        # Get related project data and fix project_metadata format
         project_data = await db.projects.find_one({"id": invoice_data.get("project_id")})
         if not project_data:
             # Create minimal project data if not found
@@ -2458,6 +2458,7 @@ async def download_invoice_pdf(invoice_id: str, current_user: dict = Depends(get
                 "architect": "Unknown Architect",
                 "location": "Unknown Location",
                 "client_id": invoice_data.get("client_id"),
+                "project_metadata": {},  # Ensure it's a dict
                 "boq_items": [],
                 "total_project_value": 0,
                 "advance_received": 0,
@@ -2466,6 +2467,12 @@ async def download_invoice_pdf(invoice_id: str, current_user: dict = Depends(get
                 "created_at": datetime.utcnow(),
                 "updated_at": datetime.utcnow()
             }
+        else:
+            # FIX: Convert project_metadata from list to dict if needed
+            if isinstance(project_data.get("project_metadata"), list):
+                project_data["project_metadata"] = {"entries": project_data["project_metadata"]}
+            elif project_data.get("project_metadata") is None:
+                project_data["project_metadata"] = {}
             
         # Get related client data
         client_data = await db.clients.find_one({"id": invoice_data.get("client_id")})
