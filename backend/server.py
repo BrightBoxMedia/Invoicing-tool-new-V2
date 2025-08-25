@@ -1929,6 +1929,13 @@ async def get_projects(current_user: dict = Depends(get_current_user)):
                 continue
                 
             # Ensure required fields exist with defaults
+            # FIX: Ensure project_metadata is always a dict
+            project_metadata = project.get("project_metadata", {})
+            if isinstance(project_metadata, list):
+                project_metadata = {"entries": project_metadata}
+            elif project_metadata is None:
+                project_metadata = {}
+            
             cleaned_project = {
                 "id": project.get("id", str(uuid.uuid4())),
                 "project_name": project.get("project_name", "Untitled Project"),
@@ -1937,8 +1944,8 @@ async def get_projects(current_user: dict = Depends(get_current_user)):
                 "client_name": project.get("client_name", "Unknown Client"),
                 "location": project.get("location"),
                 
-                # Unified metadata structure
-                "project_metadata": project.get("project_metadata", {}),
+                # Fixed metadata structure
+                "project_metadata": project_metadata,
                 "metadata_validated": project.get("metadata_validated", False),
                 "validation_errors": project.get("validation_errors", []),
                 
