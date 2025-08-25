@@ -938,16 +938,16 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
                                             ₹{project.total_project_value.toLocaleString('en-IN', {minimumFractionDigits: 2})}
                                         </td>
                                         <td className="px-3 py-3 border-r text-green-800">
-                                            ₹{(project.total_project_value * 0.30).toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                                            ₹{(project.total_project_value * (project.cash_flow_percentages?.abg_percentage || project.project_metadata?.abg_percentage || 30) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}
                                         </td>
                                         <td className="px-3 py-3 border-r text-green-800">
-                                            ₹{(project.total_project_value * 0.45).toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                                            ₹{(project.total_project_value * (project.cash_flow_percentages?.ra_bill_percentage || project.project_metadata?.ra_bill_percentage || 45) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}
                                         </td>
                                         <td className="px-3 py-3 border-r text-green-800">
-                                            ₹{(project.total_project_value * 0.20).toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                                            ₹{(project.total_project_value * (project.cash_flow_percentages?.erection_percentage || project.project_metadata?.erection_percentage || 20) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}
                                         </td>
                                         <td className="px-3 py-3 text-green-800">
-                                            ₹{(project.total_project_value * 0.05).toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                                            ₹{(project.total_project_value * (project.cash_flow_percentages?.pbg_percentage || project.project_metadata?.pbg_percentage || 5) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}
                                         </td>
                                     </tr>
                                 </tbody>
