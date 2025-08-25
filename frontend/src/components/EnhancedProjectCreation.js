@@ -794,6 +794,113 @@ const EnhancedProjectCreation = ({ currentUser, onClose, onSuccess }) => {
                                 </div>
                             </div>
                         )}
+                        
+                        {/* ABG Release Mapping Tracker / Cash Flow Summary Table */}
+                        {projectData.project_metadata.length > 0 && (
+                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
+                                <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 ABG Release Mapping Tracker / Cash Flow (Project-wise)</h3>
+                                <p className="text-sm text-gray-600 mb-4">Spread - Cash Receivables (Including taxes)</p>
+                                
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full border-2 border-gray-300">
+                                        <thead className="bg-blue-600 text-white">
+                                            <tr>
+                                                <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">Particulars</th>
+                                                <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">Type</th>
+                                                <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">Reference No</th>
+                                                <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">Dated</th>
+                                                <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">Basic</th>
+                                                <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">GST (18%)</th>
+                                                <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">PO/Inv Value</th>
+                                                <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">ABG</th>
+                                                <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">RA Bill</th>
+                                                <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">Erection</th>
+                                                <th className="px-3 py-3 text-left text-xs font-bold uppercase">PBG</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-200">
+                                            {/* Percentage Header Row */}
+                                            <tr className="bg-yellow-100 font-bold text-center">
+                                                <td className="px-3 py-2 border-r font-bold">%</td>
+                                                <td className="px-3 py-2 border-r">-</td>
+                                                <td className="px-3 py-2 border-r">-</td>
+                                                <td className="px-3 py-2 border-r">-</td>
+                                                <td className="px-3 py-2 border-r text-blue-800">100%</td>
+                                                <td className="px-3 py-2 border-r text-blue-800">18%</td>
+                                                <td className="px-3 py-2 border-r text-blue-800">118%</td>
+                                                <td className="px-3 py-2 border-r text-green-800">{(projectData.abg_percentage || 30)}%</td>
+                                                <td className="px-3 py-2 border-r text-green-800">{(projectData.ra_bill_percentage || 45)}%</td>
+                                                <td className="px-3 py-2 border-r text-green-800">{(projectData.erection_percentage || 20)}%</td>
+                                                <td className="px-3 py-2 text-green-800">{(projectData.pbg_percentage || 5)}%</td>
+                                            </tr>
+                                            
+                                            {/* Data Rows */}
+                                            {projectData.project_metadata.map((row, index) => {
+                                                const basic = parseFloat(row.po_inv_value || row.basic || 0);
+                                                const gst = basic * 0.18;
+                                                const poValue = basic + gst;
+                                                const abgPerc = parseFloat(row.abg_percentage || projectData.abg_percentage || 30);
+                                                const raPerc = parseFloat(row.ra_bill_with_taxes_percentage || projectData.ra_bill_percentage || 45);
+                                                const erectionPerc = parseFloat(row.erection_percentage || projectData.erection_percentage || 20);
+                                                const pbgPerc = parseFloat(row.pbg_percentage || projectData.pbg_percentage || 5);
+                                                
+                                                return (
+                                                    <tr key={index} className="hover:bg-gray-50">
+                                                        <td className="px-3 py-3 border-r font-bold text-gray-900">Overall</td>
+                                                        <td className="px-3 py-3 border-r">{row.type || 'Supply'}</td>
+                                                        <td className="px-3 py-3 border-r font-medium">{row.purchase_order_number || 'PO-PENDING'}</td>
+                                                        <td className="px-3 py-3 border-r">{row.dated || new Date().toISOString().split('T')[0]}</td>
+                                                        <td className="px-3 py-3 border-r font-bold text-blue-900">₹{basic.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                                                        <td className="px-3 py-3 border-r font-bold text-blue-900">₹{gst.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                                                        <td className="px-3 py-3 border-r font-bold text-blue-900">₹{poValue.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                                                        <td className="px-3 py-3 border-r font-bold text-green-800">₹{((poValue * abgPerc) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                                                        <td className="px-3 py-3 border-r font-bold text-green-800">₹{((poValue * raPerc) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                                                        <td className="px-3 py-3 border-r font-bold text-green-800">₹{((poValue * erectionPerc) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                                                        <td className="px-3 py-3 font-bold text-green-800">₹{((poValue * pbgPerc) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                                                    </tr>
+                                                );
+                                            })}
+                                            
+                                            {/* Total Row */}
+                                            <tr className="bg-gray-100 font-bold border-t-2 border-gray-400">
+                                                <td className="px-3 py-3 border-r text-gray-900">TOTAL</td>
+                                                <td className="px-3 py-3 border-r">-</td>
+                                                <td className="px-3 py-3 border-r">-</td>
+                                                <td className="px-3 py-3 border-r">-</td>
+                                                <td className="px-3 py-3 border-r text-blue-900">
+                                                    ₹{projectData.project_metadata.reduce((sum, row) => sum + parseFloat(row.po_inv_value || row.basic || 0), 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                                                </td>
+                                                <td className="px-3 py-3 border-r text-blue-900">
+                                                    ₹{(projectData.project_metadata.reduce((sum, row) => sum + parseFloat(row.po_inv_value || row.basic || 0), 0) * 0.18).toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                                                </td>
+                                                <td className="px-3 py-3 border-r text-blue-900 font-bold">
+                                                    ₹{(projectData.project_metadata.reduce((sum, row) => sum + parseFloat(row.po_inv_value || row.basic || 0), 0) * 1.18).toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                                                </td>
+                                                <td className="px-3 py-3 border-r text-green-800">
+                                                    ₹{projectData.project_metadata.reduce((sum, row) => sum + ((parseFloat(row.po_inv_value || row.basic || 0) * 1.18 * parseFloat(row.abg_percentage || 30)) / 100), 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                                                </td>
+                                                <td className="px-3 py-3 border-r text-green-800">
+                                                    ₹{projectData.project_metadata.reduce((sum, row) => sum + ((parseFloat(row.po_inv_value || row.basic || 0) * 1.18 * parseFloat(row.ra_bill_with_taxes_percentage || 45)) / 100), 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                                                </td>
+                                                <td className="px-3 py-3 border-r text-green-800">
+                                                    ₹{projectData.project_metadata.reduce((sum, row) => sum + ((parseFloat(row.po_inv_value || row.basic || 0) * 1.18 * parseFloat(row.erection_percentage || 20)) / 100), 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                                                </td>
+                                                <td className="px-3 py-3 text-green-800">
+                                                    ₹{projectData.project_metadata.reduce((sum, row) => sum + ((parseFloat(row.po_inv_value || row.basic || 0) * 1.18 * parseFloat(row.pbg_percentage || 5)) / 100), 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                                    <p className="text-sm text-blue-800 font-medium">
+                                        💡 <strong>Cash Flow Summary:</strong> This table shows your expected cash receivables based on project milestones and payment terms. 
+                                        ABG amounts can be claimed upon fulfilling advance bank guarantee requirements.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
 
                         <div className="flex justify-between">
                             <button
