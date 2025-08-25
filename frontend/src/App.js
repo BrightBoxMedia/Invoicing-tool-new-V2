@@ -979,9 +979,23 @@ const Projects = () => {
         architect: editableMetadata.architect,
         client_id: clientId,
         client_name: clientName,
-        metadata: {
+        location: editableMetadata.location,
+        
+        // Cash flow percentages for future invoice calculations
+        cash_flow_percentages: {
+          abg_percentage: editableMetadata.abg_percentage,
+          ra_bill_percentage: editableMetadata.ra_bill_percentage,
+          erection_percentage: editableMetadata.erection_percentage,
+          pbg_percentage: editableMetadata.pbg_percentage
+        },
+        
+        project_metadata: {
           ...editableMetadata,
-          date: new Date().toISOString()
+          date: new Date().toISOString(),
+          abg_percentage: editableMetadata.abg_percentage,
+          ra_bill_percentage: editableMetadata.ra_bill_percentage,
+          erection_percentage: editableMetadata.erection_percentage,
+          pbg_percentage: editableMetadata.pbg_percentage
         },
         boq_items: parsedData?.items || [],
         total_project_value: parsedData?.total_value || 0,
