@@ -724,57 +724,87 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
                                                         }`}
                                                         value={item.requested_qty || ''}
                                                         onChange={(e) => {
-                                                            const value = e.target.value;
-                                                            const numValue = parseFloat(value) || 0;
+                                                            const inputValue = e.target.value;
+                                                            const numValue = parseFloat(inputValue);
                                                             const maxAllowed = parseFloat(balanceQty);
                                                             
-                                                            // REAL-TIME VALIDATION: Don't allow typing above max
-                                                            if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                                                                if (numValue <= maxAllowed || value === '') {
-                                                                    updateItemQuantity(index, value);
+                                                            // HARD BLOCK: Don't allow ANY input above max
+                                                            if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
+                                                                if (inputValue === '' || numValue <= maxAllowed) {
+                                                                    updateItemQuantity(index, inputValue);
+                                                                    if (numValue <= maxAllowed) {
+                                                                        setError(''); // Clear error if valid
+                                                                    }
                                                                 } else {
-                                                                    // Auto-correct to maximum allowed
-                                                                    updateItemQuantity(index, maxAllowed.toFixed(3));
-                                                                    setError(`⚠️ Quantity auto-corrected to maximum available: ${maxAllowed.toFixed(3)} ${item.unit}. You cannot exceed the remaining balance.`);
+                                                                    // COMPLETELY BLOCK - don't update state
+                                                                    setError(`🚫 BLOCKED: Cannot enter ${numValue.toFixed(3)}. Maximum allowed for "${item.description}" is ${maxAllowed.toFixed(3)} ${item.unit}`);
                                                                 }
                                                             }
                                                         }}
-                                                        onKeyPress={(e) => {
-                                                            // Prevent invalid characters
-                                                            if (!/[\d\.]/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'Enter', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                                                        onKeyDown={(e) => {
+                                                            // Block certain keys that might cause issues
+                                                            const currentValue = e.target.value;
+                                                            const key = e.key;
+                                                            
+                                                            // Allow control keys
+                                                            if (['Backspace', 'Delete', 'Tab', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key)) {
+                                                                return;
+                                                            }
+                                                            
+                                                            // Allow numbers and one decimal point
+                                                            if (!/[\d\.]/.test(key) || (key === '.' && currentValue.includes('.'))) {
                                                                 e.preventDefault();
+                                                                return;
+                                                            }
+                                                            
+                                                            // Check if the resulting value would exceed limit
+                                                            let newValue = currentValue;
+                                                            if (e.target.selectionStart === e.target.selectionEnd) {
+                                                                newValue = currentValue.slice(0, e.target.selectionStart) + key + currentValue.slice(e.target.selectionEnd);
+                                                            } else {
+                                                                newValue = currentValue.slice(0, e.target.selectionStart) + key + currentValue.slice(e.target.selectionEnd);
+                                                            }
+                                                            
+                                                            const testValue = parseFloat(newValue);
+                                                            if (!isNaN(testValue) && testValue > parseFloat(balanceQty)) {
+                                                                e.preventDefault();
+                                                                setError(`🚫 Cannot exceed ${balanceQty.toFixed(3)} ${item.unit} for "${item.description}"`);
                                                             }
                                                         }}
                                                         onPaste={(e) => {
-                                                            // Handle paste events
                                                             e.preventDefault();
                                                             const paste = (e.clipboardData || window.clipboardData).getData('text');
                                                             const numValue = parseFloat(paste) || 0;
                                                             const maxAllowed = parseFloat(balanceQty);
                                                             
-                                                            if (/^\d*\.?\d*$/.test(paste)) {
-                                                                if (numValue <= maxAllowed) {
-                                                                    updateItemQuantity(index, paste);
-                                                                } else {
-                                                                    updateItemQuantity(index, maxAllowed.toFixed(3));
-                                                                    setError(`⚠️ Pasted value exceeded limit. Auto-corrected to maximum: ${maxAllowed.toFixed(3)} ${item.unit}`);
-                                                                }
+                                                            if (/^\d*\.?\d*$/.test(paste) && numValue <= maxAllowed) {
+                                                                updateItemQuantity(index, paste);
+                                                                setError('');
+                                                            } else {
+                                                                setError(`🚫 Cannot paste ${numValue.toFixed(3)}. Maximum allowed: ${maxAllowed.toFixed(3)} ${item.unit}`);
+                                                            }
+                                                        }}
+                                                        onBlur={(e) => {
+                                                            const value = parseFloat(e.target.value) || 0;
+                                                            if (value > parseFloat(balanceQty)) {
+                                                                // Force back to last valid value or 0
+                                                                updateItemQuantity(index, '0');
+                                                                setError(`🚫 Value reset to 0. Maximum allowed: ${balanceQty.toFixed(3)} ${item.unit}`);
                                                             }
                                                         }}
                                                         placeholder="0.000"
                                                         maxLength="10"
-                                                        title={`Maximum allowed: ${balanceQty.toFixed(3)} ${item.unit}`}
+                                                        title={`Maximum allowed: ${balanceQty.toFixed(3)} ${item.unit} - NO EXCEEDING ALLOWED`}
                                                     />
                                                     <div className="text-xs mt-1">
-                                                        {exceedsBalance ? (
-                                                            <div className="text-red-700 font-bold bg-red-100 px-2 py-1 rounded">
-                                                                ❌ MAX: {balanceQty.toFixed(3)} {item.unit}
-                                                            </div>
-                                                        ) : (
-                                                            <div className="text-gray-500">
-                                                                Max: {balanceQty.toFixed(3)} {item.unit}
-                                                            </div>
-                                                        )}
+                                                        <div className={`px-2 py-1 rounded text-center font-bold ${
+                                                            exceedsBalance ? 'text-red-700 bg-red-200' : 'text-green-700 bg-green-100'
+                                                        }`}>
+                                                            {exceedsBalance ? '🚫 EXCEEDS LIMIT' : '✅ WITHIN LIMIT'}
+                                                        </div>
+                                                        <div className="text-gray-600 mt-1">
+                                                            Max: {balanceQty.toFixed(3)} {item.unit}
+                                                        </div>
                                                     </div>
                                                 </td>
                                                 
