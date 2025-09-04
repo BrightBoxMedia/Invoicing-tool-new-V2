@@ -168,25 +168,26 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
         const requestedQty = parseFloat(quantity) || 0;
         const balanceQty = parseFloat(item.balance_qty || 0);
         
-        // STRICT VALIDATION - Do not allow exceeding balance at all
-        if (requestedQty > balanceQty) {
-            // Block the update and show error
-            setError(`❌ BLOCKED: Cannot exceed balance quantity. Item "${item.description}" - Requested: ${requestedQty}, Available: ${balanceQty.toFixed(3)}`);
-            return; // Don't update if exceeds balance
-        }
-        
+        // Always update the quantity (real-time input validation prevents exceeding)
         item.requested_qty = requestedQty;
         
         // Calculate amount dynamically (NOT from Excel)
         item.amount = requestedQty * parseFloat(item.rate || 0);
         
-        // Clear error if quantity is valid
-        if (requestedQty <= balanceQty) {
+        // Check if quantity exceeds balance for UI styling
+        const exceedsBalance = requestedQty > balanceQty;
+        item.validation_error = exceedsBalance;
+        
+        // Clear error if all items are valid
+        const allItemsValid = updatedItems.every(item => {
+            const reqQty = parseFloat(item.requested_qty || 0);
+            const balQty = parseFloat(item.balance_qty || 0);
+            return reqQty <= balQty;
+        });
+        
+        if (allItemsValid) {
             setError('');
         }
-        
-        // Mark as validation error for UI styling
-        item.validation_error = requestedQty > balanceQty;
         
         setInvoiceData(prev => ({
             ...prev,
