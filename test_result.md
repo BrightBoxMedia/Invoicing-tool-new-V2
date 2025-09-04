@@ -556,16 +556,19 @@
         - comment: "✅ TESTED: Enhanced Project Creation APIs working correctly. POST /api/projects/enhanced creates projects with metadata validation and company profile integration. GET /api/projects/{id}/metadata-template provides project metadata templates. POST /api/projects/validate-metadata validates project metadata against BOQ. Projects created successfully with purchase order validation, metadata templates, and company profile integration. Metadata validation working with proper error reporting for missing required fields."
 
   - task: "Regular Invoice Creation Quantity Validation"
-    implemented: false
+    implemented: true
     working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "critical"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: false
         - agent: "testing"
         - comment: "🚨 CRITICAL VULNERABILITY DISCOVERED: Regular invoice creation endpoint /api/invoices (line 2194) has NO quantity validation logic. It allows unlimited over-quantity invoices to be created without checking BOQ balance. This is the exact issue user reported - Bill Qty 07.30 accepted when Remaining was 1.009. The endpoint processes items and creates invoices without any validation against available quantities. This is a CRITICAL SECURITY FLAW that allows over-billing and financial losses. MUST BE FIXED IMMEDIATELY by adding quantity validation logic similar to enhanced endpoint."
+        - working: false
+        - agent: "testing"
+        - comment: "🚨 CRITICAL SECURITY VALIDATION FAILED: Despite quantity validation code being added to regular invoice endpoint (lines 2200-2241), the validation is NOT WORKING. Root cause: Description matching logic is too strict - BOQ has 'Foundation Work' but invoices have 'Foundation Work - First Invoice', causing no matches. Created 7 invoices totaling 233.591 Cum when only 100 Cum available. CRITICAL BUGS: 1) Description matching fails (exact match required), 2) BOQ billed_quantity never updated (still 0.0), 3) RA tracking returns 0 items. The user's exact scenario (7.30 vs 1.009) STILL ALLOWS over-billing. This is a PRODUCTION-BREAKING security vulnerability."
 
   - task: "RA Tracking Balance Calculation System"
     implemented: true
