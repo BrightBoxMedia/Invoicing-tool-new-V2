@@ -8,6 +8,7 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
     const [project, setProject] = useState(null);
     const [companyProfiles, setCompanyProfiles] = useState([]);
     const [raTracking, setRaTracking] = useState([]);
+    const [existingInvoices, setExistingInvoices] = useState([]);
     
     const [invoiceData, setInvoiceData] = useState({
         invoice_type: 'tax_invoice',
