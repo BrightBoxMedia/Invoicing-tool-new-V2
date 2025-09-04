@@ -1830,6 +1830,84 @@ async def get_clients(current_user: dict = Depends(get_current_user)):
     clients = await db.clients.find().to_list(1000)
     return [ClientInfo(**client) for client in clients]
 
+@api_router.get("/admin/invoice-design-config")
+async def get_invoice_design_config(
+    current_user: dict = Depends(get_current_user)
+):
+    """Get current invoice design configuration"""
+    try:
+        # Check if user is super admin
+        if current_user.get("role") != "super_admin":
+            raise HTTPException(status_code=403, detail="Only super admin can access invoice design configuration")
+        
+        # Get design config from database
+        design_config = await db.admin_configs.find_one({"config_type": "invoice_design"})
+        
+        if design_config:
+            return {"design_config": design_config.get("config_data", {})}
+        else:
+            # Return default config
+            return {
+                "design_config": {
+                    "primary_color": "#127285",
+                    "secondary_color": "#0891b2",
+                    "text_color": "#1f2937",
+                    "accent_color": "#059669",
+                    "font_family": "Inter",
+                    "header_font_size": "24px",
+                    "body_font_size": "14px",
+                    "small_font_size": "12px"
+                }
+            }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting invoice design config: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get invoice design config: {str(e)}")
+
+@api_router.post("/admin/invoice-design-config")
+async def save_invoice_design_config(
+    config_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Save invoice design configuration"""
+    try:
+        # Check if user is super admin
+        if current_user.get("role") != "super_admin":
+            raise HTTPException(status_code=403, detail="Only super admin can modify invoice design configuration")
+        
+        design_config = config_data.get("design_config", {})
+        
+        # Update or create design config
+        await db.admin_configs.update_one(
+            {"config_type": "invoice_design"},
+            {
+                "$set": {
+                    "config_type": "invoice_design",
+                    "config_data": design_config,
+                    "updated_by": current_user["id"],
+                    "updated_at": datetime.utcnow()
+                }
+            },
+            upsert=True
+        )
+        
+        # Log activity
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "invoice_design_updated",
+            f"Updated invoice design configuration with {len(design_config)} settings"
+        )
+        
+        return {"message": "Invoice design configuration saved successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error saving invoice design config: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to save invoice design config: {str(e)}")
+
 @api_router.post("/admin/fix-project-metadata")
 async def fix_project_metadata_format(
     current_user: dict = Depends(get_current_user)
