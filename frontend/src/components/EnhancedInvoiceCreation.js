@@ -703,27 +703,57 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
                                                         value={item.requested_qty || ''}
                                                         onChange={(e) => {
                                                             const value = e.target.value;
-                                                            // Only allow numbers and decimal point
+                                                            const numValue = parseFloat(value) || 0;
+                                                            const maxAllowed = parseFloat(balanceQty);
+                                                            
+                                                            // REAL-TIME VALIDATION: Don't allow typing above max
                                                             if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                                                                updateItemQuantity(index, value);
+                                                                if (numValue <= maxAllowed || value === '') {
+                                                                    updateItemQuantity(index, value);
+                                                                } else {
+                                                                    // Auto-correct to maximum allowed
+                                                                    updateItemQuantity(index, maxAllowed.toFixed(3));
+                                                                    setError(`⚠️ Quantity auto-corrected to maximum available: ${maxAllowed.toFixed(3)} ${item.unit}. You cannot exceed the remaining balance.`);
+                                                                }
                                                             }
                                                         }}
-                                                        onBlur={(e) => {
-                                                            // Validate on blur
-                                                            const value = parseFloat(e.target.value) || 0;
-                                                            if (value > balanceQty) {
-                                                                e.target.value = balanceQty.toFixed(3);
-                                                                updateItemQuantity(index, balanceQty.toFixed(3));
+                                                        onKeyPress={(e) => {
+                                                            // Prevent invalid characters
+                                                            if (!/[\d\.]/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'Enter', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                                                                e.preventDefault();
+                                                            }
+                                                        }}
+                                                        onPaste={(e) => {
+                                                            // Handle paste events
+                                                            e.preventDefault();
+                                                            const paste = (e.clipboardData || window.clipboardData).getData('text');
+                                                            const numValue = parseFloat(paste) || 0;
+                                                            const maxAllowed = parseFloat(balanceQty);
+                                                            
+                                                            if (/^\d*\.?\d*$/.test(paste)) {
+                                                                if (numValue <= maxAllowed) {
+                                                                    updateItemQuantity(index, paste);
+                                                                } else {
+                                                                    updateItemQuantity(index, maxAllowed.toFixed(3));
+                                                                    setError(`⚠️ Pasted value exceeded limit. Auto-corrected to maximum: ${maxAllowed.toFixed(3)} ${item.unit}`);
+                                                                }
                                                             }
                                                         }}
                                                         placeholder="0.000"
                                                         maxLength="10"
+                                                        title={`Maximum allowed: ${balanceQty.toFixed(3)} ${item.unit}`}
                                                     />
-                                                    {exceedsBalance && (
-                                                        <div className="text-xs text-red-700 mt-1 font-bold">
-                                                            MAX: {balanceQty.toFixed(3)}
-                                                        </div>
-                                                    )}
+                                                    <div className="text-xs mt-1">
+                                                        {exceedsBalance ? (
+                                                            <div className="text-red-700 font-bold bg-red-100 px-2 py-1 rounded">
+                                                                ❌ MAX: {balanceQty.toFixed(3)} {item.unit}
+                                                            </div>
+                                                        ) : (
+                                                            <div className="text-gray-500">
+                                                                Max: {balanceQty.toFixed(3)} {item.unit}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </td>
                                                 
                                                 <td className={`px-4 py-4 text-sm ${exceedsBalance ? 'text-red-800 font-bold' : 'text-gray-900'}`}>
