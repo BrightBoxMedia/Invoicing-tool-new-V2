@@ -555,11 +555,11 @@
 
   - task: "Enhanced Invoice Creation & RA Tracking APIs"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
+    stuck_count: 1
+    priority: "critical"
+    needs_retesting: true
     status_history:
         - working: true
         - agent: "testing"
@@ -570,6 +570,9 @@
         - working: true
         - agent: "testing"
         - comment: "🎉 ALL CRITICAL FIXES VERIFIED WORKING! Comprehensive testing completed with 100% success rate (6/6 tests passed). ✅ QUANTITY VALIDATION BLOCKING: Over-quantity invoices (150 when balance is 100) are now correctly blocked with proper error messages. The data mapping fix in enhanced invoice creation properly converts 'quantity' to 'requested_qty' for validation. ✅ VALID QUANTITY INVOICES: Valid invoices (50 when balance is 100) are successfully created with proper RA number assignment (RA1, RA2, etc.). ✅ PROJECT DETAILS 500 ERROR FIXED: Enhanced projects can now be retrieved without 500 errors. The metadata field handling has been corrected. ✅ INVOICE VISIBILITY: Created invoices now appear correctly in project details view. ✅ GST BREAKDOWN COMPLETE: Enhanced invoice responses now include separate cgst_amount and sgst_amount fields with correct calculations (CGST: ₹9000, SGST: ₹9000, Total: ₹18000). ✅ PDF GENERATION: Enhanced invoices generate valid PDFs successfully. Fixed RA tracking bug (unhashable dict_keys error) in line 4469. All critical functionality is now working correctly and ready for user showcase."
+        - working: false
+        - agent: "testing"
+        - comment: "🚨 CRITICAL QUANTITY VALIDATION FAILURE RE-DISCOVERED: Performed urgent re-testing of user-reported critical issue where Bill Qty 07.30 was accepted when Remaining was 1.009. CRITICAL FINDINGS CONFIRMED: ❌ REGULAR INVOICE ENDPOINT VULNERABILITY: /api/invoices endpoint (line 2194) does NOT validate quantities against BOQ balance - allows unlimited over-quantity invoices to be created (CRITICAL SECURITY FLAW), ❌ RA TRACKING CALCULATION BROKEN: Balance calculations show incorrect values (100.0 instead of expected 5.0) because billed_quantity field in BOQ items is not being used properly in get_ra_tracking_data function (line 4489), ❌ QUANTITY VALIDATION ENDPOINT BROKEN: /api/invoices/validate-quantities returns valid=True even for massive over-quantity requests due to broken RA tracking data, ❌ ENHANCED ENDPOINT INCONSISTENT: /api/invoices/enhanced sometimes blocks, sometimes allows over-quantity invoices depending on data state. ROOT CAUSE: The entire quantity tracking system has fundamental bugs - invoice items are not properly matched to BOQ items by description, billed_quantity field is not updated when invoices are created, and validation relies on broken tracking data. IMPACT: User's critical business logic failure is CONFIRMED - system allows over-billing which can cause financial losses. This is a CRITICAL PRODUCTION BUG affecting both regular and enhanced invoice endpoints."
 
   - task: "Unified Project System"
     implemented: true
