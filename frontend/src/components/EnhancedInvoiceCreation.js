@@ -255,24 +255,39 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
         try {
             setLoading(true);
             
-            // CRITICAL VALIDATION - Block if ANY item exceeds quantity
-            const errorItems = invoiceData.selected_items.filter(item => 
-                parseFloat(item.requested_qty || 0) > parseFloat(item.balance_qty || 0)
-            );
+            // SUPER STRICT VALIDATION - Check EVERY item before proceeding
+            let hasErrors = false;
+            const errorItems = [];
             
-            if (errorItems.length > 0) {
-                const errorMessages = errorItems.map(item => 
-                    `${item.description}: Requested ${item.requested_qty} > Available ${item.balance_qty}`
-                );
-                setError(`❌ INVOICE CREATION BLOCKED! The following items exceed available quantity:\n${errorMessages.join('\n')}`);
+            invoiceData.selected_items.forEach(item => {
+                const requestedQty = parseFloat(item.requested_qty || 0);
+                const balanceQty = parseFloat(item.balance_qty || 0);
+                
+                if (requestedQty > 0 && requestedQty > balanceQty) {
+                    hasErrors = true;
+                    errorItems.push({
+                        description: item.description,
+                        requested: requestedQty,
+                        balance: balanceQty,
+                        excess: (requestedQty - balanceQty).toFixed(3)
+                    });
+                }
+            });
+            
+            if (hasErrors) {
+                const errorMessage = `🚨 INVOICE CREATION BLOCKED!\n\nThe following items exceed balance quantity:\n\n${errorItems.map(err => 
+                    `• ${err.description}\n  Requested: ${err.requested} | Available: ${err.balance}\n  Excess: ${err.excess}`
+                ).join('\n\n')}`;
+                
+                setError(errorMessage);
                 setLoading(false);
-                return; // HARD STOP - Don't proceed
+                return; // HARD BLOCK - Don't proceed at all
             }
 
             const selectedItems = invoiceData.selected_items.filter(item => parseFloat(item.requested_qty || 0) > 0);
             
             if (selectedItems.length === 0) {
-                setError('❌ Please select at least one item with quantity greater than 0.');
+                setError('❌ Please select at least one item with valid quantity.');
                 setLoading(false);
                 return;
             }
