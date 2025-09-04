@@ -553,6 +553,30 @@
         - agent: "testing"
         - comment: "✅ TESTED: Enhanced Project Creation APIs working correctly. POST /api/projects/enhanced creates projects with metadata validation and company profile integration. GET /api/projects/{id}/metadata-template provides project metadata templates. POST /api/projects/validate-metadata validates project metadata against BOQ. Projects created successfully with purchase order validation, metadata templates, and company profile integration. Metadata validation working with proper error reporting for missing required fields."
 
+  - task: "Regular Invoice Creation Quantity Validation"
+    implemented: false
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+        - working: false
+        - agent: "testing"
+        - comment: "🚨 CRITICAL VULNERABILITY DISCOVERED: Regular invoice creation endpoint /api/invoices (line 2194) has NO quantity validation logic. It allows unlimited over-quantity invoices to be created without checking BOQ balance. This is the exact issue user reported - Bill Qty 07.30 accepted when Remaining was 1.009. The endpoint processes items and creates invoices without any validation against available quantities. This is a CRITICAL SECURITY FLAW that allows over-billing and financial losses. MUST BE FIXED IMMEDIATELY by adding quantity validation logic similar to enhanced endpoint."
+
+  - task: "RA Tracking Balance Calculation System"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+        - working: false
+        - agent: "testing"
+        - comment: "🚨 CRITICAL BUG IN RA TRACKING: The get_ra_tracking_data function (line 4489) has fundamental flaws: 1) Does not properly use billed_quantity field from BOQ items, 2) Relies on description matching between invoice items and BOQ items which fails due to slight differences, 3) Shows incorrect balance calculations (100.0 instead of expected 5.0), 4) RA Usage shows empty {} for all items. The function calculates used_quantity from existing invoices but the matching logic is broken. This causes the validation endpoint to return incorrect results and allows over-quantity invoices. Root cause: Invoice items and BOQ items are not properly linked, and billed_quantity tracking is not implemented correctly."
+
   - task: "Enhanced Invoice Creation & RA Tracking APIs"
     implemented: true
     working: false
