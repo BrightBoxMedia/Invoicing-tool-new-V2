@@ -2211,11 +2211,17 @@ async def create_invoice(
                 for inv_item in invoice_items:
                     requested_qty = float(inv_item.get("quantity", 0))
                     if requested_qty > 0:
-                        # Find matching BOQ item
+                        # Find matching BOQ item using flexible matching
                         matching_boq = None
+                        inv_description = inv_item.get("description", "").strip().lower()
+                        
                         for boq_item in boq_items:
-                            if (boq_item.get("description", "").strip().lower() == 
-                                inv_item.get("description", "").strip().lower()):
+                            boq_description = boq_item.get("description", "").strip().lower()
+                            
+                            # FLEXIBLE MATCHING: exact match OR substring match
+                            if (boq_description == inv_description or 
+                                boq_description in inv_description or 
+                                inv_description in boq_description):
                                 matching_boq = boq_item
                                 break
                         
