@@ -4789,11 +4789,33 @@ async def create_enhanced_invoice(
         # Insert the enhanced invoice
         await db.invoices.insert_one(enhanced_invoice)
         
+        # CRITICAL: Update BOQ billed quantities after successful invoice creation
+        if invoice_data.get("invoice_items"):
+            for inv_item in invoice_data.get("invoice_items", []):
+                billed_qty = float(inv_item.get("quantity", 0))
+                if billed_qty > 0:
+                    item_description = inv_item.get("description", "").strip()
+                    
+                    # Update billed_quantity in BOQ using flexible matching
+                    await db.projects.update_one(
+                        {
+                            "id": invoice_data.get("project_id"),
+                            "$or": [
+                                {"boq_items.description": {"$regex": f"^{re.escape(item_description)}$", "$options": "i"}},
+                                {"boq_items.description": {"$regex": re.escape(item_description), "$options": "i"}}
+                            ]
+                        },
+                        {
+                            "$inc": {"boq_items.$.billed_quantity": billed_qty},
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+        
         # Log activity
         await log_activity(
             current_user["id"], current_user["email"], current_user["role"],
             "enhanced_invoice_created",
-            f"Created enhanced invoice {ra_number or 'Proforma'} for project {project.get('project_name', 'Unknown')} with GST type {invoice_data.get('invoice_gst_type', 'cgst_sgst')}"
+            f"Created enhanced invoice {ra_number or 'Proforma'} for project {project.get('project_name', 'Unknown')} with GST type {invoice_data.get('invoice_gst_type', 'cgst_sgst')} and quantity validation"
         )
         
         return {
