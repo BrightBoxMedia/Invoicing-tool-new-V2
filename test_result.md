@@ -363,12 +363,14 @@
 
 ## test_plan:
   current_focus:
-    - "100% Working Tool Verification Completed"
-    - "All Critical Business Logic Verified"
-    - "Production Ready Enterprise Tool"
-  stuck_tasks: []
-  test_all: true
-  test_priority: "comprehensive_final_testing"
+    - "CRITICAL: Regular Invoice Creation Quantity Validation"
+    - "CRITICAL: RA Tracking Balance Calculation System"
+    - "CRITICAL: Enhanced Invoice Creation & RA Tracking APIs"
+  stuck_tasks:
+    - "Regular Invoice Creation Quantity Validation"
+    - "RA Tracking Balance Calculation System"
+  test_all: false
+  test_priority: "critical_security_fixes"
 
   - task: "Proforma Invoice Tax Options"
     implemented: true
