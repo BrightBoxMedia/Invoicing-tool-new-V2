@@ -677,34 +677,36 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
                                                 
                                                 <td className="px-4 py-4">
                                                     <input
-                                                        type="number"
-                                                        step="0.01"
-                                                        min="0"
-                                                        max={balanceQty}
-                                                        className={`w-24 px-2 py-1 border-2 rounded text-sm font-bold focus:outline-none focus:ring-2 no-spinner ${
+                                                        type="text"
+                                                        pattern="[0-9]*\.?[0-9]*"
+                                                        inputMode="decimal"
+                                                        className={`w-24 px-2 py-1 border-2 rounded text-sm font-bold focus:outline-none focus:ring-2 ${
                                                             exceedsBalance 
                                                                 ? 'border-red-600 focus:ring-red-600 bg-red-50 text-red-800' 
                                                                 : 'border-green-500 focus:ring-green-500 bg-white'
                                                         }`}
-                                                        style={{
-                                                            appearance: 'textfield',
-                                                            MozAppearance: 'textfield',
-                                                            WebkitAppearance: 'none'
-                                                        }}
                                                         value={item.requested_qty || ''}
-                                                        onChange={(e) => updateItemQuantity(index, e.target.value)}
-                                                        onInput={(e) => {
-                                                            // Real-time update without lag
+                                                        onChange={(e) => {
                                                             const value = e.target.value;
+                                                            // Only allow numbers and decimal point
                                                             if (value === '' || /^\d*\.?\d*$/.test(value)) {
                                                                 updateItemQuantity(index, value);
                                                             }
                                                         }}
-                                                        placeholder="0.00"
+                                                        onBlur={(e) => {
+                                                            // Validate on blur
+                                                            const value = parseFloat(e.target.value) || 0;
+                                                            if (value > balanceQty) {
+                                                                e.target.value = balanceQty.toFixed(3);
+                                                                updateItemQuantity(index, balanceQty.toFixed(3));
+                                                            }
+                                                        }}
+                                                        placeholder="0.000"
+                                                        maxLength="10"
                                                     />
                                                     {exceedsBalance && (
                                                         <div className="text-xs text-red-700 mt-1 font-bold">
-                                                            MAX: {balanceQty.toFixed(2)}
+                                                            MAX: {balanceQty.toFixed(3)}
                                                         </div>
                                                     )}
                                                 </td>
