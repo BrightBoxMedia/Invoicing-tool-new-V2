@@ -128,6 +128,25 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
         }
     };
 
+    const fetchExistingInvoices = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${backendUrl}/api/projects/${projectId}/invoices`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setExistingInvoices(data.invoices || []);
+            }
+        } catch (err) {
+            console.error('Error fetching existing invoices:', err);
+        }
+    };
+
     const validateQuantities = async () => {
         try {
             const token = localStorage.getItem('token');
