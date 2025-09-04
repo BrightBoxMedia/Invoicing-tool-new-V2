@@ -946,11 +946,11 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
                 {/* ABG Release Mapping Tracker / Cash Flow Summary Table */}
                 {project && (
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 ABG Release Mapping Tracker / Cash Flow (Project-wise)</h3>
-                        <p className="text-sm text-gray-600 mb-4">Spread - Cash Receivables (Including taxes)</p>
+                        <h3 className="text-lg font-semibold text-blue-900 mb-4">📊 ABG Release Mapping Tracker / Cash Flow (Project-wise)</h3>
+                        <p className="text-sm text-gray-600 mb-4">💰 Spread - Cash Receivables (Including taxes)</p>
                         
                         <div className="overflow-x-auto">
-                            <table className="min-w-full border-2 border-gray-300">
+                            <table className="min-w-full border-2 border-blue-300">
                                 <thead className="bg-blue-600 text-white">
                                     <tr>
                                         <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">Particulars</th>
@@ -960,10 +960,10 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
                                         <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">Basic</th>
                                         <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">GST (18%)</th>
                                         <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">PO/Inv Value</th>
-                                        <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">ABG ({project.cash_flow_percentages?.abg_percentage || project.project_metadata?.abg_percentage || 30}%)</th>
-                                        <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">RA Bill ({project.cash_flow_percentages?.ra_bill_percentage || project.project_metadata?.ra_bill_percentage || 45}%)</th>
-                                        <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">Erection ({project.cash_flow_percentages?.erection_percentage || project.project_metadata?.erection_percentage || 20}%)</th>
-                                        <th className="px-3 py-3 text-left text-xs font-bold uppercase">PBG ({project.cash_flow_percentages?.pbg_percentage || project.project_metadata?.pbg_percentage || 5}%)</th>
+                                        <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">ABG ({(project.cash_flow_percentages?.abg_percentage || project.project_metadata?.abg_percentage || 30)}%)</th>
+                                        <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">RA Bill ({(project.cash_flow_percentages?.ra_bill_percentage || project.project_metadata?.ra_bill_percentage || 45)}%)</th>
+                                        <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">Erection ({(project.cash_flow_percentages?.erection_percentage || project.project_metadata?.erection_percentage || 20)}%)</th>
+                                        <th className="px-3 py-3 text-left text-xs font-bold uppercase">PBG ({(project.cash_flow_percentages?.pbg_percentage || project.project_metadata?.pbg_percentage || 5)}%)</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
@@ -976,10 +976,10 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
                                         <td className="px-3 py-2 border-r text-blue-800">100%</td>
                                         <td className="px-3 py-2 border-r text-blue-800">18%</td>
                                         <td className="px-3 py-2 border-r text-blue-800">118%</td>
-                                        <td className="px-3 py-2 border-r text-green-800">{project.cash_flow_percentages?.abg_percentage || project.project_metadata?.abg_percentage || 30}%</td>
-                                        <td className="px-3 py-2 border-r text-green-800">{project.cash_flow_percentages?.ra_bill_percentage || project.project_metadata?.ra_bill_percentage || 45}%</td>
-                                        <td className="px-3 py-2 border-r text-green-800">{project.cash_flow_percentages?.erection_percentage || project.project_metadata?.erection_percentage || 20}%</td>
-                                        <td className="px-3 py-2 text-green-800">{project.cash_flow_percentages?.pbg_percentage || project.project_metadata?.pbg_percentage || 5}%</td>
+                                        <td className="px-3 py-2 border-r text-green-800">{(project.cash_flow_percentages?.abg_percentage || project.project_metadata?.abg_percentage || 30)}%</td>
+                                        <td className="px-3 py-2 border-r text-green-800">{(project.cash_flow_percentages?.ra_bill_percentage || project.project_metadata?.ra_bill_percentage || 45)}%</td>
+                                        <td className="px-3 py-2 border-r text-green-800">{(project.cash_flow_percentages?.erection_percentage || project.project_metadata?.erection_percentage || 20)}%</td>
+                                        <td className="px-3 py-2 text-green-800">{(project.cash_flow_percentages?.pbg_percentage || project.project_metadata?.pbg_percentage || 5)}%</td>
                                     </tr>
                                     
                                     {/* Overall Row */}
@@ -997,32 +997,55 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
                                         <td className="px-3 py-3 font-bold text-green-800">₹{(project.total_project_value * (project.cash_flow_percentages?.pbg_percentage || project.project_metadata?.pbg_percentage || 5) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
                                     </tr>
                                     
-                                    {/* Amount Left to Claim Row - Since we don't have existing invoices data, show full amounts */}
-                                    <tr className="bg-blue-100 font-bold border-t-2 border-blue-400">
-                                        <td className="px-3 py-3 border-r text-blue-900">Amount Left to Claim</td>
-                                        <td className="px-3 py-3 border-r">-</td>
-                                        <td className="px-3 py-3 border-r">-</td>
-                                        <td className="px-3 py-3 border-r">-</td>
-                                        <td className="px-3 py-3 border-r text-blue-900">
-                                            ₹{(project.total_project_value / 1.18).toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                                    {/* RA Rows - Show existing RA bills */}
+                                    {existingInvoices && existingInvoices.filter(inv => inv.ra_number).map((invoice, index) => {
+                                        const basic = invoice.subtotal || 0;
+                                        const gst = invoice.total_gst_amount || 0;
+                                        const total = invoice.total_amount || 0;
+                                        
+                                        return (
+                                            <tr key={index} className="hover:bg-blue-50">
+                                                <td className="px-3 py-3 border-r font-bold text-blue-900">{invoice.ra_number}</td>
+                                                <td className="px-3 py-3 border-r">RA Invoice</td>
+                                                <td className="px-3 py-3 border-r font-medium">{invoice.invoice_number || 'INV-' + invoice.ra_number}</td>
+                                                <td className="px-3 py-3 border-r">{new Date(invoice.created_at).toISOString().split('T')[0]}</td>
+                                                <td className="px-3 py-3 border-r font-bold text-blue-900">₹{basic.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                                                <td className="px-3 py-3 border-r font-bold text-blue-900">₹{gst.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                                                <td className="px-3 py-3 border-r font-bold text-blue-900">₹{total.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                                                <td className="px-3 py-3 border-r font-bold text-green-800">₹{(total * (project.cash_flow_percentages?.abg_percentage || project.project_metadata?.abg_percentage || 30) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                                                <td className="px-3 py-3 border-r font-bold text-green-800">₹{(total * (project.cash_flow_percentages?.ra_bill_percentage || project.project_metadata?.ra_bill_percentage || 45) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                                                <td className="px-3 py-3 border-r font-bold text-green-800">₹{(total * (project.cash_flow_percentages?.erection_percentage || project.project_metadata?.erection_percentage || 20) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                                                <td className="px-3 py-3 font-bold text-green-800">₹{(total * (project.cash_flow_percentages?.pbg_percentage || project.project_metadata?.pbg_percentage || 5) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                                            </tr>
+                                        );
+                                    })}
+                                    
+                                    {/* Amount Left to Claim Row */}
+                                    <tr className="bg-green-100 font-bold border-t-2 border-green-400">
+                                        <td className="px-3 py-3 border-r text-green-900">💰 Amount Left to Claim</td>
+                                        <td className="px-3 py-3 border-r text-green-700">Balance</td>
+                                        <td className="px-3 py-3 border-r text-green-700">Available</td>
+                                        <td className="px-3 py-3 border-r text-green-700">-</td>
+                                        <td className="px-3 py-3 border-r text-green-900">
+                                            ₹{((project.total_project_value / 1.18) - (existingInvoices || []).reduce((sum, inv) => sum + (inv.subtotal || 0), 0)).toLocaleString('en-IN', {minimumFractionDigits: 2})}
                                         </td>
-                                        <td className="px-3 py-3 border-r text-blue-900">
-                                            ₹{(project.total_project_value * 0.18 / 1.18).toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                                        <td className="px-3 py-3 border-r text-green-900">
+                                            ₹{((project.total_project_value * 0.18 / 1.18) - (existingInvoices || []).reduce((sum, inv) => sum + (inv.total_gst_amount || 0), 0)).toLocaleString('en-IN', {minimumFractionDigits: 2})}
                                         </td>
-                                        <td className="px-3 py-3 border-r text-blue-900 font-bold">
-                                            ₹{project.total_project_value.toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                                        <td className="px-3 py-3 border-r text-green-900 font-bold">
+                                            ₹{(project.total_project_value - (existingInvoices || []).reduce((sum, inv) => sum + (inv.total_amount || 0), 0)).toLocaleString('en-IN', {minimumFractionDigits: 2})}
                                         </td>
                                         <td className="px-3 py-3 border-r text-green-800">
-                                            ₹{(project.total_project_value * (project.cash_flow_percentages?.abg_percentage || project.project_metadata?.abg_percentage || 30) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                                            ₹{(project.total_project_value * (project.cash_flow_percentages?.abg_percentage || project.project_metadata?.abg_percentage || 30) / 100 - (existingInvoices || []).reduce((sum, inv) => sum + (inv.total_amount || 0) * (project.cash_flow_percentages?.abg_percentage || project.project_metadata?.abg_percentage || 30) / 100, 0)).toLocaleString('en-IN', {minimumFractionDigits: 2})}
                                         </td>
                                         <td className="px-3 py-3 border-r text-green-800">
-                                            ₹{(project.total_project_value * (project.cash_flow_percentages?.ra_bill_percentage || project.project_metadata?.ra_bill_percentage || 45) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                                            ₹{(project.total_project_value * (project.cash_flow_percentages?.ra_bill_percentage || project.project_metadata?.ra_bill_percentage || 45) / 100 - (existingInvoices || []).reduce((sum, inv) => sum + (inv.total_amount || 0) * (project.cash_flow_percentages?.ra_bill_percentage || project.project_metadata?.ra_bill_percentage || 45) / 100, 0)).toLocaleString('en-IN', {minimumFractionDigits: 2})}
                                         </td>
                                         <td className="px-3 py-3 border-r text-green-800">
-                                            ₹{(project.total_project_value * (project.cash_flow_percentages?.erection_percentage || project.project_metadata?.erection_percentage || 20) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                                            ₹{(project.total_project_value * (project.cash_flow_percentages?.erection_percentage || project.project_metadata?.erection_percentage || 20) / 100 - (existingInvoices || []).reduce((sum, inv) => sum + (inv.total_amount || 0) * (project.cash_flow_percentages?.erection_percentage || project.project_metadata?.erection_percentage || 20) / 100, 0)).toLocaleString('en-IN', {minimumFractionDigits: 2})}
                                         </td>
                                         <td className="px-3 py-3 text-green-800">
-                                            ₹{(project.total_project_value * (project.cash_flow_percentages?.pbg_percentage || project.project_metadata?.pbg_percentage || 5) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                                            ₹{(project.total_project_value * (project.cash_flow_percentages?.pbg_percentage || project.project_metadata?.pbg_percentage || 5) / 100 - (existingInvoices || []).reduce((sum, inv) => sum + (inv.total_amount || 0) * (project.cash_flow_percentages?.pbg_percentage || project.project_metadata?.pbg_percentage || 5) / 100, 0)).toLocaleString('en-IN', {minimumFractionDigits: 2})}
                                         </td>
                                     </tr>
                                 </tbody>
