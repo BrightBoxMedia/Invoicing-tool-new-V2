@@ -131,6 +131,7 @@ const Sidebar = ({ user }) => {
     { path: '/logs', icon: '📝', label: 'Activity Logs' },
     { path: '/users', icon: '👤', label: 'User Management' }, 
     { path: '/admin', icon: '⚙️', label: 'Admin Interface' },
+    { path: '/invoice-design', icon: '🎨', label: 'Invoice Design' },
   ];
   
   return (
