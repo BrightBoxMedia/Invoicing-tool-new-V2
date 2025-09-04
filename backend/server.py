@@ -2363,17 +2363,31 @@ async def create_invoice(
             for inv_item in invoice_data.get("items", []):
                 billed_qty = float(inv_item.get("quantity", 0))
                 if billed_qty > 0:
-                    # Update billed_quantity in BOQ
-                    await db.projects.update_one(
-                        {
-                            "id": project_id,
-                            "boq_items.description": inv_item.get("description")
-                        },
-                        {
-                            "$inc": {"boq_items.$.billed_quantity": billed_qty},
-                            "$set": {"updated_at": datetime.utcnow()}
-                        }
-                    )
+                    inv_description = inv_item.get("description", "").strip().lower()
+                    
+                    # Find and update matching BOQ item using flexible matching
+                    project_boq = project.get("boq_items", [])
+                    for i, boq_item in enumerate(project_boq):
+                        boq_description = boq_item.get("description", "").strip().lower()
+                        
+                        # FLEXIBLE MATCHING: exact match OR substring match
+                        if (boq_description == inv_description or 
+                            boq_description in inv_description or 
+                            inv_description in boq_description):
+                            
+                            # Update billed_quantity in the BOQ item
+                            new_billed_qty = float(boq_item.get("billed_quantity", 0)) + billed_qty
+                            
+                            await db.projects.update_one(
+                                {"id": project_id},
+                                {
+                                    "$set": {
+                                        f"boq_items.{i}.billed_quantity": new_billed_qty,
+                                        "updated_at": datetime.utcnow()
+                                    }
+                                }
+                            )
+                            break
         
         # Update project advance if advance received against invoice
         if advance_received_invoice > 0:
