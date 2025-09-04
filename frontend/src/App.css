@@ -2,16 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Remove spinner arrows from number inputs */
+/* COMPLETELY REMOVE ALL SPINNER ARROWS - NO EXCEPTIONS */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  margin: 0 !important;
+  display: none !important;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield !important;
+  appearance: textfield !important;
+}
+
+/* Additional fallback for all numeric inputs */
 .no-spinner::-webkit-outer-spin-button,
 .no-spinner::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+  display: none !important;
 }
 
 .no-spinner[type=number] {
-  -moz-appearance: textfield;
-  appearance: textfield;
+  -moz-appearance: textfield !important;
+  appearance: textfield !important;
+}
+
+/* Force hide spinners on all number inputs globally */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
 }
 
 body {
