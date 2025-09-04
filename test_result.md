@@ -574,13 +574,16 @@
     implemented: true
     working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "critical"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: false
         - agent: "testing"
         - comment: "🚨 CRITICAL BUG IN RA TRACKING: The get_ra_tracking_data function (line 4489) has fundamental flaws: 1) Does not properly use billed_quantity field from BOQ items, 2) Relies on description matching between invoice items and BOQ items which fails due to slight differences, 3) Shows incorrect balance calculations (100.0 instead of expected 5.0), 4) RA Usage shows empty {} for all items. The function calculates used_quantity from existing invoices but the matching logic is broken. This causes the validation endpoint to return incorrect results and allows over-quantity invoices. Root cause: Invoice items and BOQ items are not properly linked, and billed_quantity tracking is not implemented correctly."
+        - working: false
+        - agent: "testing"
+        - comment: "🚨 RA TRACKING COMPLETELY BROKEN: Comprehensive testing reveals RA tracking endpoint returns 0 items despite project having BOQ items. The get_ra_tracking_data function (line 4553) is fundamentally broken. Despite 7 invoices created totaling 233.591 Cum from 100 Cum available, RA tracking shows no items. This confirms the description matching logic is completely failing. The function cannot match invoice descriptions like 'Foundation Work - First Invoice' with BOQ description 'Foundation Work'. This broken RA tracking is the root cause of validation endpoint failures and allows unlimited over-billing. CRITICAL SYSTEM FAILURE."
 
   - task: "Enhanced Invoice Creation & RA Tracking APIs"
     implemented: true
