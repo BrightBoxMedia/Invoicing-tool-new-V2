@@ -4554,41 +4554,61 @@ async def get_ra_tracking_data(
     project_id: str,
     current_user: dict = Depends(get_current_user)
 ):
-    """Get current RA tracking data for a project"""
+    """Get current RA tracking data for a project with accurate balance calculations"""
     try:
         project = await db.projects.find_one({"id": project_id})
         if not project:
             raise HTTPException(status_code=404, detail="Project not found")
         
         # Get all existing invoices for this project to calculate used quantities
-        invoices = await db.invoices.find({"project_id": project_id, "invoice_type": "tax_invoice"}).to_list(None)
+        invoices = await db.invoices.find({"project_id": project_id}).to_list(None)
         
         # Initialize RA tracking data from BOQ
         ra_tracking = []
         boq_items = project.get("boq_items", [])
         
         for item in boq_items:
-            # Calculate used quantity from all previous RA bills
+            item_description = item.get("description", "").strip().lower()
+            overall_qty = float(item.get("quantity", 0))
+            
+            # Calculate used quantity from all invoices (more accurate matching)
             used_quantity = 0
             ra_usage = {}
             
             for invoice in invoices:
+                ra_number = invoice.get("ra_number", "")
                 for invoice_item in invoice.get("items", []):
-                    if invoice_item.get("description") == item.get("description"):
-                        ra_number = invoice.get("ra_number", "")
+                    invoice_desc = invoice_item.get("description", "").strip().lower()
+                    
+                    # Improved matching - exact match or contains match
+                    if (invoice_desc == item_description or 
+                        item_description in invoice_desc or 
+                        invoice_desc in item_description):
+                        
+                        invoice_qty = float(invoice_item.get("quantity", 0))
+                        used_quantity += invoice_qty
+                        
                         if ra_number:
-                            ra_usage[ra_number] = invoice_item.get("quantity", 0)
-                            used_quantity += invoice_item.get("quantity", 0)
+                            if ra_number in ra_usage:
+                                ra_usage[ra_number] += invoice_qty
+                            else:
+                                ra_usage[ra_number] = invoice_qty
             
-            balance_qty = float(item.get("quantity", 0)) - used_quantity
+            # Use billed_quantity from BOQ if available (more accurate)
+            billed_qty = float(item.get("billed_quantity", 0))
+            if billed_qty > 0:
+                used_quantity = billed_qty
+            
+            balance_qty = max(0, overall_qty - used_quantity)
             
             tracking_item = {
                 "item_id": item.get("id", str(uuid.uuid4())),
                 "description": item.get("description", ""),
                 "unit": item.get("unit", "nos"),
-                "overall_qty": float(item.get("quantity", 0)),
+                "overall_qty": overall_qty,
+                "used_qty": used_quantity,
+                "balance_qty": balance_qty,
                 "ra_usage": ra_usage,
-                "balance_qty": max(0, balance_qty),
                 "rate": float(item.get("rate", 0)),
                 "gst_rate": float(item.get("gst_rate", 18)),
                 "gst_type": "cgst_sgst",  # Default, can be overridden
@@ -4599,10 +4619,17 @@ async def get_ra_tracking_data(
             
             ra_tracking.append(tracking_item)
         
+        # Get existing RA numbers for reference
+        existing_ra_numbers = []
+        for invoice in invoices:
+            ra_number = invoice.get("ra_number", "")
+            if ra_number and ra_number not in existing_ra_numbers:
+                existing_ra_numbers.append(ra_number)
+        
         return {
             "project_id": project_id,
             "ra_tracking": ra_tracking,
-            "existing_ra_numbers": list(set(ra_number for item in ra_tracking for ra_number in item["ra_usage"].keys()))
+            "existing_ra_numbers": existing_ra_numbers
         }
         
     except HTTPException:
