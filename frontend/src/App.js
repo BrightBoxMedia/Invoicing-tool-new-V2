@@ -11,7 +11,7 @@ import Reports from './components/Reports';
 import PDFProcessor from './components/PDFProcessor';
 import AdminInterface from './components/AdminInterface';
 import CompanyProfileManagement from './components/CompanyProfileManagement';
-import EnhancedInvoiceCreation from './components/EnhancedInvoiceCreation';
+
 import InvoiceDesignCustomizer from './components/InvoiceDesignCustomizer';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
