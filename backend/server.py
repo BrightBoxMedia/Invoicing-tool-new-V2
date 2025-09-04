@@ -2192,8 +2192,55 @@ async def get_project_boq_status(project_id: str, current_user: dict = Depends(g
         raise HTTPException(status_code=500, detail="Failed to get BOQ status")
 
 @api_router.post("/invoices", response_model=dict)
-async def create_invoice(invoice_data: dict, current_user: dict = Depends(get_current_user)):
+async def create_invoice(
+    invoice_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
     try:
+        # CRITICAL SECURITY FIX: Add quantity validation to regular invoice endpoint
+        project_id = invoice_data.get("project_id")
+        if project_id:
+            # Validate quantities against BOQ balance
+            project = await db.projects.find_one({"id": project_id})
+            if project:
+                boq_items = project.get("boq_items", [])
+                invoice_items = invoice_data.get("items", [])
+                
+                # Check each invoice item against BOQ balance
+                validation_errors = []
+                for inv_item in invoice_items:
+                    requested_qty = float(inv_item.get("quantity", 0))
+                    if requested_qty > 0:
+                        # Find matching BOQ item
+                        matching_boq = None
+                        for boq_item in boq_items:
+                            if (boq_item.get("description", "").strip().lower() == 
+                                inv_item.get("description", "").strip().lower()):
+                                matching_boq = boq_item
+                                break
+                        
+                        if matching_boq:
+                            overall_qty = float(matching_boq.get("quantity", 0))
+                            billed_qty = float(matching_boq.get("billed_quantity", 0))
+                            balance_qty = overall_qty - billed_qty
+                            
+                            if requested_qty > balance_qty:
+                                validation_errors.append({
+                                    "description": inv_item.get("description"),
+                                    "requested_qty": requested_qty,
+                                    "available_qty": balance_qty,
+                                    "error": f"Requested quantity {requested_qty} exceeds available balance {balance_qty}"
+                                })
+                
+                # BLOCK invoice creation if validation fails
+                if validation_errors:
+                    raise HTTPException(status_code=400, detail={
+                        "message": "❌ QUANTITY VALIDATION FAILED - Invoice creation blocked",
+                        "errors": validation_errors,
+                        "total_errors": len(validation_errors)
+                    })
+        
+        # Continue with regular invoice creation if validation passes
         # Get project and client information
         project = await db.projects.find_one({"id": invoice_data["project_id"]})
         if not project:
@@ -2305,6 +2352,23 @@ async def create_invoice(invoice_data: dict, current_user: dict = Depends(get_cu
         # Save to database
         await db.invoices.insert_one(new_invoice)
         
+        # CRITICAL: Update BOQ billed quantities
+        if project and invoice_data.get("items"):
+            for inv_item in invoice_data.get("items", []):
+                billed_qty = float(inv_item.get("quantity", 0))
+                if billed_qty > 0:
+                    # Update billed_quantity in BOQ
+                    await db.projects.update_one(
+                        {
+                            "id": project_id,
+                            "boq_items.description": inv_item.get("description")
+                        },
+                        {
+                            "$inc": {"boq_items.$.billed_quantity": billed_qty},
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+        
         # Update project advance if advance received against invoice
         if advance_received_invoice > 0:
             await db.projects.update_one(
@@ -2317,11 +2381,11 @@ async def create_invoice(invoice_data: dict, current_user: dict = Depends(get_cu
         await log_activity(
             current_user["id"], current_user["email"], current_user["role"],
             "invoice_created", 
-            f"Created {invoice_data['invoice_type']} invoice {invoice_number} ({tax_status}) for project {project['project_name']} - ₹{grand_total:,.2f}"
+            f"Created {invoice_data['invoice_type']} invoice {invoice_number} ({tax_status}) with quantity validation for project {project['project_name']} - ₹{grand_total:,.2f}"
         )
         
         return {
-            "message": "Invoice created successfully", 
+            "message": "Invoice created successfully with quantity validation", 
             "invoice_id": new_invoice["id"], 
             "invoice_number": invoice_number,
             "total_amount": grand_total,
