@@ -3535,6 +3535,7 @@ const App = () => {
                   <Route path="/search" element={<SearchResults />} />
                   <Route path="/company-profiles" element={<CompanyProfileManagement currentUser={user} />} />
                   <Route path="/enhanced-invoice-creation" element={<EnhancedInvoiceCreation currentUser={user} />} />
+                  <Route path="/invoice-design" element={<InvoiceDesignCustomizer currentUser={user} />} />
                   {user.role === 'super_admin' && (
                     <>
                       <Route path="/logs" element={<ActivityLogs currentUser={user} />} />
