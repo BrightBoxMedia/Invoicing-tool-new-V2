@@ -40,6 +40,7 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
             fetchProjectDetails();
             fetchCompanyProfiles();
             fetchRATracking();
+            fetchExistingInvoices();
         }
     }, [projectId]);
 
