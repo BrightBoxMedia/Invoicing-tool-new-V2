@@ -639,6 +639,18 @@
         - agent: "testing"
         - comment: "🎯 UNIFIED PROJECT SYSTEM TESTING COMPLETED: Performed comprehensive testing of the unified project system to ensure no confusion between enhanced and regular projects. OUTSTANDING RESULTS: ✅ 100% success rate (22/22 tests passed), ✅ SINGLE PROJECT ENDPOINT: /api/projects endpoint now includes all enhanced features (company profiles, metadata validation, etc.) - both simple and complex projects can be created through main endpoint, ✅ NO DUPLICATE ENDPOINTS: Verified /api/projects/enhanced no longer exists (returns 404/405), ✅ UNIFIED PROJECT STRUCTURE: Projects created with both simple and complex data work correctly - basic projects have required fields with enhanced fields optional, enhanced projects have both basic and enhanced fields, ✅ ENHANCED FEATURES AVAILABLE: Company profile integration works seamlessly through main endpoint - projects can be linked to company profiles with locations and bank details, ✅ NO FIELD CONFUSION: Only one metadata structure (project_metadata) exists - no confusion between metadata and project_metadata fields, unified metadata structure working correctly, ✅ CONSISTENT PROJECT RETRIEVAL: All projects have consistent basic structure, enhanced features available but optional, individual project retrieval working correctly. Fixed critical issue in GET projects endpoint where it was mapping to old 'metadata' field instead of unified 'project_metadata' field. The unified project system is now fully functional with clean, unified structure and NO dual structures!"
 
+  - task: "Unified Invoice Creation System"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "main"
+        - comment: "FIXED: Removed separate 'Enhanced Invoices' menu item and route. Unified invoice creation into single system as requested by user. Regular invoice creation now has proper quantity validation working correctly."
+
 ## agent_communication:
     - agent: "main"
     - message: "CRITICAL USER ISSUES RESOLUTION STARTING: User is frustrated about two specific issues: 1) Remaining qty blocker is not updated (over-quantity validation still failing), 2) Enhanced invoice creation should not be separate but integrated into regular flow. User wants ONE unified invoice creation system, not two separate systems. Starting immediate fix to unify invoice creation and ensure proper quantity validation."
