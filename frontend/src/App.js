@@ -2156,6 +2156,7 @@ const Invoices = () => {
   const [selectedItems, setSelectedItems] = useState([]);
   const [boqStatus, setBOQStatus] = useState(null);
   const [partialQuantities, setPartialQuantities] = useState({});
+  const [quantityErrors, setQuantityErrors] = useState({});
   const [itemGSTRates, setItemGSTRates] = useState({});
   const [loading, setLoading] = useState(true);
   
