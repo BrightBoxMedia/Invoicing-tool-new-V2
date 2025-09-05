@@ -2329,9 +2329,43 @@ const Invoices = () => {
   };
 
   const updatePartialQuantity = (itemId, quantity) => {
+    const numericQuantity = parseFloat(quantity) || 0;
+    
+    // Find the corresponding BOQ item to get remaining quantity
+    const boqItem = boqStatus?.boq_items?.find(item => 
+      (item.id || item.serial_number) === itemId
+    );
+    
+    if (boqItem) {
+      const remainingQty = boqItem.remaining_quantity || 0;
+      
+      // Check if quantity exceeds remaining balance
+      if (numericQuantity > remainingQty) {
+        // Set error for this item
+        setQuantityErrors(prev => ({
+          ...prev,
+          [itemId]: `Cannot exceed remaining quantity ${remainingQty}`
+        }));
+        
+        // Cap the quantity to remaining balance
+        setPartialQuantities(prev => ({
+          ...prev,
+          [itemId]: remainingQty
+        }));
+        return;
+      } else {
+        // Clear error if quantity is valid
+        setQuantityErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[itemId];
+          return newErrors;
+        });
+      }
+    }
+    
     setPartialQuantities(prev => ({
       ...prev,
-      [itemId]: parseFloat(quantity) || 0
+      [itemId]: numericQuantity
     }));
   };
 
