@@ -2853,16 +2853,27 @@ const Invoices = () => {
                                 <td className="px-3 py-2 text-green-600 font-medium">{item.remaining_quantity}</td>
                                 <td className="px-3 py-2">₹{item.rate}</td>
                                 <td className="px-3 py-2">
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    max={item.remaining_quantity}
-                                    step="0.01"
-                                    value={billQty}
-                                    onChange={(e) => updatePartialQuantity(itemId, e.target.value)}
-                                    className="w-20 px-2 py-1 border border-gray-300 rounded text-center"
-                                    placeholder="0"
-                                  />
+                                  <div>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      max={item.remaining_quantity}
+                                      step="0.01"
+                                      value={billQty}
+                                      onChange={(e) => updatePartialQuantity(itemId, e.target.value)}
+                                      className={`w-20 px-2 py-1 border rounded text-center ${
+                                        quantityErrors[itemId] 
+                                          ? 'border-red-500 bg-red-50 focus:ring-red-500' 
+                                          : 'border-gray-300 focus:ring-blue-500'
+                                      }`}
+                                      placeholder="0"
+                                    />
+                                    {quantityErrors[itemId] && (
+                                      <div className="text-xs text-red-600 mt-1 leading-tight">
+                                        {quantityErrors[itemId]}
+                                      </div>
+                                    )}
+                                  </div>
                                 </td>
                                 <td className="px-3 py-2">
                                   <input
