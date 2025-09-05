@@ -1905,12 +1905,13 @@ const Projects = () => {
                 </button>
                 <button
                   onClick={handleCreateInvoice}
-                  disabled={!boqStatus || Object.values(partialQuantities).every(qty => qty === 0)}
+                  disabled={!boqStatus || Object.values(partialQuantities).every(qty => qty === 0) || Object.keys(quantityErrors).length > 0}
                   className={`px-6 py-2 rounded-lg font-medium text-white ${
-                    boqStatus && Object.values(partialQuantities).some(qty => qty > 0)
+                    boqStatus && Object.values(partialQuantities).some(qty => qty > 0) && Object.keys(quantityErrors).length === 0
                       ? 'bg-blue-600 hover:bg-blue-700 cursor-pointer'
                       : 'bg-gray-400 cursor-not-allowed'
                   }`}
+                  title={Object.keys(quantityErrors).length > 0 ? 'Fix quantity errors before creating invoice' : ''}
                 >
                   Create {boqStatus?.next_ra_number} Invoice
                 </button>
