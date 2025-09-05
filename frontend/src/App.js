@@ -2964,12 +2964,13 @@ const Invoices = () => {
                 </button>
                 <button
                   onClick={handleCreateInvoice}
-                  disabled={!selectedProject || !boqStatus || Object.values(partialQuantities).every(qty => qty === 0)}
+                  disabled={!selectedProject || !boqStatus || Object.values(partialQuantities).every(qty => qty === 0) || Object.keys(quantityErrors).length > 0}
                   className={`px-6 py-2 rounded font-medium ${
-                    selectedProject && boqStatus && Object.values(partialQuantities).some(qty => qty > 0)
+                    selectedProject && boqStatus && Object.values(partialQuantities).some(qty => qty > 0) && Object.keys(quantityErrors).length === 0
                       ? 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
+                  title={Object.keys(quantityErrors).length > 0 ? 'Fix quantity errors before creating invoice' : ''}
                 >
                   Create {boqStatus?.next_ra_number} Invoice
                 </button>
