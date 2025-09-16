@@ -1,0 +1,17 @@
+{
+  "name": "activus-invoice-functions",
+  "version": "1.0.0",
+  "description": "Firebase Functions for Activus Invoice Management System",
+  "scripts": {
+    "build": "echo 'Building functions...'",
+    "serve": "functions-framework --target=api --debug",
+    "start": "npm run serve",
+    "deploy": "firebase deploy --only functions"
+  },
+  "engines": {
+    "node": "18"
+  },
+  "main": "main.py",
+  "dependencies": {},
+  "private": true
+}
