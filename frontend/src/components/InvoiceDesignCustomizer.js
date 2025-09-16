@@ -331,14 +331,36 @@ const InvoiceDesignCustomizer = ({ currentUser }) => {
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Company Logo URL</label>
-                                        <input
-                                            type="url"
-                                            value={designConfig.company_logo_url}
-                                            onChange={(e) => setDesignConfig({...designConfig, company_logo_url: e.target.value})}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                                            placeholder="https://example.com/logo.png"
-                                        />
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Company Logo</label>
+                                        <div className="space-y-3">
+                                            <input
+                                                id="logo-upload"
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleLogoUpload}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                            />
+                                            {(logoPreview || designConfig.company_logo_url) && (
+                                                <div className="relative inline-block">
+                                                    <img
+                                                        src={logoPreview || designConfig.company_logo_url}
+                                                        alt="Logo Preview"
+                                                        className="h-16 w-auto border border-gray-200 rounded"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={removeLogo}
+                                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                                                        title="Remove logo"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </div>
+                                            )}
+                                            <p className="text-xs text-gray-500">
+                                                Upload PNG, JPG, or GIF. Max size: 5MB. Recommended: 300x150px
+                                            </p>
+                                        </div>
                                     </div>
                                     
                                     <div>
