@@ -94,3 +94,7 @@ backend_test.py
 # Production environment files
 .env.production
 .env.local
+-e 
+# Environment files
+*.env
+*.env.*
