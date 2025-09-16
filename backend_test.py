@@ -1856,7 +1856,8 @@ def main():
     tester = ActivusAPITester()
     
     try:
-        success = tester.run_all_tests()
+        # Run the comprehensive production readiness test as requested
+        success = tester.run_production_readiness_test()
         return 0 if success else 1
     except KeyboardInterrupt:
         print("\n⏹️ Tests interrupted by user")
