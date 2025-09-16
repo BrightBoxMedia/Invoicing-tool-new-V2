@@ -27,12 +27,13 @@ from enum import Enum
 import bcrypt
 import jwt
 from fastapi.middleware.cors import CORSMiddleware
-import pdfplumber
-import PyPDF2
-import tabula
-from pdfminer.high_level import extract_text as pdfminer_extract_text
-from pdfminer.layout import LAParams
-import docx
+# PDF processing imports removed to reduce bundle size
+# import pdfplumber
+# import PyPDF2
+# import tabula
+# from pdfminer.high_level import extract_text as pdfminer_extract_text
+# from pdfminer.layout import LAParams
+# import docx
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
