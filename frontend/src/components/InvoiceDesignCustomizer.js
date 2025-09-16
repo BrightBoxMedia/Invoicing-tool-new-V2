@@ -239,7 +239,6 @@ const InvoiceDesignCustomizer = ({ currentUser }) => {
         const fileInput = document.getElementById('logo-upload');
         if (fileInput) fileInput.value = '';
     };
-    };
 
     const addCustomField = () => {
         const newField = {
