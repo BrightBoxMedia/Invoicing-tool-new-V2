@@ -62,6 +62,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Add production middleware
+if config.is_production:
+    app.add_middleware(SecurityHeadersMiddleware)
+    app.add_middleware(RequestLoggingMiddleware)
+    app.add_middleware(RateLimitingMiddleware, calls=1000, period=60)  # 1000 requests per minute
+
 # PDF processing functionality disabled for production to reduce bundle size
 # This reduces Vercel function from >250MB to manageable size
 PDF_PROCESSING_ENABLED = False
