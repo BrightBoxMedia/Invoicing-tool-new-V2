@@ -1984,12 +1984,41 @@ async def create_invoice(
                         for boq_item in boq_items:
                             boq_description = boq_item.get("description", "").strip().lower()
                             
-                            # FLEXIBLE MATCHING: exact match OR substring match
-                            if (boq_description == inv_description or 
-                                boq_description in inv_description or 
-                                inv_description in boq_description):
-                                matching_boq = boq_item
-                                break
+                        # ROBUST MATCHING ALGORITHM - Multiple strategies for BOQ validation
+                        is_match = False
+                        
+                        # Strategy 1: Exact match (case-insensitive)
+                        if boq_description == inv_description:
+                            is_match = True
+                        
+                        # Strategy 2: Substring match (both directions)
+                        elif (boq_description in inv_description or 
+                              inv_description in boq_description):
+                            is_match = True
+                        
+                        # Strategy 3: Remove common words and match
+                        elif len(boq_description) > 5 and len(inv_description) > 5:
+                            # Remove common connecting words
+                            common_words = ['work', 'of', 'for', 'in', 'at', 'with', 'and', 'the', 'a', 'an']
+                            boq_cleaned = ' '.join([word for word in boq_description.split() 
+                                                   if word not in common_words])
+                            inv_cleaned = ' '.join([word for word in inv_description.split() 
+                                                   if word not in common_words])
+                            
+                            if (boq_cleaned in inv_cleaned or 
+                                inv_cleaned in boq_cleaned):
+                                is_match = True
+                        
+                        # Strategy 4: First few words match (for long descriptions)
+                        elif len(boq_description.split()) >= 2 and len(inv_description.split()) >= 2:
+                            boq_first_words = ' '.join(boq_description.split()[:3])
+                            inv_first_words = ' '.join(inv_description.split()[:3])
+                            if boq_first_words == inv_first_words:
+                                is_match = True
+                        
+                        if is_match:
+                            matching_boq = boq_item
+                            break
                         
                         if matching_boq:
                             overall_qty = float(matching_boq.get("quantity", 0))
