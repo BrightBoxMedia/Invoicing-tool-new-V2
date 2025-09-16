@@ -67,6 +67,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Mount static files for logo uploads
+uploads_dir = ROOT_DIR / "uploads"
+uploads_dir.mkdir(exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
+
 # PDF Text Extraction Models
 class POExtractedData(BaseModel):
     po_number: Optional[str] = None
