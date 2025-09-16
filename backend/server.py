@@ -3862,212 +3862,53 @@ async def get_bank_guarantees_summary(current_user: dict = Depends(get_current_u
         logger.error(f"Error generating bank guarantees summary: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to generate summary: {str(e)}")
 
-# PDF Text Extraction Engine for PO Processing
+# PDF processing functionality disabled for production to reduce bundle size
+# This reduces Vercel function from >250MB to manageable size
 @api_router.post("/pdf-processor/extract")
-async def extract_pdf_data(
+async def extract_pdf_data_disabled(
     file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user)
 ):
-    """Extract data from uploaded PDF/DOCX Purchase Order"""
-    try:
-        if not file.filename:
-            raise HTTPException(status_code=400, detail="No file provided")
-        
-        # Read file content
-        file_content = await file.read()
-        
-        if len(file_content) == 0:
-            raise HTTPException(status_code=400, detail="Empty file provided")
-        
-        # Initialize PDF parser
-        parser = POPDFParser()
-        
-        # Extract data
-        extracted_data = await parser.extract_from_file(file_content, file.filename)
-        
-    except ValueError as e:
-        # Handle unsupported file formats and other value errors
-        raise HTTPException(status_code=400, detail=str(e))
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error processing PDF file {file.filename}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to process file: {str(e)}")
-
-    try:
-        extraction_record = {
-            "id": str(uuid.uuid4()),
-            "original_filename": file.filename,
-            "extracted_data": extracted_data.dict(),
-            "processed_by": current_user["id"],
-            "processed_at": datetime.utcnow(),
-            "file_size": len(file_content)
-        }
-        
-        await db.pdf_extractions.insert_one(extraction_record)
-        
-        await log_activity(
-            current_user["id"], current_user["email"], current_user["role"],
-            "pdf_data_extracted", 
-            f"Extracted data from PO file: {file.filename} (Method: {extracted_data.extraction_method}, Confidence: {extracted_data.confidence_score:.2f})"
-        )
-        
-        return {
-            "extraction_id": extraction_record["id"],
-            "extracted_data": extracted_data,
-            "processing_info": {
-                "filename": file.filename,
-                "file_size": len(file_content),
-                "extraction_method": extracted_data.extraction_method,
-                "confidence_score": extracted_data.confidence_score
-            }
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error processing PDF file {file.filename}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to process file: {str(e)}")
+    """PDF processing disabled in production"""
+    raise HTTPException(
+        status_code=503, 
+        detail="PDF processing is currently disabled to reduce deployment size. Please use Excel upload instead."
+    )
 
 @api_router.get("/pdf-processor/extractions")
-async def get_pdf_extractions(
+async def get_pdf_extractions_disabled(
     skip: int = 0,
     limit: int = 50,
     current_user: dict = Depends(get_current_user)
 ):
-    """Get list of PDF extractions"""
-    try:
-        extractions = await db.pdf_extractions.find().skip(skip).limit(limit).sort("processed_at", -1).to_list(limit)
-        
-        # Convert ObjectId to string for JSON serialization
-        for extraction in extractions:
-            if "_id" in extraction:
-                extraction["_id"] = str(extraction["_id"])
-        
-        return {
-            "extractions": extractions,
-            "total": len(extractions)
-        }
-        
-    except Exception as e:
-        logger.error(f"Error fetching PDF extractions: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to fetch extractions: {str(e)}")
+    """PDF processing disabled in production"""
+    raise HTTPException(
+        status_code=503, 
+        detail="PDF processing is currently disabled to reduce deployment size."
+    )
 
 @api_router.get("/pdf-processor/extractions/{extraction_id}")
-async def get_pdf_extraction(
+async def get_pdf_extraction_disabled(
     extraction_id: str,
     current_user: dict = Depends(get_current_user)
 ):
-    """Get specific PDF extraction details"""
-    try:
-        extraction = await db.pdf_extractions.find_one({"id": extraction_id})
-        
-        if not extraction:
-            raise HTTPException(status_code=404, detail="Extraction not found")
-        
-        # Convert ObjectId to string for JSON serialization
-        if "_id" in extraction:
-            extraction["_id"] = str(extraction["_id"])
-        
-        return extraction
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error fetching PDF extraction {extraction_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to fetch extraction: {str(e)}")
+    """PDF processing disabled in production"""
+    raise HTTPException(
+        status_code=503, 
+        detail="PDF processing is currently disabled to reduce deployment size."
+    )
 
 @api_router.post("/pdf-processor/convert-to-project")
-async def convert_extraction_to_project(
+async def convert_extraction_to_project_disabled(
     extraction_id: str,
     project_metadata: dict,
     current_user: dict = Depends(get_current_user)
 ):
-    """Convert PDF extraction data to a new project"""
-    try:
-        # Get extraction data
-        extraction = await db.pdf_extractions.find_one({"id": extraction_id})
-        if not extraction:
-            raise HTTPException(status_code=404, detail="Extraction not found")
-        
-        extracted_data = extraction["extracted_data"]
-        
-        # Create BOQ items from line items
-        boq_items = []
-        for i, item in enumerate(extracted_data.get("line_items", [])):
-            boq_item = {
-                "serial_number": str(i + 1),
-                "description": item.get("description", "Imported Item"),
-                "unit": item.get("unit", "nos"),
-                "quantity": item.get("quantity", 1.0),
-                "rate": item.get("rate", 0.0),
-                "amount": item.get("amount", item.get("quantity", 1.0) * item.get("rate", 0.0)),
-                "gst_rate": 18.0,  # Default GST rate
-                "gst_amount": (item.get("amount", item.get("quantity", 1.0) * item.get("rate", 0.0))) * 0.18,
-                "total_with_gst": (item.get("amount", item.get("quantity", 1.0) * item.get("rate", 0.0))) * 1.18
-            }
-            boq_items.append(boq_item)
-        
-        # Calculate totals
-        total_project_value = sum(item["total_with_gst"] for item in boq_items)
-        
-        # Create project
-        project_data = {
-            "id": str(uuid.uuid4()),
-            "project_name": project_metadata.get("project_name", f"Project from PO {extracted_data.get('po_number', 'Unknown')}"),
-            "architect": project_metadata.get("architect", extracted_data.get("vendor_name", "Unknown Architect")),
-            "client_id": project_metadata.get("client_id", ""),
-            "client_name": project_metadata.get("client_name", extracted_data.get("client_name", "Unknown Client")),
-            "metadata": {
-                "imported_from_pdf": True,
-                "original_filename": extraction["original_filename"],
-                "po_number": extracted_data.get("po_number"),
-                "po_date": extracted_data.get("po_date"),
-                "extraction_method": extracted_data.get("extraction_method"),
-                "confidence_score": extracted_data.get("confidence_score"),
-                **project_metadata.get("additional_metadata", {})
-            },
-            "boq_items": boq_items,
-            "total_project_value": total_project_value,
-            "advance_received": 0.0,
-            "pending_payment": total_project_value,
-            "created_by": current_user["id"],
-            "created_at": datetime.utcnow(),
-            "updated_at": datetime.utcnow()
-        }
-        
-        # Create the project
-        await db.projects.insert_one(project_data)
-        
-        # Update extraction record to mark as converted
-        await db.pdf_extractions.update_one(
-            {"id": extraction_id},
-            {"$set": {
-                "converted_to_project": True,
-                "project_id": project_data["id"],
-                "conversion_date": datetime.utcnow()
-            }}
-        )
-        
-        await log_activity(
-            current_user["id"], current_user["email"], current_user["role"],
-            "pdf_converted_to_project", 
-            f"Converted PDF extraction to project: {project_data['project_name']} (₹{total_project_value:,.2f})"
-        )
-        
-        return {
-            "message": "Project created successfully from PDF extraction",
-            "project_id": project_data["id"],
-            "project_name": project_data["project_name"],
-            "total_value": total_project_value,
-            "items_count": len(boq_items)
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error converting extraction to project: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to convert to project: {str(e)}")
+    """PDF processing disabled in production"""
+    raise HTTPException(
+        status_code=503, 
+        detail="PDF processing is currently disabled to reduce deployment size."
+    )
 
 # Admin Configuration System
 class WorkflowConfig(BaseModel):
