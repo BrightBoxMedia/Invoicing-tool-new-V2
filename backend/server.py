@@ -9,7 +9,7 @@ import os
 import logging
 import uuid
 import io
-import pandas as pd
+# import pandas as pd  # Removed to reduce bundle size
 import openpyxl
 from datetime import datetime, timedelta
 from decimal import Decimal
