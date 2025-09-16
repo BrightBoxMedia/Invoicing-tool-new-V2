@@ -29,10 +29,5 @@
   ],
   "env": {
     "PYTHONPATH": "./backend"
-  },
-  "functions": {
-    "backend/main.py": {
-      "maxDuration": 30
-    }
   }
 }
