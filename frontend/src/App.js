@@ -3968,7 +3968,7 @@ const UserManagement = () => {
   };
 
   const handleDeactivate = async (userId) => {
-    if (!confirm('Are you sure you want to deactivate this user?')) return;
+    if (!window.confirm('Are you sure you want to deactivate this user?')) return;
 
     try {
       const token = localStorage.getItem('token');
