@@ -1934,21 +1934,17 @@ async def upload_company_logo(
         if len(contents) > 5 * 1024 * 1024:
             raise HTTPException(status_code=400, detail="File size must be less than 5MB")
         
-        # Create uploads directory if it doesn't exist
-        uploads_dir = ROOT_DIR / "uploads" / "logos"
-        uploads_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Generate unique filename
+        # For production deployment (Vercel), store as base64 data URL
+        import base64
         file_extension = logo.filename.split('.')[-1] if '.' in logo.filename else 'png'
+        mime_type = logo.content_type or f'image/{file_extension}'
+        
+        # Convert to base64 data URL
+        base64_data = base64.b64encode(contents).decode('utf-8')
+        logo_url = f"data:{mime_type};base64,{base64_data}"
+        
+        # Generate unique filename for reference
         unique_filename = f"logo_{uuid.uuid4()}.{file_extension}"
-        file_path = uploads_dir / unique_filename
-        
-        # Save file
-        with open(file_path, "wb") as f:
-            f.write(contents)
-        
-        # Create URL for the uploaded file (assuming static file serving)
-        logo_url = f"/uploads/logos/{unique_filename}"
         
         # Log activity
         await log_activity(
