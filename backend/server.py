@@ -4,6 +4,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from starlette.middleware.cors import CORSMiddleware
 from health import comprehensive_health_check, check_database_health
 from config import config
+from middleware import SecurityHeadersMiddleware, RequestLoggingMiddleware, RateLimitingMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field, validator
 from typing import List, Optional, Dict, Any
