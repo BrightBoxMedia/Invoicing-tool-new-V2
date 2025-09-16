@@ -1,6 +1,4 @@
-<file>
-      <absolute_file_name>/app/api/index.py</absolute_file_name>
-      <content">import sys
+import sys
 import os
 sys.path.append('../backend')
 
@@ -78,5 +76,3 @@ async def get_clients():
 # Vercel handler
 def handler(request, start_response):
     return app(request, start_response)
-</content>
-    </file>
