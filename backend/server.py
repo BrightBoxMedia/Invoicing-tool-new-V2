@@ -1908,6 +1908,62 @@ async def save_invoice_design_config(
         logger.error(f"Error saving invoice design config: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to save invoice design config: {str(e)}")
 
+@api_router.post("/admin/upload-logo")
+async def upload_company_logo(
+    logo: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Upload company logo for invoice design"""
+    try:
+        # Check if user is super admin
+        if current_user.get("role") != "super_admin":
+            raise HTTPException(status_code=403, detail="Only super admin can upload logos")
+        
+        # Validate file type
+        if not logo.content_type.startswith('image/'):
+            raise HTTPException(status_code=400, detail="Only image files are allowed")
+        
+        # Validate file size (max 5MB)
+        contents = await logo.read()
+        if len(contents) > 5 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="File size must be less than 5MB")
+        
+        # Create uploads directory if it doesn't exist
+        uploads_dir = ROOT_DIR / "uploads" / "logos"
+        uploads_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Generate unique filename
+        file_extension = logo.filename.split('.')[-1] if '.' in logo.filename else 'png'
+        unique_filename = f"logo_{uuid.uuid4()}.{file_extension}"
+        file_path = uploads_dir / unique_filename
+        
+        # Save file
+        with open(file_path, "wb") as f:
+            f.write(contents)
+        
+        # Create URL for the uploaded file (assuming static file serving)
+        logo_url = f"/uploads/logos/{unique_filename}"
+        
+        # Log activity
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "logo_uploaded",
+            f"Uploaded company logo: {logo.filename} ({len(contents)} bytes)"
+        )
+        
+        return {
+            "message": "Logo uploaded successfully",
+            "logo_url": logo_url,
+            "filename": unique_filename,
+            "size": len(contents)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error uploading logo: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to upload logo: {str(e)}")
+
 @api_router.post("/admin/fix-project-metadata")
 async def fix_project_metadata_format(
     current_user: dict = Depends(get_current_user)
