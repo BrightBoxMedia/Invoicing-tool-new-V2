@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+motor
+pymongo
+bcrypt
+pyjwt
+python-multipart
+starlette
