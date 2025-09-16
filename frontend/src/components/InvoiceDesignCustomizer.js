@@ -175,6 +175,72 @@ const InvoiceDesignCustomizer = ({ currentUser }) => {
         }
     };
 
+    const handleLogoUpload = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            setError('Please select a valid image file (PNG, JPG, GIF, etc.)');
+            return;
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            setError('Logo file size must be less than 5MB');
+            return;
+        }
+
+        setLogoFile(file);
+        
+        // Create preview URL
+        const previewUrl = URL.createObjectURL(file);
+        setLogoPreview(previewUrl);
+        
+        // Upload the file
+        setLoading(true);
+        setError('');
+        
+        try {
+            const formData = new FormData();
+            formData.append('logo', file);
+            
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${backendUrl}/api/admin/upload-logo`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setDesignConfig({...designConfig, company_logo_url: data.logo_url});
+                setSuccess('✅ Logo uploaded successfully!');
+                setTimeout(() => setSuccess(''), 3000);
+            } else {
+                const errorData = await response.json();
+                setError(errorData.detail || 'Failed to upload logo');
+            }
+        } catch (err) {
+            setError('Network error uploading logo');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const removeLogo = () => {
+        setLogoFile(null);
+        setLogoPreview('');
+        setDesignConfig({...designConfig, company_logo_url: ''});
+        
+        // Clear the file input
+        const fileInput = document.getElementById('logo-upload');
+        if (fileInput) fileInput.value = '';
+    };
+    };
+
     const addCustomField = () => {
         const newField = {
             id: Date.now(),
