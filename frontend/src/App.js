@@ -4481,6 +4481,11 @@ const SearchResults = () => {
   );
 };
 
+// Wrap App with ErrorBoundary for production error handling
+const AppWithErrorBoundary = () => (
+  <ErrorBoundary>
+    <App />
+  </ErrorBoundary>
+);
 
-
-export default App;
+export default AppWithErrorBoundary;
