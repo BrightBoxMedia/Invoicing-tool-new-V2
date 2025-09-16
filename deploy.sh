@@ -167,4 +167,3 @@ echo "3. Deploy on Vercel with the provided environment variables"
 echo ""
 echo "📖 See DEPLOYMENT_STATUS.md for detailed instructions"
 echo ""
-EOF
