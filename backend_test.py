@@ -1260,6 +1260,147 @@ class ActivusAPITester:
             self.log_test("Create enhanced invoice", False, f"- {result}")
             return None
 
+    def test_logo_upload_functionality(self):
+        """Test Logo Upload Functionality for Invoice Design Customizer"""
+        print("\n🖼️ Testing Logo Upload Functionality...")
+        
+        if not self.user_data or self.user_data.get('role') != 'super_admin':
+            self.log_test("Logo upload access check", False, "- Not super admin, skipping logo upload tests")
+            return False
+        
+        # 1. Test with valid image file (should succeed)
+        valid_image_data = self.create_sample_image_data()
+        files = {'logo': ('test_logo.png', valid_image_data, 'image/png')}
+        
+        success, result = self.make_request('POST', 'admin/upload-logo', files=files)
+        
+        uploaded_logo_url = None
+        uploaded_filename = None
+        if success:
+            uploaded_logo_url = result.get('logo_url')
+            uploaded_filename = result.get('filename')
+            file_size = result.get('size', 0)
+            
+            self.log_test("Upload valid image file", True, 
+                        f"- Logo URL: {uploaded_logo_url}, Size: {file_size} bytes")
+            
+            # Verify response structure
+            required_fields = ['message', 'logo_url', 'filename', 'size']
+            has_all_fields = all(field in result for field in required_fields)
+            self.log_test("Logo upload response structure", has_all_fields,
+                        f"- Contains all required fields")
+            
+            # Verify logo URL format
+            correct_url_format = uploaded_logo_url and uploaded_logo_url.startswith('/uploads/logos/')
+            self.log_test("Logo URL format", correct_url_format,
+                        f"- URL format: {uploaded_logo_url}")
+        else:
+            self.log_test("Upload valid image file", False, f"- {result}")
+        
+        # 2. Test static file access - verify uploaded files are accessible
+        if uploaded_logo_url:
+            # Test accessing the uploaded file via static file serving
+            static_url = f"{self.base_url}{uploaded_logo_url}"
+            try:
+                import requests
+                response = requests.get(static_url)
+                file_accessible = response.status_code == 200
+                self.log_test("Static file access", file_accessible,
+                            f"- File accessible at: {static_url}")
+                
+                if file_accessible:
+                    # Verify it's actually an image by checking content type
+                    content_type = response.headers.get('content-type', '')
+                    is_image = content_type.startswith('image/')
+                    self.log_test("Static file content type", is_image,
+                                f"- Content-Type: {content_type}")
+            except Exception as e:
+                self.log_test("Static file access", False, f"- Error accessing file: {str(e)}")
+        
+        # 3. Test with non-image file (should fail with 400)
+        text_file_data = b"This is not an image file"
+        files = {'logo': ('test_document.txt', text_file_data, 'text/plain')}
+        
+        success, result = self.make_request('POST', 'admin/upload-logo', files=files, expected_status=400)
+        self.log_test("Reject non-image file", success,
+                    "- Correctly rejected non-image file with 400 error")
+        
+        # 4. Test with large file >5MB (should fail with 400)
+        large_file_data = b'x' * (6 * 1024 * 1024)  # 6MB file
+        files = {'logo': ('large_logo.png', large_file_data, 'image/png')}
+        
+        success, result = self.make_request('POST', 'admin/upload-logo', files=files, expected_status=400)
+        self.log_test("Reject large file >5MB", success,
+                    "- Correctly rejected file larger than 5MB with 400 error")
+        
+        # 5. Test without super admin role (should fail with 403)
+        # Store current token and simulate non-admin user
+        old_token = self.token
+        self.token = None
+        
+        files = {'logo': ('test_logo.png', valid_image_data, 'image/png')}
+        success, result = self.make_request('POST', 'admin/upload-logo', files=files, expected_status=401)
+        self.log_test("Reject unauthorized access", success,
+                    "- Correctly rejected unauthenticated request with 401 error")
+        
+        # Restore token
+        self.token = old_token
+        
+        # 6. Test file directory structure
+        # Verify that files are saved in correct directory structure
+        if uploaded_filename:
+            expected_path = f"/uploads/logos/{uploaded_filename}"
+            path_matches = uploaded_logo_url == expected_path
+            self.log_test("Correct directory structure", path_matches,
+                        f"- Expected: {expected_path}, Got: {uploaded_logo_url}")
+        
+        # 7. Test multiple file uploads (ensure unique filenames)
+        another_image_data = self.create_sample_image_data()
+        files = {'logo': ('another_logo.jpg', another_image_data, 'image/jpeg')}
+        
+        success, result = self.make_request('POST', 'admin/upload-logo', files=files)
+        
+        if success:
+            second_filename = result.get('filename')
+            second_logo_url = result.get('logo_url')
+            
+            # Verify filenames are unique
+            filenames_unique = uploaded_filename != second_filename
+            self.log_test("Unique filename generation", filenames_unique,
+                        f"- First: {uploaded_filename}, Second: {second_filename}")
+            
+            # Verify both files have different URLs
+            urls_unique = uploaded_logo_url != second_logo_url
+            self.log_test("Unique URL generation", urls_unique,
+                        f"- URLs are unique")
+        else:
+            self.log_test("Upload second image file", False, f"- {result}")
+        
+        # 8. Test edge cases
+        # Test with empty file
+        files = {'logo': ('empty.png', b'', 'image/png')}
+        success, result = self.make_request('POST', 'admin/upload-logo', files=files, expected_status=400)
+        self.log_test("Reject empty file", success,
+                    "- Correctly rejected empty file")
+        
+        # Test with file having no extension
+        files = {'logo': ('logo_no_ext', valid_image_data, 'image/png')}
+        success, result = self.make_request('POST', 'admin/upload-logo', files=files)
+        if success:
+            filename_with_default_ext = result.get('filename', '').endswith('.png')
+            self.log_test("Handle file without extension", filename_with_default_ext,
+                        f"- Added default .png extension")
+        else:
+            self.log_test("Handle file without extension", False, f"- {result}")
+        
+        return True
+
+    def create_sample_image_data(self):
+        """Create a minimal valid image file data for testing"""
+        # Create a minimal PNG file (1x1 pixel transparent PNG)
+        png_data = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xdb\x00\x00\x00\x00IEND\xaeB`\x82'
+        return png_data
+
     def test_enhanced_features_authentication(self):
         """Test authentication and authorization for enhanced features"""
         print("\n🔐 Testing Enhanced Features Authentication...")
