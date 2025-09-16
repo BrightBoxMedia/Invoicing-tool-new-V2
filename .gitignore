@@ -81,3 +81,16 @@ android-sdk/ -e
 # Environment files
 *.env
 *.env.*
+
+# Test files and results
+test_result.md
+*_test.py
+backend_test.py
+*.test.js
+
+# Upload directories (will be handled by production storage)
+/backend/uploads/
+
+# Production environment files
+.env.production
+.env.local
