@@ -60,7 +60,7 @@
     "build": "craco build",
     "test": "craco test",
     "eject": "react-scripts eject",
-    "vercel-build": "npm run build"
+    "vercel-build": "craco build"
   },
   "browserslist": {
     "production": [
