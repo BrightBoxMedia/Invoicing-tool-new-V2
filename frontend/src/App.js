@@ -16,7 +16,7 @@ import CompanyProfileManagement from './components/CompanyProfileManagement';
 
 import InvoiceDesignCustomizer from './components/InvoiceDesignCustomizer';
 
-// API configuration
+// API configuration for Firebase
 const BACKEND_URL = config.API_BASE_URL;
 const API = `${BACKEND_URL}/api`;
 
