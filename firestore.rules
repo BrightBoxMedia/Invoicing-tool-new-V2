@@ -1,0 +1,42 @@
+// Firestore Security Rules for Activus Invoice Management
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection - only authenticated users can read/write their own data
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Projects collection - authenticated users can read/write
+    match /projects/{document} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Invoices collection - authenticated users can read/write
+    match /invoices/{document} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Clients collection - authenticated users can read/write
+    match /clients/{document} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Company profiles collection - authenticated users can read/write
+    match /company_profiles/{document} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Activity logs collection - read only for authenticated users
+    match /activity_logs/{document} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    // Admin only collections
+    match /admin/{document} {
+      allow read, write: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'];
+    }
+  }
+}
