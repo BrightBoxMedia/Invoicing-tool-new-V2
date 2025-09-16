@@ -1,11 +1,20 @@
 {
-  "name": "activus-invoice-management-frontend",
+  "name": "activus-invoice-management",
   "version": "1.0.0",
-  "description": "Professional BOQ processing and GST-compliant invoice generation system",
-  "homepage": "https://github.com/yourusername/activus-invoice-management",
+  "description": "Professional invoice management system with BOQ processing and GST compliance for Activus Design & Build",
+  "homepage": ".",
   "author": "Activus Design & Build",
   "license": "MIT",
   "private": true,
+  "keywords": [
+    "invoice management",
+    "BOQ processing",
+    "GST billing",
+    "construction invoicing",
+    "project management",
+    "firebase",
+    "react"
+  ],
   "dependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@hookform/resolvers": "^5.0.1",
