@@ -16,8 +16,8 @@ import CompanyProfileManagement from './components/CompanyProfileManagement';
 
 import InvoiceDesignCustomizer from './components/InvoiceDesignCustomizer';
 
-// API configuration for Vercel deployment
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || window.location.origin;
+// API configuration for Vercel deployment - SIMPLIFIED
+const BACKEND_URL = window.location.origin;
 const API = `${BACKEND_URL}/api`;
 
 // Auth Context
