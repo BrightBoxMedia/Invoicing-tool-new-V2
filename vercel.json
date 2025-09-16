@@ -9,24 +9,37 @@
       }
     },
     {
-      "src": "backend/main.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxLambdaSize": "50mb"
-      }
+      "src": "backend/server.py",
+      "use": "@vercel/python"
     }
   ],
   "routes": [
     {
-      "handle": "filesystem"
+      "src": "/api/(.*)",
+      "dest": "/backend/server.py"
     },
     {
-      "src": "/api/(.*)",
-      "dest": "/backend/main.py"
+      "src": "/static/(.*)",
+      "dest": "/frontend/build/static/$1"
+    },
+    {
+      "src": "/manifest.json",
+      "dest": "/frontend/build/manifest.json"
+    },
+    {
+      "src": "/favicon.ico",
+      "dest": "/frontend/build/favicon.ico"
+    },
+    {
+      "src": "/logo(.*)",
+      "dest": "/frontend/build/logo$1"
     },
     {
       "src": "/(.*)",
       "dest": "/frontend/build/index.html"
     }
-  ]
+  ],
+  "env": {
+    "PYTHONPATH": "./backend"
+  }
 }
