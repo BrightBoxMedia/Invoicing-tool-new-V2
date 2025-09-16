@@ -9,18 +9,18 @@
       }
     },
     {
-      "src": "backend/server.py",
+      "src": "backend/main.py",
       "use": "@vercel/python"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/backend/server.py"
+      "dest": "/backend/main.py"
     },
     {
       "src": "/uploads/(.*)",
-      "dest": "/backend/server.py"
+      "dest": "/backend/main.py"
     },
     {
       "src": "/(.*)",
@@ -29,5 +29,10 @@
   ],
   "env": {
     "PYTHONPATH": "./backend"
+  },
+  "functions": {
+    "backend/main.py": {
+      "maxDuration": 30
+    }
   }
 }
