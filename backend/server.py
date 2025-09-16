@@ -4207,10 +4207,39 @@ async def get_ra_tracking_data(
                 for invoice_item in invoice.get("items", []):
                     invoice_desc = invoice_item.get("description", "").strip().lower()
                     
-                    # Improved matching - exact match or contains match
-                    if (invoice_desc == item_description or 
-                        item_description in invoice_desc or 
-                        invoice_desc in item_description):
+                    # ROBUST MATCHING ALGORITHM - Multiple strategies
+                    is_match = False
+                    
+                    # Strategy 1: Exact match (case-insensitive)
+                    if invoice_desc == item_description:
+                        is_match = True
+                    
+                    # Strategy 2: Substring match (both directions)
+                    elif (item_description in invoice_desc or 
+                          invoice_desc in item_description):
+                        is_match = True
+                    
+                    # Strategy 3: Remove common words and match
+                    elif len(item_description) > 5 and len(invoice_desc) > 5:
+                        # Remove common connecting words
+                        common_words = ['work', 'of', 'for', 'in', 'at', 'with', 'and', 'the', 'a', 'an']
+                        item_cleaned = ' '.join([word for word in item_description.split() 
+                                               if word not in common_words])
+                        invoice_cleaned = ' '.join([word for word in invoice_desc.split() 
+                                                  if word not in common_words])
+                        
+                        if (item_cleaned in invoice_cleaned or 
+                            invoice_cleaned in item_cleaned):
+                            is_match = True
+                    
+                    # Strategy 4: First few words match (for long descriptions)
+                    elif len(item_description.split()) >= 2 and len(invoice_desc.split()) >= 2:
+                        item_first_words = ' '.join(item_description.split()[:3])
+                        invoice_first_words = ' '.join(invoice_desc.split()[:3])
+                        if item_first_words == invoice_first_words:
+                            is_match = True
+                    
+                    if is_match:
                         
                         invoice_qty = float(invoice_item.get("quantity", 0))
                         used_quantity += invoice_qty
