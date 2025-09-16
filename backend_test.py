@@ -1575,6 +1575,9 @@ class ActivusAPITester:
         # Test NEW Database Clear Functionality (CRITICAL SECURITY FEATURE)
         self.test_database_clear_functionality()
         
+        # Test NEW Logo Upload Functionality (REQUESTED FEATURE)
+        self.test_logo_upload_functionality()
+        
         # Test authentication and permissions for new endpoints
         self.test_authentication_and_permissions()
         
