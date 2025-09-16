@@ -4576,6 +4576,55 @@ async def get_project_metadata_template(
 # Include router
 app.include_router(api_router)
 
+# Health check endpoints for production monitoring
+@app.get("/health")
+async def health_check():
+    """Simple health check endpoint"""
+    return {
+        "status": "ok", 
+        "timestamp": datetime.utcnow().isoformat(),
+        "service": "activus-invoice-management"
+    }
+
+@app.get("/health/detailed")
+async def detailed_health_check():
+    """Detailed health check with database and system info"""
+    try:
+        health_data = await comprehensive_health_check()
+        return health_data
+    except Exception as e:
+        return {
+            "status": "error",
+            "timestamp": datetime.utcnow().isoformat(),
+            "error": str(e)
+        }
+
+@api_router.get("/admin/system-health")
+async def admin_system_health(current_user: dict = Depends(get_current_user)):
+    """Admin-only detailed system health endpoint"""
+    if current_user.get("role") not in ["admin", "super_admin"]:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    try:
+        health_data = await comprehensive_health_check()
+        return health_data
+    except Exception as e:
+        logger.error(f"System health check error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")
+
+# Root endpoint for production
+@app.get("/")
+async def root():
+    """Root endpoint - returns API info"""
+    return {
+        "service": "Activus Invoice Management API",
+        "version": "1.0.0",
+        "status": "running",
+        "timestamp": datetime.utcnow().isoformat(),
+        "docs": "/docs",
+        "health": "/health"
+    }
+
 @app.on_event("startup")
 async def startup_event():
     await init_super_admin()
