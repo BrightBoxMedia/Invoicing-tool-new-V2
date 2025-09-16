@@ -16,7 +16,8 @@ import CompanyProfileManagement from './components/CompanyProfileManagement';
 
 import InvoiceDesignCustomizer from './components/InvoiceDesignCustomizer';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+// API configuration
+const BACKEND_URL = config.API_BASE_URL;
 const API = `${BACKEND_URL}/api`;
 
 // Auth Context
