@@ -46,9 +46,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # MongoDB connection
-mongo_url = os.environ['MONGO_URL']
+mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+db = client[os.environ.get('DB_NAME', 'test_database')]
 
 # FastAPI app
 app = FastAPI(title="Activus Invoice Management System", version="1.0.0")
@@ -56,7 +56,7 @@ api_router = APIRouter(prefix="/api")
 
 # Security
 security = HTTPBearer()
-SECRET_KEY = "activus_secret_key_2024"
+SECRET_KEY = os.environ.get('JWT_SECRET', 'activus_secret_key_2024')
 
 # Add CORS middleware
 app.add_middleware(
