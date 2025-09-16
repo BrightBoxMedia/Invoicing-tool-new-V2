@@ -52,10 +52,10 @@ api_router = APIRouter(prefix="/api")
 security = HTTPBearer()
 SECRET_KEY = config.jwt_secret
 
-# Add CORS middleware - configured for production
+# Add CORS middleware with production configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with your specific domain
+    allow_origins=config.get_cors_origins(),
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
