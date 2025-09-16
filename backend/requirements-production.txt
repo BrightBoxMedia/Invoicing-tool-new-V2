@@ -1,0 +1,37 @@
+# Optimized requirements for Vercel deployment
+# Core FastAPI and server dependencies
+fastapi>=0.100.0
+uvicorn>=0.24.0
+python-dotenv>=1.0.1
+python-multipart>=0.0.9
+
+# Database
+pymongo==4.5.0
+motor==3.3.1
+
+# Authentication and Security
+pyjwt>=2.10.0
+bcrypt>=4.0.0
+passlib>=1.7.4
+cryptography>=42.0.0
+
+# Data models and validation
+pydantic>=2.6.0
+email-validator>=2.2.0
+
+# HTTP requests
+requests>=2.31.0
+
+# Excel file processing (lightweight)
+openpyxl>=3.1.0
+
+# PDF generation (essential only)
+reportlab>=4.0.0
+pillow>=10.0.0
+
+# Removed heavy packages to reduce size:
+# - pandas, numpy (not essential for core functionality)
+# - tabula-py, pdfplumber, pdfminer.six, PyPDF2 (PDF text extraction - can be optional)
+# - python-docx (DOCX processing - can be optional)
+# - Development tools (pytest, black, isort, flake8, mypy)
+# - boto3, requests-oauthlib (not used in current implementation)
