@@ -50,12 +50,12 @@ api_router = APIRouter(prefix="/api")
 security = HTTPBearer()
 SECRET_KEY = os.environ.get('JWT_SECRET', 'activus_secret_key_2024')
 
-# Add CORS middleware
+# Add CORS middleware - configured for production
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # In production, replace with your specific domain
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
