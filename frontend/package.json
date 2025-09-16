@@ -1,6 +1,10 @@
 {
-  "name": "frontend",
-  "version": "0.1.0",
+  "name": "activus-invoice-management-frontend",
+  "version": "1.0.0",
+  "description": "Professional BOQ processing and GST-compliant invoice generation system",
+  "homepage": "https://github.com/yourusername/activus-invoice-management",
+  "author": "Activus Design & Build",
+  "license": "MIT",
   "private": true,
   "dependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
