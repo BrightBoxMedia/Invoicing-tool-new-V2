@@ -43,7 +43,7 @@ const EnhancedProjectCreation = ({ currentUser, onClose, onSuccess }) => {
     const [error, setError] = useState('');
     const [step, setStep] = useState(1); // 1: Basic Info, 2: Company Selection, 3: Metadata, 4: BOQ Upload, 5: Validation
 
-    const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.VITE_REACT_APP_BACKEND_URL;
+    const backendUrl = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || "http://localhost:8001";
 
     useEffect(() => {
         fetchCompanyProfiles();

@@ -16,7 +16,7 @@ const PDFProcessor = ({ currentUser }) => {
         additional_metadata: {}
     });
 
-    const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.VITE_REACT_APP_BACKEND_URL;
+    const backendUrl = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || "http://localhost:8001";
 
     useEffect(() => {
         fetchExtractions();
