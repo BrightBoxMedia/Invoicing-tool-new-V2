@@ -4633,12 +4633,7 @@ async def root():
         "health": "/health"
     }
 
-# Vercel serverless function handler
-def handler(request, response):
-    """Vercel serverless function handler"""
-    return app(request, response)
-
-# For development
+# For local development
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
