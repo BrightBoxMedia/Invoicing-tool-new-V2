@@ -12,7 +12,7 @@ class SupplementaryTester:
     def __init__(self):
         # Get backend URL from frontend .env file
         frontend_env_path = Path("/app/frontend/.env")
-        self.base_url = "https://billingflow-1.preview.emergentagent.com"
+        self.base_url = "https://billtrack.preview.emergentagent.com"
         
         if frontend_env_path.exists():
             with open(frontend_env_path, 'r') as f:

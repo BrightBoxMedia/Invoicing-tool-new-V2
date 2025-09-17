@@ -8,7 +8,7 @@ import requests
 import json
 
 def test_enhanced_invoice_debug():
-    base_url = "https://billingflow-1.preview.emergentagent.com"
+    base_url = "https://billtrack.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     # Login first
