@@ -18,7 +18,7 @@ const ItemMaster = ({ currentUser }) => {
         category: ''
     });
 
-    const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.VITE_REACT_APP_BACKEND_URL;
+    const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
     const commonUnits = ['nos', 'cum', 'sqm', 'kg', 'ton', 'ltr', 'meter', 'rmt', 'sqft', 'cft'];
     const commonCategories = ['Construction', 'Electrical', 'Plumbing', 'Finishing', 'Civil', 'Mechanical', 'Safety', 'Tools', 'Other'];
