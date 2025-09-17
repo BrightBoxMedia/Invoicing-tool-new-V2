@@ -14,7 +14,7 @@ const Reports = ({ currentUser }) => {
         dateTo: ''
     });
 
-    const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.VITE_REACT_APP_BACKEND_URL;
+    const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
     useEffect(() => {
         fetchClients();
