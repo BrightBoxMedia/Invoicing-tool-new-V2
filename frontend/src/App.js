@@ -511,8 +511,8 @@ const Projects = ({ currentUser }) => {
           'Content-Type': 'multipart/form-data'
         }
       });
-      setParsedData(response.data);
-      setShowBOQModal(true);
+      // BOQ Upload successful - for now, just show alert
+      alert('BOQ uploaded successfully! Use Enhanced Project Creation for full workflow.');
     } catch (error) {
       alert('Error uploading file: ' + (error.response?.data?.detail || error.message));
     }
