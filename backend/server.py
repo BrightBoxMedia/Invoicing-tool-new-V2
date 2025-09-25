@@ -15,13 +15,15 @@ from io import BytesIO
 import base64
 
 # FastAPI and Pydantic imports
-from fastapi import FastAPI, HTTPException, Depends, File, UploadFile, Query
+from fastapi import FastAPI, HTTPException, Depends, File, UploadFile, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import Response, FileResponse
+from fastapi.responses import Response, FileResponse, StreamingResponse
 from pydantic import BaseModel, Field, validator
 import uvicorn
+import json
+import websockets
 
 # Database
 import motor.motor_asyncio
