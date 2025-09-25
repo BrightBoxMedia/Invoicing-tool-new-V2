@@ -134,12 +134,13 @@ class ActivusAPITester:
         # Test creating a client
         client_data = {
             "name": "Test Client Ltd",
-            "gst_no": "27ABCDE1234F1Z5",
-            "bill_to_address": "123 Test Street, Test City, Test State - 123456",
-            "ship_to_address": "456 Ship Street, Ship City, Ship State - 654321",
-            "contact_person": "John Doe",
+            "email": "john@testclient.com",
             "phone": "+91-9876543210",
-            "email": "john@testclient.com"
+            "address": "123 Test Street",
+            "city": "Test City",
+            "state": "Test State",
+            "gst_no": "27ABCDE1234F1Z5",
+            "bill_to_address": "123 Test Street, Test City, Test State - 123456"
         }
         
         success, result = self.make_request('POST', 'clients', client_data, expected_status=200)
