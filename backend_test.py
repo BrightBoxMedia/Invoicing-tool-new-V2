@@ -2441,94 +2441,45 @@ class ActivusAPITester:
                     f"- Overall success rate: {success_rate:.1f}% ({successful_tests}/{total_tests} tests passed)")
         
         return success_rate >= 80
-        """Run complete test suite"""
-        print("🚀 Starting Activus Invoice Management System API Tests")
-        print(f"🌐 Testing against: {self.base_url}")
-        print("=" * 80)
-        
-        # Test authentication first
-        if not self.test_authentication():
-            print("\n❌ Authentication failed - stopping tests")
-            return False
-        
-        # Test all endpoints
-        self.test_dashboard_stats()
-        self.test_client_management()
-        
-        # Test BOQ upload and project creation
-        boq_data = self.test_boq_upload()
-        self.test_project_management(boq_data)
-        
-        # Test invoice management
-        self.test_invoice_management()
-        
-        # Test activity logs
-        self.test_activity_logs()
-        
-        # Test newly implemented features
-        self.test_item_master_apis()
-        self.test_search_and_filter_apis()
-        self.test_reports_and_insights_apis()
-        
-        # Test NEW PDF Text Extraction Engine (BE-01)
-        self.test_pdf_processing_endpoints()
-        
-        # Test NEW Admin Configuration System
-        self.test_admin_configuration_system()
-        
-        # Test NEW Database Clear Functionality (CRITICAL SECURITY FEATURE)
-        self.test_database_clear_functionality()
-        
-        # Test NEW Logo Upload Functionality (REQUESTED FEATURE)
-        self.test_logo_upload_functionality()
-        
-        # Test authentication and permissions for new endpoints
-        self.test_authentication_and_permissions()
-        
-        # ===== NEW ENHANCED FEATURES TESTING =====
-        print("\n" + "🌟" * 80)
-        print("🌟 TESTING NEW ENHANCED ENTERPRISE FEATURES")
-        print("🌟" * 80)
-        
-        # Test Enhanced Company Profile Management APIs
-        self.test_enhanced_company_profile_apis()
-        
-        # Test Enhanced Project Creation APIs
-        self.test_enhanced_project_creation_apis()
-        
-        # Test Enhanced Invoice Creation & RA Tracking APIs
-        self.test_enhanced_invoice_creation_and_ra_tracking_apis()
-        
-        # Test Enhanced Features Authentication
-        self.test_enhanced_features_authentication()
-        
-        # Test error handling (updated with new endpoints)
-        self.test_error_handling()
-        
-        # Print summary
-        print("\n" + "=" * 80)
-        print(f"📊 Test Summary: {self.tests_passed}/{self.tests_run} tests passed")
-        
-        if self.created_resources['clients']:
-            print(f"👥 Created {len(self.created_resources['clients'])} clients")
-        if self.created_resources['projects']:
-            print(f"🏗️ Created {len(self.created_resources['projects'])} projects")
-        if self.created_resources['invoices']:
-            print(f"🧾 Created {len(self.created_resources['invoices'])} invoices")
-        
-        success_rate = (self.tests_passed / self.tests_run) * 100 if self.tests_run > 0 else 0
-        print(f"✅ Success Rate: {success_rate:.1f}%")
-        
-        return self.tests_passed == self.tests_run
 
 def main():
     """Main test execution"""
     tester = ActivusAPITester()
     
     try:
-        # Run the comprehensive production readiness test as requested
-        success = tester.run_production_readiness_test()
-        return 0 if success else 1
+        # Run comprehensive WebSocket system testing
+        print("🚀 Starting Comprehensive WebSocket System Testing...")
+        print(f"🌐 Testing against: {tester.base_url}")
+        print("=" * 80)
+        
+        # Test authentication first
+        if not tester.test_authentication():
+            print("\n❌ Authentication failed - stopping tests")
+            return 1
+        
+        # Create basic resources needed for WebSocket testing
+        tester.test_client_management()
+        boq_data = tester.test_boq_upload()
+        tester.test_project_management(boq_data)
+        
+        # Run comprehensive WebSocket system tests
+        websocket_success = tester.test_comprehensive_websocket_system()
+        
+        # Print final results
+        print("\n" + "=" * 80)
+        print("🎯 WEBSOCKET SYSTEM TEST RESULTS")
+        print("=" * 80)
+        print(f"✅ Tests Passed: {tester.tests_passed}")
+        print(f"❌ Tests Failed: {tester.tests_run - tester.tests_passed}")
+        print(f"📊 Success Rate: {(tester.tests_passed/tester.tests_run)*100:.1f}%")
+        
+        if websocket_success:
+            print(f"🏆 WEBSOCKET STATUS: ✅ FULLY FUNCTIONAL")
+        else:
+            print(f"🏆 WEBSOCKET STATUS: ⚠️ NEEDS ATTENTION")
+        
+        return 0 if websocket_success else 1
+        
     except KeyboardInterrupt:
         print("\n⏹️ Tests interrupted by user")
         return 1
