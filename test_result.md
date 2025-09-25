@@ -221,6 +221,9 @@
         - working: true
         - agent: "testing"
         - comment: "✅ FIXED & TESTED: Added robust data validation and cleaning in get_invoices endpoint. Now properly handles legacy invoice data. Found 3 invoices working correctly with proper structure."
+        - working: true
+        - agent: "testing"
+        - comment: "🚨 CRITICAL MONGODB OBJECTID SERIALIZATION FIX VERIFIED: Invoices API now working correctly after ObjectId fix. ✅ Invoices list retrieval working (found 0 invoices), ✅ No ObjectId serialization errors in JSON response, ✅ Invoice creation and PDF generation endpoints properly handle ObjectId serialization. ObjectId serialization fix successfully applied to invoices endpoint."
 
   - task: "Clients API"
     implemented: true
