@@ -1310,6 +1310,36 @@ async def create_invoice(invoice_data: dict, current_user: dict = Depends(get_cu
             project_id=invoice.project_id, invoice_id=invoice.id
         )
         
+        # Emit real-time event for invoice creation
+        boq_items_affected = [item.boq_item_id for item in invoice_items]
+        event_data = create_invoice_event_data(invoice_dict, boq_items_affected)
+        await emit_project_event(
+            ProjectEvent.INVOICE_CREATED, 
+            invoice_data['project_id'], 
+            event_data, 
+            current_user['id']
+        )
+        
+        # Emit BOQ item billing events for each item
+        for item in invoice_items:
+            boq_item = next((bi for bi in project.get('boq_items', []) 
+                           if bi['id'] == item.boq_item_id), None)
+            if boq_item:
+                new_billed_qty = boq_item.get('billed_quantity', 0) + item.quantity
+                available_qty = boq_item['quantity'] - new_billed_qty
+                
+                boq_event_data = create_boq_event_data(
+                    item.boq_item_id, 
+                    new_billed_qty, 
+                    available_qty
+                )
+                await emit_project_event(
+                    ProjectEvent.BOQ_ITEM_BILLED, 
+                    invoice_data['project_id'], 
+                    boq_event_data, 
+                    current_user['id']
+                )
+        
         return {
             "message": "Invoice created successfully", 
             "invoice_id": invoice.id,
