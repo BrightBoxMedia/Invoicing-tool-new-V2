@@ -1545,6 +1545,116 @@ async def get_activity_logs(current_user: dict = Depends(get_current_user)):
         logger.error(f"Activity logs error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get activity logs: {str(e)}")
 
+# WebSocket Endpoint for Real-time Project Updates
+@app.websocket("/ws/projects/{project_id}")
+async def websocket_endpoint(websocket: WebSocket, project_id: str):
+    """WebSocket endpoint for real-time project updates"""
+    user_id = None
+    
+    try:
+        # Accept connection
+        await websocket.accept()
+        
+        # Get user authentication from query params or headers
+        user_id = websocket.query_params.get("user_id", f"anonymous_{uuid.uuid4()}")
+        
+        # Connect user to project channel
+        await manager.connect(websocket, project_id, user_id)
+        
+        # Send initial project snapshot
+        snapshot = await manager.get_project_snapshot(project_id)
+        if snapshot:
+            await manager.send_personal_message(json.dumps(snapshot), websocket)
+        
+        # Keep connection alive and handle reconnection requests
+        while True:
+            try:
+                message = await websocket.receive_text()
+                data = json.loads(message)
+                
+                # Handle different message types
+                if data.get("type") == "ping":
+                    await manager.send_personal_message(
+                        json.dumps({"type": "pong", "timestamp": datetime.now(timezone.utc).isoformat()}), 
+                        websocket
+                    )
+                elif data.get("type") == "request_snapshot":
+                    snapshot = await manager.get_project_snapshot(project_id)
+                    if snapshot:
+                        await manager.send_personal_message(json.dumps(snapshot), websocket)
+                elif data.get("type") == "subscribe_events":
+                    # Client requesting events since timestamp
+                    since_timestamp = data.get("since_timestamp")
+                    # For now, just send current snapshot
+                    # In production, you'd implement event log retrieval
+                    snapshot = await manager.get_project_snapshot(project_id)
+                    if snapshot:
+                        await manager.send_personal_message(json.dumps(snapshot), websocket)
+                        
+            except WebSocketDisconnect:
+                break
+            except Exception as e:
+                logger.error(f"WebSocket message error: {e}")
+                break
+                
+    except WebSocketDisconnect:
+        pass
+    except Exception as e:
+        logger.error(f"WebSocket connection error: {e}")
+    finally:
+        if user_id:
+            await manager.disconnect(websocket, project_id, user_id)
+
+# SSE (Server-Sent Events) Endpoint - Fallback for clients that can't use WebSocket
+@api_router.get("/projects/{project_id}/events")
+async def project_events_sse(project_id: str, current_user: dict = Depends(get_current_user)):
+    """Server-Sent Events endpoint for real-time updates (WebSocket fallback)"""
+    
+    async def event_stream():
+        try:
+            # Send initial snapshot
+            snapshot = await manager.get_project_snapshot(project_id)
+            if snapshot:
+                yield f"data: {json.dumps(snapshot)}\n\n"
+            
+            # Keep connection alive with periodic updates
+            while True:
+                await asyncio.sleep(10)  # 10-second polling interval
+                
+                # Send updated snapshot
+                snapshot = await manager.get_project_snapshot(project_id)
+                if snapshot:
+                    yield f"data: {json.dumps(snapshot)}\n\n"
+                    
+        except Exception as e:
+            logger.error(f"SSE stream error: {e}")
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+    
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Cache-Control"
+        }
+    )
+
+# Enhanced Project Snapshot API for manual refresh
+@api_router.get("/projects/{project_id}/snapshot")
+async def get_project_snapshot(project_id: str, current_user: dict = Depends(get_current_user)):
+    """Get current canonical project state"""
+    try:
+        snapshot = await manager.get_project_snapshot(project_id)
+        if not snapshot:
+            raise HTTPException(status_code=404, detail="Project not found")
+        return snapshot
+        
+    except Exception as e:
+        logger.error(f"Project snapshot error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get project snapshot: {str(e)}")
+
 # Include API router
 app.include_router(api_router)
 
