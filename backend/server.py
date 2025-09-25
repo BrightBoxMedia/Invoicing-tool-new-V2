@@ -897,8 +897,18 @@ async def get_project(project_id: str, current_user: dict = Depends(get_current_
         if not project:
             raise HTTPException(status_code=404, detail="Project not found")
         
+        # Remove MongoDB _id
+        if '_id' in project:
+            del project['_id']
+        
         # Get associated invoices
-        invoices = await db.invoices.find({"project_id": project_id}).to_list(100)
+        invoices_cursor = db.invoices.find({"project_id": project_id})
+        invoices = await invoices_cursor.to_list(100)
+        
+        # Remove MongoDB _id from invoices
+        for invoice in invoices:
+            if '_id' in invoice:
+                del invoice['_id']
         
         # Calculate billing status with proper RA tracking
         billing_status = await calculate_project_billing_status(project, invoices)
@@ -911,6 +921,59 @@ async def get_project(project_id: str, current_user: dict = Depends(get_current_
     except Exception as e:
         logger.error(f"Error fetching project: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch project: {str(e)}")
+
+@api_router.get("/projects/{project_id}/ra-tracking")
+async def get_project_ra_tracking(project_id: str, current_user: dict = Depends(get_current_user)):
+    try:
+        project = await db.projects.find_one({"id": project_id})
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+        
+        # Get all invoices for this project
+        invoices_cursor = db.invoices.find({"project_id": project_id, "invoice_type": "tax_invoice"})
+        invoices = await invoices_cursor.to_list(100)
+        
+        # Calculate RA tracking for each BOQ item
+        ra_tracking = []
+        for item in project.get('boq_items', []):
+            # Calculate billed quantity from tax invoices only
+            billed_qty = 0
+            for invoice in invoices:
+                for inv_item in invoice.get('items', []):
+                    if inv_item.get('boq_item_id') == item.get('id'):
+                        billed_qty += inv_item.get('quantity', 0)
+            
+            balance_qty = item.get('quantity', 0) - billed_qty
+            
+            ra_tracking.append({
+                'item_id': item.get('id'),
+                'description': item.get('description'),
+                'unit': item.get('unit', 'Nos'),
+                'overall_qty': item.get('quantity', 0),
+                'balance_qty': max(0, balance_qty),
+                'billed_qty': billed_qty,
+                'rate': item.get('rate', 0),
+                'gst_mapping': {
+                    'total_gst_rate': item.get('gst_rate', 18),
+                    'cgst_rate': item.get('gst_rate', 18) / 2,
+                    'sgst_rate': item.get('gst_rate', 18) / 2,
+                    'igst_rate': item.get('gst_rate', 18)
+                },
+                'ra_usage': {}
+            })
+        
+        return {
+            'ra_tracking': ra_tracking,
+            'next_ra': f"RA{len(invoices) + 1}",
+            'project_name': project.get('project_name'),
+            'client_name': project.get('client_name')
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching RA tracking: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch RA tracking: {str(e)}")
 
 async def calculate_project_billing_status(project: dict, invoices: list) -> dict:
     """Calculate comprehensive project billing status"""
