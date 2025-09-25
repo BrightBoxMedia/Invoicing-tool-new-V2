@@ -454,13 +454,13 @@ const Dashboard = ({ currentUser }) => {
   );
 };
 
-// FIXED Projects Component with PROFESSIONAL BILLING STATUS
+// ENHANCED Projects Component with REAL-TIME WEBSOCKET SYSTEM
 const Projects = ({ currentUser }) => {
   const [projects, setProjects] = useState([]);
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState(null);
-  const [projectBillingData, setProjectBillingData] = useState(null);
+  const [showProjectDetails, setShowProjectDetails] = useState(false);
   const [showBOQModal, setShowBOQModal] = useState(false);
   const [showEnhancedInvoice, setShowEnhancedInvoice] = useState(false);
   const [parsedData, setParsedData] = useState(null);
