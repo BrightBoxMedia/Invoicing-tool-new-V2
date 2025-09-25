@@ -405,19 +405,12 @@ const EnhancedProjectDetails = ({ project, onClose, onCreateInvoice }) => {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-between items-center pt-4 border-t border-gray-200">
+          <div className="flex justify-center items-center pt-4 border-t border-gray-200">
             <button
               onClick={onClose}
-              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-8 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
             >
               Close
-            </button>
-            
-            <button
-              onClick={() => onCreateInvoice(project)}
-              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors z-[9999] relative"
-            >
-              🧾 Create Invoice
             </button>
           </div>
 
