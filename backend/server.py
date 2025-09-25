@@ -75,6 +75,169 @@ security = HTTPBearer()
 client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URL)
 db: AsyncIOMotorDatabase = client.activus_invoice_db
 
+# Real-time WebSocket Infrastructure for AWS Compatibility
+class ConnectionManager:
+    """WebSocket connection manager with AWS-compatible features"""
+    
+    def __init__(self):
+        self.active_connections: Dict[str, List[WebSocket]] = {}
+        self.user_projects: Dict[str, str] = {}  # user_id -> current_project_id
+        self.last_event_timestamps: Dict[str, datetime] = {}
+        
+    async def connect(self, websocket: WebSocket, project_id: str, user_id: str):
+        """Connect user to project channel"""
+        await websocket.accept()
+        
+        if project_id not in self.active_connections:
+            self.active_connections[project_id] = []
+        
+        self.active_connections[project_id].append(websocket)
+        self.user_projects[user_id] = project_id
+        
+        logger.info(f"User {user_id} connected to project {project_id}")
+        
+    async def disconnect(self, websocket: WebSocket, project_id: str, user_id: str):
+        """Disconnect user from project channel"""
+        if project_id in self.active_connections:
+            try:
+                self.active_connections[project_id].remove(websocket)
+                if not self.active_connections[project_id]:
+                    del self.active_connections[project_id]
+            except ValueError:
+                pass
+        
+        if user_id in self.user_projects:
+            del self.user_projects[user_id]
+        
+        logger.info(f"User {user_id} disconnected from project {project_id}")
+    
+    async def send_personal_message(self, message: str, websocket: WebSocket):
+        """Send message to specific websocket"""
+        try:
+            await websocket.send_text(message)
+        except WebSocketDisconnect:
+            pass
+    
+    async def broadcast_to_project(self, project_id: str, message: dict, exclude_user: str = None):
+        """Broadcast message to all users viewing a project"""
+        if project_id not in self.active_connections:
+            return
+            
+        message_str = json.dumps({
+            **message,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "project_id": project_id
+        })
+        
+        # Store last event timestamp for reconnection handling
+        self.last_event_timestamps[project_id] = datetime.now(timezone.utc)
+        
+        # Send to all connected clients for this project
+        disconnected = []
+        for websocket in self.active_connections[project_id]:
+            try:
+                await websocket.send_text(message_str)
+            except (WebSocketDisconnect, Exception) as e:
+                disconnected.append(websocket)
+        
+        # Clean up disconnected clients
+        for ws in disconnected:
+            try:
+                self.active_connections[project_id].remove(ws)
+            except ValueError:
+                pass
+                
+    async def get_project_snapshot(self, project_id: str):
+        """Get current canonical project state for reconnection"""
+        try:
+            # Get fresh project data
+            project = await db.projects.find_one({"id": project_id})
+            if not project:
+                return None
+                
+            # Get invoices for this project
+            invoices_cursor = db.invoices.find({"project_id": project_id})
+            invoices = await invoices_cursor.to_list(length=None)
+            
+            # Calculate current totals
+            total_billed = sum(inv.get("total_amount", 0) for inv in invoices if inv.get("invoice_type") == "tax_invoice")
+            total_project_value = project.get("total_project_value", 0)
+            remaining_value = total_project_value - total_billed
+            
+            return {
+                "event": "project_snapshot",
+                "project_id": project_id,
+                "data": {
+                    "total_billed": total_billed,
+                    "remaining_value": remaining_value,
+                    "project_completed_percentage": (total_billed / total_project_value * 100) if total_project_value > 0 else 0,
+                    "total_invoices": len(invoices),
+                    "last_event_timestamp": self.last_event_timestamps.get(project_id, datetime.now(timezone.utc)).isoformat()
+                }
+            }
+        except Exception as e:
+            logger.error(f"Error getting project snapshot: {e}")
+            return None
+
+# Global connection manager instance
+manager = ConnectionManager()
+
+# Real-time Event System
+class ProjectEvent:
+    """Project event types for real-time updates"""
+    INVOICE_CREATED = "invoice.created"
+    INVOICE_UPDATED = "invoice.updated"  
+    INVOICE_DELETED = "invoice.deleted"
+    EXPENSE_CREATED = "expense.created"
+    EXPENSE_UPDATED = "expense.updated"
+    PROJECT_UPDATED = "project.updated"
+    BOQ_ITEM_BILLED = "boq.item_billed"
+    BOQ_CONFLICT = "boq.conflict"
+
+async def emit_project_event(event_type: str, project_id: str, data: dict, user_id: str = None):
+    """Emit real-time event for project changes"""
+    try:
+        # Get updated project data for canonical totals
+        project_snapshot = await manager.get_project_snapshot(project_id)
+        
+        event_data = {
+            "event": event_type,
+            "project_id": project_id,
+            "data": data,
+            "actor_id": user_id,
+            "canonical_totals": project_snapshot["data"] if project_snapshot else {}
+        }
+        
+        # Broadcast to all users viewing this project
+        await manager.broadcast_to_project(project_id, event_data, exclude_user=user_id)
+        
+        # Log event for monitoring
+        logger.info(f"Event emitted: {event_type} for project {project_id}")
+        
+    except Exception as e:
+        logger.error(f"Error emitting project event: {e}")
+
+# Event payload helpers
+def create_invoice_event_data(invoice: dict, boq_items_affected: List[str] = None) -> dict:
+    """Create invoice event payload with minimal required fields"""
+    return {
+        "invoice_id": invoice.get("id"),
+        "invoice_number": invoice.get("invoice_number"),
+        "invoice_type": invoice.get("invoice_type"),
+        "total_amount": invoice.get("total_amount", 0),
+        "gst_amount": invoice.get("total_gst_amount", 0),
+        "ra_tag": invoice.get("ra_number"),
+        "affected_item_ids": boq_items_affected or []
+    }
+
+def create_boq_event_data(item_id: str, billed_quantity: float, available_quantity: float) -> dict:
+    """Create BOQ item billing event payload"""
+    return {
+        "item_id": item_id,
+        "billed_quantity": billed_quantity,
+        "available_quantity": available_quantity
+    }
+
 # Pydantic Models
 class UserRole:
     ADMIN = "admin"
