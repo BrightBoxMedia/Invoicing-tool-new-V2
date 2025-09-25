@@ -1122,21 +1122,29 @@ async def update_boq_billed_quantities(project_id: str, invoice_items: List[Invo
 @api_router.get("/invoices")
 async def get_invoices(current_user: dict = Depends(get_current_user)):
     try:
-        invoices = await db.invoices.find().to_list(1000)
+        # Fetch invoices from MongoDB
+        invoices_cursor = db.invoices.find()
+        invoices = await invoices_cursor.to_list(1000)
         
-        # Enhance with project and client info
+        # Convert MongoDB documents to proper format
+        formatted_invoices = []
         for invoice in invoices:
-            # Get project info
+            # Remove MongoDB _id
+            if '_id' in invoice:
+                del invoice['_id']
+            
+            # Enhance with project and client info
             project = await db.projects.find_one({"id": invoice.get('project_id')})
             if project:
                 invoice['project_name'] = project.get('project_name', 'Unknown Project')
             
-            # Get client info  
             client = await db.clients.find_one({"id": invoice.get('client_id')})
             if client:
                 invoice['client_name'] = client.get('name', 'Unknown Client')
+            
+            formatted_invoices.append(invoice)
         
-        return invoices
+        return formatted_invoices
         
     except Exception as e:
         logger.error(f"Error fetching invoices: {str(e)}")
