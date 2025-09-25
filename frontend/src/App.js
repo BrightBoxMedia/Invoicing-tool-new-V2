@@ -905,6 +905,18 @@ const Projects = ({ currentUser }) => {
           </div>
         </div>
       )}
+
+      {/* Enhanced Project Details Modal with Real-time Updates */}
+      {showProjectDetails && selectedProject && (
+        <EnhancedProjectDetails
+          project={selectedProject}
+          onClose={() => {
+            setShowProjectDetails(false);
+            setSelectedProject(null);
+          }}
+          onCreateInvoice={handleCreateInvoice}
+        />
+      )}
     </div>
   );
 };
