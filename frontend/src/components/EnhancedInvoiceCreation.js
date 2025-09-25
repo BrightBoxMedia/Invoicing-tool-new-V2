@@ -363,11 +363,13 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
                                             {item.unit}
                                         </td>
                                         <td className="px-4 py-4 text-center">
+                                            <div className="text-sm font-medium text-blue-600">
+                                                {item.overall_qty}
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-4 text-center">
                                             <div className="text-sm font-medium text-gray-900">
                                                 {item.balance_qty}
-                                            </div>
-                                            <div className="text-xs text-gray-500">
-                                                Total: {item.overall_qty}
                                             </div>
                                         </td>
                                         <td className="px-4 py-4 text-center">
