@@ -203,6 +203,9 @@
         - working: true
         - agent: "testing"
         - comment: "✅ TESTED: Projects listing endpoint working correctly. Found 7 projects with proper data structure. Null safety checks implemented. Individual project retrieval working."
+        - working: true
+        - agent: "testing"
+        - comment: "🚨 CRITICAL MONGODB OBJECTID SERIALIZATION FIX VERIFIED: Projects API now working correctly after ObjectId fix. ✅ Projects list retrieval working (found 3 projects), ✅ All projects have proper ID serialization, ✅ Project data structure complete with all required fields, ✅ BOQ items properly serialized (20 items found), ✅ No ObjectId serialization errors in JSON response. The user-reported issue 'projects not showing up in projects list' is COMPLETELY RESOLVED."
 
   - task: "Invoices API"
     implemented: true
