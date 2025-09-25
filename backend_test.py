@@ -254,6 +254,11 @@ class ActivusAPITester:
             "architect": "Test Architect",
             "client_id": client_id,
             "client_name": "Test Client Ltd",
+            "location": "Test Location",
+            "abg_percentage": 10.0,
+            "ra_percentage": 80.0,
+            "erection_percentage": 5.0,
+            "pbg_percentage": 5.0,
             "metadata": {
                 "project_name": "Test Construction Project",
                 "architect": "Test Architect",
