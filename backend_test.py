@@ -1447,6 +1447,247 @@ class ActivusAPITester:
         else:
             self.log_test("Company profile deletion access check", False, "- Not super admin, cannot test deletion access")
 
+    def test_critical_objectid_serialization_fix(self):
+        """Test the critical MongoDB ObjectId serialization fix for projects, clients, and invoices"""
+        print("\n🚨 Testing CRITICAL MongoDB ObjectId Serialization Fix...")
+        print("This tests the fix for the user-reported issue: 'projects not showing up in projects list'")
+        
+        # Test 1: Projects API - Create and retrieve projects
+        print("\n1️⃣ Testing Projects API ObjectId Serialization...")
+        
+        # Create a client first for project creation
+        if not self.created_resources['clients']:
+            self.test_client_management()
+        
+        client_id = self.created_resources['clients'][0] if self.created_resources['clients'] else "test-client-id"
+        
+        # Create a project with comprehensive data
+        project_data = {
+            "project_name": "ObjectId Test Project",
+            "architect": "Test Architect",
+            "client_id": client_id,
+            "client_name": "Test Client Ltd",
+            "location": "Test Location",
+            "abg_percentage": 10.0,
+            "ra_percentage": 80.0,
+            "erection_percentage": 5.0,
+            "pbg_percentage": 5.0,
+            "total_project_value": 500000.0,
+            "boq_items": [
+                {
+                    "sr_no": 1,
+                    "description": "Test Foundation Work",
+                    "unit": "Cum",
+                    "quantity": 100.0,
+                    "rate": 2500.0,
+                    "amount": 250000.0,
+                    "gst_rate": 18.0,
+                    "billed_quantity": 0.0
+                },
+                {
+                    "sr_no": 2,
+                    "description": "Test Steel Structure",
+                    "unit": "Kg",
+                    "quantity": 1000.0,
+                    "rate": 250.0,
+                    "amount": 250000.0,
+                    "gst_rate": 18.0,
+                    "billed_quantity": 0.0
+                }
+            ]
+        }
+        
+        # Create project
+        success, result = self.make_request('POST', 'projects', project_data)
+        
+        if success and 'project_id' in result:
+            project_id = result['project_id']
+            self.created_resources['projects'].append(project_id)
+            self.log_test("Create project with ObjectId fix", True, f"- Project ID: {project_id}")
+            
+            # Test retrieving projects list (this was failing before the fix)
+            success, projects_list = self.make_request('GET', 'projects')
+            
+            if success:
+                # Verify the created project appears in the list
+                created_project = next((p for p in projects_list if p.get('id') == project_id), None)
+                
+                if created_project:
+                    self.log_test("Projects list retrieval with ObjectId fix", True, 
+                                f"- Found {len(projects_list)} projects, created project visible")
+                    
+                    # Verify all required fields are present and properly serialized
+                    required_fields = ['id', 'project_name', 'client_name', 'total_project_value', 'boq_items']
+                    has_all_fields = all(field in created_project for field in required_fields)
+                    
+                    self.log_test("Project data serialization", has_all_fields,
+                                f"- All fields present: {list(created_project.keys())}")
+                    
+                    # Verify BOQ items are properly serialized
+                    boq_items = created_project.get('boq_items', [])
+                    boq_serialized_correctly = len(boq_items) == 2 and all('id' in item for item in boq_items)
+                    
+                    self.log_test("BOQ items ObjectId serialization", boq_serialized_correctly,
+                                f"- BOQ items count: {len(boq_items)}, all have IDs")
+                    
+                else:
+                    self.log_test("Projects list retrieval with ObjectId fix", False, 
+                                "- Created project not found in projects list")
+            else:
+                self.log_test("Projects list retrieval with ObjectId fix", False, f"- {projects_list}")
+            
+            # Test individual project retrieval
+            success, individual_project = self.make_request('GET', f'projects/{project_id}')
+            
+            if success:
+                self.log_test("Individual project retrieval", True,
+                            f"- Project: {individual_project.get('project_name', 'Unknown')}")
+                
+                # Verify billing status is properly calculated
+                billing_status = individual_project.get('billing_status', {})
+                has_billing_data = 'boq_items' in billing_status and 'next_ra' in billing_status
+                
+                self.log_test("Project billing status calculation", has_billing_data,
+                            f"- Next RA: {billing_status.get('next_ra', 'N/A')}")
+            else:
+                self.log_test("Individual project retrieval", False, f"- {individual_project}")
+                
+        else:
+            self.log_test("Create project with ObjectId fix", False, f"- {result}")
+            return False
+        
+        # Test 2: Clients API ObjectId Serialization
+        print("\n2️⃣ Testing Clients API ObjectId Serialization...")
+        
+        success, clients_list = self.make_request('GET', 'clients')
+        
+        if success:
+            self.log_test("Clients list retrieval with ObjectId fix", True,
+                        f"- Found {len(clients_list)} clients")
+            
+            # Verify all clients have proper ID serialization
+            if clients_list:
+                all_have_ids = all('id' in client for client in clients_list)
+                self.log_test("Client ObjectId serialization", all_have_ids,
+                            f"- All clients have proper IDs")
+                
+                # Test individual client data structure
+                sample_client = clients_list[0]
+                required_client_fields = ['id', 'name', 'email', 'phone', 'gst_no']
+                has_required_fields = all(field in sample_client for field in required_client_fields)
+                
+                self.log_test("Client data structure", has_required_fields,
+                            f"- Sample client fields: {list(sample_client.keys())}")
+        else:
+            self.log_test("Clients list retrieval with ObjectId fix", False, f"- {clients_list}")
+        
+        # Test 3: Invoices API ObjectId Serialization
+        print("\n3️⃣ Testing Invoices API ObjectId Serialization...")
+        
+        # Create an invoice to test serialization
+        if project_id and client_id:
+            invoice_data = {
+                "project_id": project_id,
+                "client_id": client_id,
+                "invoice_type": "proforma",
+                "items": [
+                    {
+                        "boq_item_id": "test-boq-item-1",
+                        "description": "Test Invoice Item",
+                        "unit": "Cum",
+                        "quantity": 10.0,
+                        "rate": 2500.0,
+                        "amount": 25000.0,
+                        "gst_rate": 18.0
+                    }
+                ],
+                "subtotal": 25000.0,
+                "total_gst_amount": 4500.0,
+                "total_amount": 29500.0,
+                "payment_terms": "30 days",
+                "advance_received": 0.0,
+                "net_amount_due": 29500.0
+            }
+            
+            success, invoice_result = self.make_request('POST', 'invoices', invoice_data)
+            
+            if success and 'invoice_id' in invoice_result:
+                invoice_id = invoice_result['invoice_id']
+                self.created_resources['invoices'].append(invoice_id)
+                self.log_test("Create invoice with ObjectId fix", True,
+                            f"- Invoice ID: {invoice_id}")
+                
+                # Test invoices list retrieval
+                success, invoices_list = self.make_request('GET', 'invoices')
+                
+                if success:
+                    created_invoice = next((inv for inv in invoices_list if inv.get('id') == invoice_id), None)
+                    
+                    if created_invoice:
+                        self.log_test("Invoices list retrieval with ObjectId fix", True,
+                                    f"- Found {len(invoices_list)} invoices, created invoice visible")
+                        
+                        # Verify invoice data serialization
+                        required_invoice_fields = ['id', 'invoice_number', 'project_id', 'client_id', 'items']
+                        has_all_fields = all(field in created_invoice for field in required_invoice_fields)
+                        
+                        self.log_test("Invoice data serialization", has_all_fields,
+                                    f"- Invoice fields: {list(created_invoice.keys())}")
+                        
+                        # Verify invoice items are properly serialized
+                        invoice_items = created_invoice.get('items', [])
+                        items_serialized = len(invoice_items) > 0 and all('id' in item for item in invoice_items)
+                        
+                        self.log_test("Invoice items ObjectId serialization", items_serialized,
+                                    f"- Invoice items count: {len(invoice_items)}")
+                        
+                        # Test PDF generation (this was also affected by ObjectId issues)
+                        success, pdf_data = self.make_request('GET', f'invoices/{invoice_id}/pdf')
+                        
+                        if success:
+                            pdf_size = len(pdf_data) if isinstance(pdf_data, bytes) else 0
+                            self.log_test("Invoice PDF generation with ObjectId fix", pdf_size > 0,
+                                        f"- PDF generated successfully, size: {pdf_size} bytes")
+                        else:
+                            self.log_test("Invoice PDF generation with ObjectId fix", False, f"- {pdf_data}")
+                    else:
+                        self.log_test("Invoices list retrieval with ObjectId fix", False,
+                                    "- Created invoice not found in invoices list")
+                else:
+                    self.log_test("Invoices list retrieval with ObjectId fix", False, f"- {invoices_list}")
+            else:
+                self.log_test("Create invoice with ObjectId fix", False, f"- {invoice_result}")
+        
+        # Test 4: Cross-reference data integrity
+        print("\n4️⃣ Testing Cross-Reference Data Integrity...")
+        
+        if project_id and client_id:
+            # Verify project references client correctly
+            success, project_detail = self.make_request('GET', f'projects/{project_id}')
+            
+            if success:
+                project_client_id = project_detail.get('client_id')
+                client_reference_correct = project_client_id == client_id
+                
+                self.log_test("Project-Client reference integrity", client_reference_correct,
+                            f"- Project client_id: {project_client_id}, Expected: {client_id}")
+            
+            # Verify invoice references both project and client correctly
+            if self.created_resources['invoices']:
+                invoice_id = self.created_resources['invoices'][-1]
+                success, invoice_detail = self.make_request('GET', f'invoices/{invoice_id}/pdf')
+                
+                # If PDF generation works, it means all references are properly resolved
+                if success:
+                    self.log_test("Invoice cross-reference integrity", True,
+                                "- Invoice PDF generation confirms all references work")
+                else:
+                    self.log_test("Invoice cross-reference integrity", False,
+                                "- PDF generation failed, possible reference issues")
+        
+        print("\n✅ Critical ObjectId Serialization Fix Testing Complete")
+        return True
+
     def test_quantity_validation_system(self):
         """Test the critical quantity validation system that prevents over-billing"""
         print("\n⚠️ Testing Quantity Validation System (Critical User Issue #1)...")
