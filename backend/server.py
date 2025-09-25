@@ -545,27 +545,67 @@ class ExcelParser:
         return project_info
     
     def _find_header_row(self, worksheet) -> Optional[int]:
-        """Find the header row containing BOQ column names"""
-        for row in range(1, min(25, worksheet.max_row + 1)):
+        """SUPER INTELLIGENT header detection for ANY Excel format"""
+        logger.info("🔍 SEARCHING for header row in Excel...")
+        
+        for row in range(1, min(50, worksheet.max_row + 1)):  # Increased search range
             row_text = []
-            for col in range(1, min(15, worksheet.max_column + 1)):
+            non_empty_count = 0
+            
+            for col in range(1, min(30, worksheet.max_column + 1)):  # Increased column range
                 cell_value = worksheet.cell(row=row, column=col).value
                 if cell_value:
                     row_text.append(str(cell_value).lower())
+                    non_empty_count += 1
             
             row_combined = ' '.join(row_text)
+            logger.info(f"Row {row}: {non_empty_count} cells | '{row_combined[:100]}...'")
             
-            # Check if this row contains BOQ headers
-            header_indicators = ['description', 'particular', 'item', 'work']
-            numeric_indicators = ['quantity', 'qty', 'rate', 'amount']
+            # SUPER FLEXIBLE header detection
+            description_indicators = [
+                'description', 'particular', 'particulars', 'item', 'work', 'activity', 'scope', 
+                'specification', 'details', 'desc', 'material', 'service', 'task', 'component'
+            ]
             
-            has_description = any(indicator in row_combined for indicator in header_indicators)
+            numeric_indicators = [
+                'quantity', 'qty', 'qnty', 'rate', 'amount', 'price', 'cost', 'value', 
+                'total', 'unit', 'nos', 'each', 'measure', 'measurement'
+            ]
+            
+            has_description = any(indicator in row_combined for indicator in description_indicators)
             has_numeric = any(indicator in row_combined for indicator in numeric_indicators)
             
-            if has_description and has_numeric:
-                logger.info(f"Found header row at {row}: {row_combined}")
+            # Additional heuristics
+            has_enough_columns = non_empty_count >= 3  # At least 3 non-empty columns
+            looks_like_header = any(word in row_combined for word in ['sr', 'sl', 'no', 'column', 'field'])
+            
+            # Score-based detection
+            score = 0
+            if has_description: score += 3
+            if has_numeric: score += 2  
+            if has_enough_columns: score += 1
+            if looks_like_header: score += 1
+            
+            logger.info(f"Row {row} score: {score} | Desc: {has_description} | Numeric: {has_numeric} | Columns: {non_empty_count}")
+            
+            if score >= 4 or (has_description and has_numeric):
+                logger.info(f"✅ FOUND HEADER ROW at {row}: '{row_combined[:100]}...'")
                 return row
         
+        # Fallback: Look for any row with multiple text headers
+        logger.warning("⚠️ Standard header detection failed, trying fallback...")
+        for row in range(1, min(50, worksheet.max_row + 1)):
+            non_empty = 0
+            for col in range(1, min(30, worksheet.max_column + 1)):
+                cell_value = worksheet.cell(row=row, column=col).value
+                if cell_value and isinstance(cell_value, str) and len(str(cell_value).strip()) > 2:
+                    non_empty += 1
+            
+            if non_empty >= 4:  # Row with at least 4 text headers
+                logger.info(f"✅ FALLBACK HEADER ROW found at {row} with {non_empty} columns")
+                return row
+        
+        logger.error("❌ Could not find any header row!")
         return None
     
     def _get_enhanced_column_mapping(self, worksheet, header_row: int) -> Dict[str, int]:
