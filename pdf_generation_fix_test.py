@@ -20,9 +20,9 @@ class PDFGenerationFixTester:
                         self.base_url = line.split('=')[1].strip()
                         break
                 else:
-                    self.base_url = "https://billtrack.preview.emergentagent.com"
+                    self.base_url = "https://billing-maestro.preview.emergentagent.com"
         except:
-            self.base_url = "https://billtrack.preview.emergentagent.com"
+            self.base_url = "https://billing-maestro.preview.emergentagent.com"
         
         self.api_url = f"{self.base_url}/api"
         self.token = None

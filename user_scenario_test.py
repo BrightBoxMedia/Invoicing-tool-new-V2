@@ -8,7 +8,7 @@ import requests
 import json
 
 def test_user_scenario():
-    base_url = 'https://billtrack.preview.emergentagent.com/api'
+    base_url = 'https://billing-maestro.preview.emergentagent.com/api'
     
     # Authenticate
     login_response = requests.post(f'{base_url}/auth/login', 

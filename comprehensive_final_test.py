@@ -16,7 +16,7 @@ class ComprehensiveFinalTester:
     def __init__(self):
         # Get backend URL from frontend .env file
         frontend_env_path = Path("/app/frontend/.env")
-        self.base_url = "https://billtrack.preview.emergentagent.com"  # Default
+        self.base_url = "https://billing-maestro.preview.emergentagent.com"  # Default
         
         if frontend_env_path.exists():
             with open(frontend_env_path, 'r') as f:
