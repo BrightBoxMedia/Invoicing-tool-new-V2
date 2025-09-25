@@ -150,7 +150,8 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
     const { subtotal, totalGST, grandTotal, selectedItems } = calculateTotals();
 
     return (
-        <div className="p-6 max-w-7xl">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
+            <div className="bg-white rounded-lg shadow-2xl max-w-7xl w-full max-h-[90vh] overflow-y-auto p-6">
             {/* Header */}
             <div className="flex justify-between items-center mb-6 pb-4 border-b">
                 <div>
