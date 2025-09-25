@@ -256,45 +256,95 @@ const EnhancedProjectDetails = ({ project, onClose, onCreateInvoice }) => {
             </div>
           </div>
 
-          {/* Invoice History list */}
+          {/* Invoice History with Proper Headers and Columns */}
           <div className="mb-6 p-4 bg-white rounded-lg border border-gray-200">
             <h4 className="font-semibold mb-3 text-gray-800">📄 Invoice History</h4>
             {invoiceHistory.length > 0 ? (
-              <div className="space-y-2">
-                {invoiceHistory.map((invoice, index) => (
-                  <div key={invoice.id} className="flex items-center justify-between p-3 bg-gray-50 rounded border">
-                    <div className="flex items-center space-x-4">
-                      <button
-                        className="font-medium text-blue-600 hover:text-blue-800 underline"
-                        onClick={() => window.open(`/invoices/${invoice.id}`, '_blank')}
-                      >
-                        {invoice.invoice_number}
-                      </button>
-                      {invoice.ra_number && (
-                        <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
-                          {invoice.ra_number}
-                        </span>
-                      )}
-                      <span className="text-sm text-gray-600">
-                        {new Date(invoice.created_at || invoice.invoice_date).toLocaleDateString('en-IN')}
-                      </span>
-                      <span className={`px-2 py-1 text-xs font-medium rounded ${
-                        invoice.status === 'paid' ? 'bg-green-100 text-green-800' :
-                        invoice.status === 'sent' ? 'bg-blue-100 text-blue-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {invoice.status || 'Created'}
-                      </span>
-                    </div>
-                    <div className="font-semibold text-gray-900">
-                      ₹{(invoice.total_amount || 0).toLocaleString('en-IN')}
-                    </div>
-                  </div>
-                ))}
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Invoice Number
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        RA Tag
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Date
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Basic Value
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        GST Value
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Total Value
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {invoiceHistory.map((invoice, index) => {
+                      const basicValue = (invoice.subtotal || 0);
+                      const gstValue = (invoice.total_gst_amount || 0);
+                      const totalValue = (invoice.total_amount || 0);
+                      
+                      return (
+                        <tr key={invoice.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <button
+                              className="text-blue-600 hover:text-blue-800 underline font-medium"
+                              onClick={() => window.open(`/invoices/${invoice.id}`, '_blank')}
+                            >
+                              {invoice.invoice_number}
+                            </button>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {invoice.ra_number ? (
+                              <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
+                                {invoice.ra_number}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                            {new Date(invoice.created_at || invoice.invoice_date).toLocaleDateString('en-IN')}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            ₹{basicValue.toLocaleString('en-IN')}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-orange-600">
+                            ₹{gstValue.toLocaleString('en-IN')}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">
+                            ₹{totalValue.toLocaleString('en-IN')}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`px-2 py-1 text-xs font-medium rounded ${
+                              invoice.status === 'paid' ? 'bg-green-100 text-green-800' :
+                              invoice.status === 'sent' ? 'bg-blue-100 text-blue-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {invoice.status || 'Created'}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             ) : (
-              <div className="text-gray-500 text-center py-4">
-                No invoices created yet
+              <div className="text-gray-500 text-center py-8">
+                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p className="mt-2">No invoices created yet</p>
               </div>
             )}
           </div>
