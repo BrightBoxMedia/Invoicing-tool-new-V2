@@ -680,10 +680,10 @@ const Projects = ({ currentUser }) => {
                 
                 <div className="flex space-x-3">
                   <button
-                    onClick={() => handleViewBilling(project)}
+                    onClick={() => handleViewProjectDetails(project)}
                     className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    {selectedProject?.id === project.id ? 'Hide Billing' : 'View Billing'}
+                    View Project Details
                   </button>
                   <button
                     onClick={() => {
