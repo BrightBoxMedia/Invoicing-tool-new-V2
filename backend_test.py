@@ -279,7 +279,7 @@ class ActivusAPITester:
                     "billed_quantity": 0.0
                 }
             ],
-            "total_project_value": boq_data['total_value'] if boq_data else 10000,
+            "total_project_value": boq_data['total_project_value'] if boq_data else 10000,
             "advance_received": 0,
             "created_by": self.user_data['id'] if self.user_data else "test-user-id"
         }
