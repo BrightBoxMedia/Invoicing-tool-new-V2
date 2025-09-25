@@ -483,17 +483,7 @@ const Projects = ({ currentUser }) => {
     }
   };
 
-  const fetchClients = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/clients`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setClients(response.data || []);
-    } catch (error) {
-      console.error('Error fetching clients:', error);
-    }
-  };
+
 
 
 
