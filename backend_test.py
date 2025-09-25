@@ -267,14 +267,16 @@ class ActivusAPITester:
                 "client": "Test Client Ltd",
                 "location": "Test Location"
             },
-            "boq_items": boq_data['items'] if boq_data else [
+            "boq_items": boq_data['boq_items'] if boq_data else [
                 {
-                    "serial_number": "1",
+                    "sr_no": 1,
                     "description": "Test Item",
                     "unit": "nos",
                     "quantity": 10,
                     "rate": 1000,
-                    "amount": 10000
+                    "amount": 10000,
+                    "gst_rate": 18.0,
+                    "billed_quantity": 0.0
                 }
             ],
             "total_project_value": boq_data['total_value'] if boq_data else 10000,
