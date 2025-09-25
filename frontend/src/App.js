@@ -465,6 +465,7 @@ const Projects = ({ currentUser }) => {
   const [showEnhancedInvoice, setShowEnhancedInvoice] = useState(false);
   const [parsedData, setParsedData] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [projectBillingData, setProjectBillingData] = useState(null);
 
   useEffect(() => {
     fetchProjects();
