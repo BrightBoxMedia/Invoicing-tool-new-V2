@@ -16,6 +16,8 @@ import Invoices from './components/Invoices';
 import Clients from './components/Clients';
 import BankGuarantees from './components/BankGuarantees';
 import UserManagement from './components/UserManagement';
+import { ProjectWebSocketProvider } from './components/ProjectWebSocket';
+import EnhancedProjectDetails from './components/EnhancedProjectDetails';
 
 // API configuration
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
