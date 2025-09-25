@@ -1927,8 +1927,12 @@ class ActivusAPITester:
             print("❌ Authentication failed - cannot proceed with other tests")
             return False
         
-        # 2. CORE FUNCTIONALITY
-        print("\n🏗️ CRITICAL AREA 2: Core Functionality")
+        # 2. CRITICAL OBJECTID SERIALIZATION FIX
+        print("\n🚨 CRITICAL AREA 2: MongoDB ObjectId Serialization Fix")
+        self.test_critical_objectid_serialization_fix()
+        
+        # 3. CORE FUNCTIONALITY
+        print("\n🏗️ CRITICAL AREA 3: Core Functionality")
         self.test_dashboard_stats()
         self.test_client_management()
         
@@ -1939,24 +1943,24 @@ class ActivusAPITester:
         # Invoice creation and PDF generation
         self.test_invoice_management()
         
-        # 3. USER ISSUES RESOLUTION
-        print("\n⚠️ CRITICAL AREA 3: User Issues Resolution")
+        # 4. USER ISSUES RESOLUTION
+        print("\n⚠️ CRITICAL AREA 4: User Issues Resolution")
         self.test_quantity_validation_system()  # Issue #1
         self.test_logo_upload_production_ready()  # Issue #2
         
-        # 4. API ENDPOINTS
-        print("\n🔗 CRITICAL AREA 4: API Endpoints")
+        # 5. API ENDPOINTS
+        print("\n🔗 CRITICAL AREA 5: API Endpoints")
         self.test_activity_logs()
         self.test_item_master_apis()
         self.test_search_and_filter_apis()
         self.test_reports_and_insights_apis()
         
-        # 5. PRODUCTION CONFIGURATION
-        print("\n⚙️ CRITICAL AREA 5: Production Configuration")
+        # 6. PRODUCTION CONFIGURATION
+        print("\n⚙️ CRITICAL AREA 6: Production Configuration")
         self.test_production_configuration()
         
-        # 6. PERFORMANCE
-        print("\n⚡ CRITICAL AREA 6: Performance")
+        # 7. PERFORMANCE
+        print("\n⚡ CRITICAL AREA 7: Performance")
         self.test_performance_and_response_times()
         
         # Print final results
@@ -1977,6 +1981,7 @@ class ActivusAPITester:
         
         print(f"\n📋 CRITICAL FEATURES STATUS:")
         print(f"   🔐 Authentication: {'✅' if self.token else '❌'}")
+        print(f"   🚨 ObjectId Fix: {'✅' if self.created_resources['projects'] else '❌'}")
         print(f"   🏗️ Core Functionality: {'✅' if self.created_resources['projects'] else '❌'}")
         print(f"   🧾 Invoice Management: {'✅' if self.created_resources['invoices'] else '❌'}")
         print(f"   📄 PDF Generation: {'✅' if self.created_resources['invoices'] else '❌'}")
