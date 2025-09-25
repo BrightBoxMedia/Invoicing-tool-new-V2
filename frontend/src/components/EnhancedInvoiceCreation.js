@@ -1,5 +1,137 @@
 import React, { useState, useEffect } from 'react';
 
+// Invoice History Table Component (Reusable)
+const InvoiceHistoryTable = ({ projectId }) => {
+    const [invoiceHistory, setInvoiceHistory] = useState([]);
+    const [loading, setLoading] = useState(true);
+    
+    const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+    
+    useEffect(() => {
+        const fetchInvoiceHistory = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${backendUrl}/api/invoices`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const allInvoices = await response.json();
+                const projectInvoices = allInvoices.filter(inv => inv.project_id === projectId);
+                
+                setInvoiceHistory(projectInvoices.sort((a, b) => 
+                    new Date(b.created_at || b.invoice_date) - new Date(a.created_at || a.invoice_date)
+                ));
+            } catch (error) {
+                console.error('Error fetching invoice history:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        
+        if (projectId) {
+            fetchInvoiceHistory();
+        }
+    }, [projectId, backendUrl]);
+
+    if (loading) {
+        return (
+            <div className="p-4 text-center">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-2 text-sm text-gray-500">Loading invoice history...</p>
+            </div>
+        );
+    }
+
+    if (invoiceHistory.length === 0) {
+        return (
+            <div className="p-6 text-center text-gray-500">
+                <svg className="mx-auto h-10 w-10 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p>No invoices created yet</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                    <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Invoice Number
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            RA Tag
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Date
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Basic Value
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            GST Value
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Total Value
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                        </th>
+                    </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                    {invoiceHistory.map((invoice, index) => {
+                        const basicValue = (invoice.subtotal || 0);
+                        const gstValue = (invoice.total_gst_amount || 0);
+                        const totalValue = (invoice.total_amount || 0);
+                        
+                        return (
+                            <tr key={invoice.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    <span className="text-blue-600 font-medium">
+                                        {invoice.invoice_number}
+                                    </span>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    {invoice.ra_number ? (
+                                        <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
+                                            {invoice.ra_number}
+                                        </span>
+                                    ) : (
+                                        <span className="text-gray-400">-</span>
+                                    )}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                    {new Date(invoice.created_at || invoice.invoice_date).toLocaleDateString('en-IN')}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    ₹{basicValue.toLocaleString('en-IN')}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-orange-600">
+                                    ₹{gstValue.toLocaleString('en-IN')}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">
+                                    ₹{totalValue.toLocaleString('en-IN')}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    <span className={`px-2 py-1 text-xs font-medium rounded ${
+                                        invoice.status === 'paid' ? 'bg-green-100 text-green-800' :
+                                        invoice.status === 'sent' ? 'bg-blue-100 text-blue-800' :
+                                        'bg-gray-100 text-gray-800'
+                                    }`}>
+                                        {invoice.status || 'Created'}
+                                    </span>
+                                </td>
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
+        </div>
+    );
+};
+
 const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess }) => {
     const [project, setProject] = useState(null);
     const [loading, setLoading] = useState(true);
