@@ -332,6 +332,7 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
                         </div>
                     </div>
                 </div>
+                </div>
             </div>
         </div>
     );
