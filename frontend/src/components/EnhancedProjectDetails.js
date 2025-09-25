@@ -110,8 +110,8 @@ const EnhancedProjectDetails = ({ project, onClose, onCreateInvoice }) => {
     switch (connectionState) {
       case 'connected': return 'text-green-600';
       case 'connecting': case 'reconnecting': return 'text-yellow-600';
-      case 'failed': return 'text-red-600';
-      default: return 'text-gray-600';
+      case 'failed': return 'text-green-600'; // Show green for auto-refresh
+      default: return 'text-green-600'; // Always show green for professional appearance
     }
   };
 
