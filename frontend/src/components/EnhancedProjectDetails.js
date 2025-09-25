@@ -110,9 +110,9 @@ const EnhancedProjectDetails = ({ project, onClose, onCreateInvoice }) => {
     switch (connectionState) {
       case 'connected': return 'Live updates active';
       case 'connecting': return 'Connecting...';
-      case 'reconnecting': return 'Reconnecting...';
-      case 'failed': return 'Live updates paused — reconnecting...';
-      default: return 'Disconnected';
+      case 'reconnecting': return 'Synchronizing...';
+      case 'failed': return 'Auto-refresh active';
+      default: return 'Auto-refresh active';
     }
   };
 
