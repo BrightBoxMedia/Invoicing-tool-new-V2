@@ -465,7 +465,6 @@ const Projects = ({ currentUser }) => {
 
   useEffect(() => {
     fetchProjects();
-    fetchClients();
   }, []);
 
   const fetchProjects = async () => {
