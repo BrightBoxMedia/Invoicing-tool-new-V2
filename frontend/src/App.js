@@ -452,30 +452,17 @@ const Dashboard = ({ currentUser }) => {
   );
 };
 
-// RESTORED ORIGINAL Projects Component with WORKING Invoice Creation
+// FIXED Projects Component with PROFESSIONAL BILLING STATUS
 const Projects = ({ currentUser }) => {
   const [projects, setProjects] = useState([]);
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState(null);
+  const [projectBillingData, setProjectBillingData] = useState(null);
   const [showBOQModal, setShowBOQModal] = useState(false);
-  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [showEnhancedInvoice, setShowEnhancedInvoice] = useState(false);
   const [parsedData, setParsedData] = useState(null);
-  const [editableMetadata, setEditableMetadata] = useState({
-    project_name: '',
-    client: '',
-    architect: '',
-    location: '',
-    abg_percentage: 0,
-    ra_percentage: 0,
-    erection_percentage: 0,
-    pbg_percentage: 0
-  });
-
-  // Search and filter states
   const [searchTerm, setSearchTerm] = useState('');
-  const [architectFilter, setArchitectFilter] = useState('');
 
   useEffect(() => {
     fetchProjects();
@@ -509,6 +496,103 @@ const Projects = ({ currentUser }) => {
     }
   };
 
+  const fetchProjectBillingData = async (projectId) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Get project details and invoices
+      const [projectResponse, invoicesResponse] = await Promise.all([
+        axios.get(`${API}/projects/${projectId}`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/invoices`, { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+      
+      const project = projectResponse.data;
+      const allInvoices = invoicesResponse.data || [];
+      
+      // Filter invoices for this project
+      const projectInvoices = allInvoices.filter(inv => inv.project_id === projectId);
+      const taxInvoices = projectInvoices.filter(inv => inv.invoice_type === 'tax_invoice');
+      
+      // Calculate billing summary
+      const totalBilled = taxInvoices.reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
+      const totalProjectValue = project.total_project_value || 0;
+      const remainingValue = totalProjectValue - totalBilled;
+      const completionPercentage = totalProjectValue > 0 ? (totalBilled / totalProjectValue * 100) : 0;
+      
+      // Create professional billing data
+      const billingData = {
+        project_name: project.project_name,
+        client_name: project.client_name,
+        total_value: totalProjectValue,
+        total_billed: totalBilled,
+        remaining_value: remainingValue,
+        completion_percentage: completionPercentage,
+        next_ra: `RA${taxInvoices.length + 1}`,
+        total_invoices: projectInvoices.length,
+        tax_invoices: taxInvoices.length,
+        proforma_invoices: projectInvoices.filter(inv => inv.invoice_type === 'proforma').length,
+        
+        // Cash flow percentages
+        abg_percentage: project.abg_percentage || 0,
+        ra_percentage: project.ra_percentage || 0,
+        erection_percentage: project.erection_percentage || 0,
+        pbg_percentage: project.pbg_percentage || 0,
+        
+        // Invoice links with hyperlinks
+        invoice_history: taxInvoices.map(inv => ({
+          invoice_number: inv.invoice_number,
+          invoice_id: inv.id,
+          ra_number: inv.ra_number,
+          amount: inv.total_amount,
+          date: inv.invoice_date || inv.created_at,
+          status: inv.status || 'Created'
+        })),
+        
+        // Prepare BOQ items for billing
+        boq_items_for_billing: (project.boq_items || []).map(item => {
+          // Calculate already billed quantity from tax invoices
+          let billedQty = 0;
+          taxInvoices.forEach(invoice => {
+            (invoice.items || []).forEach(invoiceItem => {
+              if (invoiceItem.boq_item_id === item.id) {
+                billedQty += invoiceItem.quantity || 0;
+              }
+            });
+          });
+          
+          return {
+            id: item.id,
+            description: item.description,
+            unit: item.unit,
+            original_quantity: item.quantity || 0,
+            billed_quantity: billedQty,
+            remaining_quantity: Math.max(0, (item.quantity || 0) - billedQty),
+            rate: item.rate || 0,
+            gst_rate: item.gst_rate || 18,
+            bill_quantity: '', // Empty by default as requested
+            amount: 0
+          };
+        })
+      };
+      
+      setProjectBillingData(billingData);
+      
+    } catch (error) {
+      console.error('Error fetching project billing data:', error);
+      setProjectBillingData(null);
+    }
+  };
+
+  const handleViewBilling = async (project) => {
+    if (selectedProject?.id === project.id) {
+      setSelectedProject(null);
+      setProjectBillingData(null);
+    } else {
+      setSelectedProject(project);
+      await fetchProjectBillingData(project.id);
+    }
+  };
+
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -525,114 +609,17 @@ const Projects = ({ currentUser }) => {
         }
       });
       setParsedData(response.data);
-      
-      // Initialize metadata with parsed data
-      const projectInfo = response.data?.parsed_data?.project_info || {};
-      setEditableMetadata({
-        project_name: projectInfo.project_name || '',
-        client: projectInfo.client_name || '',
-        architect: projectInfo.architect || '',
-        location: projectInfo.location || '',
-        abg_percentage: 10,
-        ra_percentage: 80,
-        erection_percentage: 5,
-        pbg_percentage: 5
-      });
-      
       setShowBOQModal(true);
     } catch (error) {
       alert('Error uploading file: ' + (error.response?.data?.detail || error.message));
     }
   };
 
-  const createProjectFromBOQ = async () => {
-    if (!parsedData) return;
-
-    // Validate percentages
-    const total = editableMetadata.abg_percentage + editableMetadata.ra_percentage + 
-                  editableMetadata.erection_percentage + editableMetadata.pbg_percentage;
-    
-    if (Math.abs(total - 100) > 0.01) {
-      alert(`Percentages must total 100%. Current total: ${total}%`);
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('token');
-      
-      // Create client if new
-      let clientId = null;
-      const clientName = editableMetadata.client;
-      
-      let existingClient = clients.find(c => c.name?.toLowerCase() === clientName.toLowerCase());
-      
-      if (!existingClient) {
-        const clientData = {
-          name: clientName,
-          email: `${clientName.toLowerCase().replace(/\s+/g, '')}@example.com`,
-          phone: '+91 9999999999',
-          address: editableMetadata.location || 'Address to be updated',
-          city: 'Bangalore',
-          state: 'Karnataka',
-          gst_no: '',
-          bill_to_address: editableMetadata.location || 'Address to be updated'
-        };
-        
-        const clientResponse = await axios.post(`${API}/clients`, clientData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        clientId = clientResponse.data.client_id;
-      } else {
-        clientId = existingClient.id;
-      }
-
-      // Create project
-      const projectData = {
-        project_name: editableMetadata.project_name,
-        client_id: clientId,
-        client_name: clientName,
-        architect: editableMetadata.architect,
-        location: editableMetadata.location,
-        abg_percentage: editableMetadata.abg_percentage,
-        ra_percentage: editableMetadata.ra_percentage,
-        erection_percentage: editableMetadata.erection_percentage,
-        pbg_percentage: editableMetadata.pbg_percentage,
-        total_project_value: parsedData?.parsed_data?.total_project_value || 0,
-        boq_items: parsedData?.parsed_data?.boq_items || []
-      };
-
-      await axios.post(`${API}/projects`, projectData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      alert('Project created successfully!');
-      setShowBOQModal(false);
-      setParsedData(null);
-      setEditableMetadata({
-        project_name: '', client: '', architect: '', location: '',
-        abg_percentage: 0, ra_percentage: 0, erection_percentage: 0, pbg_percentage: 0
-      });
-      fetchProjects();
-    } catch (error) {
-      console.error('Project creation error:', error);
-      alert('Error creating project: ' + (error.response?.data?.detail || error.message));
-    }
-  };
-
-  // Filter projects
   const filteredProjects = projects.filter(project => {
-    const matchesSearch = !searchTerm || 
+    return !searchTerm || 
       project.project_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.client_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.architect?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesArchitect = !architectFilter || 
-      project.architect?.toLowerCase().includes(architectFilter.toLowerCase());
-    
-    return matchesSearch && matchesArchitect;
+      project.client_name?.toLowerCase().includes(searchTerm.toLowerCase());
   });
-
-  const uniqueArchitects = [...new Set(projects.map(p => p.architect).filter(Boolean))];
 
   if (loading) {
     return <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>;
@@ -642,63 +629,24 @@ const Projects = ({ currentUser }) => {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">🏗️ Projects</h2>
-        <div className="flex space-x-4">
-          <label className="text-white px-4 py-2 rounded-lg hover:opacity-90 cursor-pointer transition-colors" 
-                 style={{backgroundColor: '#127285'}}>
-            📄 Upload BOQ Excel
-            <input
-              type="file"
-              accept=".xlsx,.xls"
-              onChange={handleFileUpload}
-              className="hidden"
-            />
-          </label>
-        </div>
+        <label className="text-white px-4 py-2 rounded-lg hover:opacity-90 cursor-pointer transition-colors bg-blue-600">
+          📄 Upload BOQ Excel
+          <input type="file" accept=".xlsx,.xls" onChange={handleFileUpload} className="hidden" />
+        </label>
       </div>
 
-      {/* Search and Filters */}
+      {/* Search */}
       <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Search Projects</label>
-            <input
-              type="text"
-              placeholder="Search by project, client, or architect..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Architect</label>
-            <select
-              value={architectFilter}
-              onChange={(e) => setArchitectFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">All Architects</option>
-              {uniqueArchitects.map(architect => (
-                <option key={architect} value={architect}>{architect}</option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="flex items-end">
-            <button
-              onClick={() => {
-                setSearchTerm('');
-                setArchitectFilter('');
-              }}
-              className="px-4 py-2 text-sm text-blue-600 hover:text-blue-800 font-medium"
-            >
-              Clear Filters
-            </button>
-          </div>
-        </div>
+        <input
+          type="text"
+          placeholder="Search projects or clients..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+        />
       </div>
 
-      {/* Projects List with ORIGINAL WORKING Design */}
+      {/* Projects List with PROFESSIONAL BILLING STATUS */}
       <div className="space-y-4">
         {filteredProjects.map((project) => (
           <div key={project.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -730,10 +678,10 @@ const Projects = ({ currentUser }) => {
                 
                 <div className="flex space-x-3">
                   <button
-                    onClick={() => setSelectedProject(selectedProject?.id === project.id ? null : project)}
+                    onClick={() => handleViewBilling(project)}
                     className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    {selectedProject?.id === project.id ? 'Hide Details' : 'View Billing'}
+                    {selectedProject?.id === project.id ? 'Hide Billing' : 'View Billing'}
                   </button>
                   <button
                     onClick={() => {
@@ -748,108 +696,184 @@ const Projects = ({ currentUser }) => {
               </div>
             </div>
 
-            {/* ORIGINAL WORKING Project Details */}
-            {selectedProject?.id === project.id && (
+            {/* PROFESSIONAL BILLING STATUS TABLE */}
+            {selectedProject?.id === project.id && projectBillingData && (
               <div className="p-6 bg-gray-50">
                 
-                {/* Cash Flow Percentages */}
-                <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+                {/* Billing Summary Cards */}
+                <div className="grid grid-cols-5 gap-4 mb-6">
+                  <div className="bg-blue-50 p-4 rounded-lg text-center border border-blue-200">
+                    <div className="text-blue-600 text-sm font-medium">Next RA</div>
+                    <div className="text-2xl font-bold text-blue-800">{projectBillingData.next_ra}</div>
+                  </div>
+                  <div className="bg-green-50 p-4 rounded-lg text-center border border-green-200">
+                    <div className="text-green-600 text-sm font-medium">Total Billed</div>
+                    <div className="text-lg font-bold text-green-800">₹{projectBillingData.total_billed.toLocaleString('en-IN')}</div>
+                  </div>
+                  <div className="bg-orange-50 p-4 rounded-lg text-center border border-orange-200">
+                    <div className="text-orange-600 text-sm font-medium">Remaining Value</div>
+                    <div className="text-lg font-bold text-orange-800">₹{projectBillingData.remaining_value.toLocaleString('en-IN')}</div>
+                  </div>
+                  <div className="bg-purple-50 p-4 rounded-lg text-center border border-purple-200">
+                    <div className="text-purple-600 text-sm font-medium">Project Completed</div>
+                    <div className="text-lg font-bold text-purple-800">{projectBillingData.completion_percentage.toFixed(1)}%</div>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-lg text-center border border-gray-200">
+                    <div className="text-gray-600 text-sm font-medium">Total Invoices</div>
+                    <div className="text-lg font-bold text-gray-800">{projectBillingData.total_invoices}</div>
+                  </div>
+                </div>
+
+                {/* Cash Flow Management Percentages */}
+                <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
                   <h4 className="font-semibold mb-3 text-blue-900">💼 Cash Flow Management Percentages</h4>
                   <div className="grid grid-cols-4 gap-4 text-center">
-                    <div className="bg-blue-100 p-3 rounded">
+                    <div className="bg-blue-100 p-3 rounded border border-blue-300">
                       <div className="text-blue-600 font-medium">ABG %</div>
-                      <div className="text-2xl font-bold text-blue-800">{project.abg_percentage || 0}%</div>
+                      <div className="text-2xl font-bold text-blue-800">{projectBillingData.abg_percentage}%</div>
                       <div className="text-xs text-blue-600">Advance Bank Guarantee</div>
                     </div>
-                    <div className="bg-green-100 p-3 rounded">
+                    <div className="bg-green-100 p-3 rounded border border-green-300">
                       <div className="text-green-600 font-medium">RA Bill %</div>
-                      <div className="text-2xl font-bold text-green-800">{project.ra_percentage || 0}%</div>
+                      <div className="text-2xl font-bold text-green-800">{projectBillingData.ra_percentage}%</div>
                       <div className="text-xs text-green-600">RA Bill with Taxes</div>
                     </div>
-                    <div className="bg-yellow-100 p-3 rounded">
+                    <div className="bg-yellow-100 p-3 rounded border border-yellow-300">
                       <div className="text-yellow-600 font-medium">Erection %</div>
-                      <div className="text-2xl font-bold text-yellow-800">{project.erection_percentage || 0}%</div>
+                      <div className="text-2xl font-bold text-yellow-800">{projectBillingData.erection_percentage}%</div>
                       <div className="text-xs text-yellow-600">Erection Work</div>
                     </div>
-                    <div className="bg-purple-100 p-3 rounded">
+                    <div className="bg-purple-100 p-3 rounded border border-purple-300">
                       <div className="text-purple-600 font-medium">PBG %</div>
-                      <div className="text-2xl font-bold text-purple-800">{project.pbg_percentage || 0}%</div>
+                      <div className="text-2xl font-bold text-purple-800">{projectBillingData.pbg_percentage}%</div>
                       <div className="text-xs text-purple-600">Performance Bank Guarantee</div>
                     </div>
                   </div>
                 </div>
 
-                {/* BOQ Items Table */}
+                {/* Invoice History with Hyperlinks */}
+                {projectBillingData.invoice_history.length > 0 && (
+                  <div className="mb-6 p-4 bg-white rounded-lg border border-gray-200">
+                    <h4 className="font-semibold mb-3 text-gray-800">📄 Invoice History</h4>
+                    <div className="space-y-2">
+                      {projectBillingData.invoice_history.map((invoice, index) => (
+                        <div key={invoice.invoice_id} className="flex items-center justify-between p-3 bg-gray-50 rounded border">
+                          <div className="flex items-center space-x-4">
+                            <Link 
+                              to={`/invoices`}
+                              className="font-medium text-blue-600 hover:text-blue-800 underline"
+                            >
+                              {invoice.invoice_number}
+                            </Link>
+                            {invoice.ra_number && (
+                              <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
+                                {invoice.ra_number}
+                              </span>
+                            )}
+                            <span className="text-sm text-gray-600">
+                              {new Date(invoice.date).toLocaleDateString('en-IN')}
+                            </span>
+                          </div>
+                          <div className="font-semibold text-gray-900">
+                            ₹{invoice.amount.toLocaleString('en-IN')}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* BOQ Items for Next Billing - DYNAMIC TABLE */}
                 <div className="mb-6">
-                  <h4 className="font-semibold mb-3 text-gray-800">📋 BOQ Items ({project.boq_items?.length || 0} items)</h4>
+                  <h4 className="font-semibold mb-3 text-gray-800 flex items-center">
+                    📋 BOQ Items - Select Quantities for {projectBillingData.next_ra}:
+                  </h4>
                   
-                  {project.boq_items && project.boq_items.length > 0 ? (
+                  {projectBillingData.boq_items_for_billing && projectBillingData.boq_items_for_billing.length > 0 ? (
                     <div className="overflow-x-auto border rounded-lg bg-white">
                       <table className="min-w-full text-sm">
                         <thead className="bg-gray-100">
                           <tr>
-                            <th className="px-4 py-3 text-left font-medium text-gray-700">S.No</th>
-                            <th className="px-4 py-3 text-left font-medium text-gray-700">Description</th>
+                            <th className="px-4 py-3 text-left font-medium text-gray-700">Item Description</th>
                             <th className="px-3 py-3 text-center font-medium text-gray-700">Unit</th>
-                            <th className="px-3 py-3 text-center font-medium text-gray-700">Quantity</th>
-                            <th className="px-3 py-3 text-right font-medium text-gray-700">Rate (₹)</th>
-                            <th className="px-3 py-3 text-right font-medium text-gray-700">Amount (₹)</th>
-                            <th className="px-3 py-3 text-center font-medium text-gray-700">GST %</th>
+                            <th className="px-3 py-3 text-center font-medium text-gray-700">Original Qty</th>
                             <th className="px-3 py-3 text-center font-medium text-gray-700">Billed Qty</th>
+                            <th className="px-3 py-3 text-center font-medium text-gray-700">Available Qty</th>
+                            <th className="px-3 py-3 text-right font-medium text-gray-700">Rate (₹)</th>
+                            <th className="px-3 py-3 text-center font-medium text-gray-700">Bill Qty</th>
+                            <th className="px-3 py-3 text-center font-medium text-gray-700">GST %</th>
+                            <th className="px-3 py-3 text-right font-medium text-gray-700">Amount (₹)</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {project.boq_items.slice(0, 10).map((item, index) => (
+                          {projectBillingData.boq_items_for_billing.map((item, index) => (
                             <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                              <td className="px-4 py-3 text-center">{item.sr_no || (index + 1)}</td>
                               <td className="px-4 py-3">
-                                <div className="max-w-md">
-                                  <div className="font-medium text-gray-900">{item.description}</div>
+                                <div className="text-sm font-medium text-gray-900 max-w-xs">
+                                  {item.description}
                                 </div>
                               </td>
-                              <td className="px-3 py-3 text-center text-gray-600">{item.unit}</td>
-                              <td className="px-3 py-3 text-center font-medium">{item.quantity}</td>
-                              <td className="px-3 py-3 text-right font-medium">₹{(item.rate || 0).toLocaleString('en-IN')}</td>
-                              <td className="px-3 py-3 text-right font-semibold text-green-600">₹{(item.amount || 0).toLocaleString('en-IN')}</td>
-                              <td className="px-3 py-3 text-center">
-                                <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">
-                                  {item.gst_rate || 18}%
-                                </span>
+                              <td className="px-3 py-3 text-center text-sm text-gray-600">
+                                {item.unit}
                               </td>
-                              <td className="px-3 py-3 text-center text-red-600 font-medium">
-                                {item.billed_quantity || 0}
+                              <td className="px-3 py-3 text-center text-sm font-medium">
+                                {item.original_quantity}
+                              </td>
+                              <td className="px-3 py-3 text-center text-sm text-red-600 font-medium">
+                                {item.billed_quantity}
+                              </td>
+                              <td className="px-3 py-3 text-center text-sm text-green-600 font-medium">
+                                {item.remaining_quantity}
+                              </td>
+                              <td className="px-3 py-3 text-right text-sm font-medium">
+                                ₹{item.rate.toLocaleString('en-IN')}
+                              </td>
+                              <td className="px-3 py-3 text-center">
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  max={item.remaining_quantity}
+                                  placeholder=""
+                                  className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 text-center"
+                                />
+                              </td>
+                              <td className="px-3 py-3 text-center">
+                                <select className="w-20 px-1 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
+                                  <option value="0">0%</option>
+                                  <option value="5">5%</option>
+                                  <option value="12">12%</option>
+                                  <option value="18" defaultValue>18%</option>
+                                  <option value="28">28%</option>
+                                  <option value="40">40%</option>
+                                </select>
+                              </td>
+                              <td className="px-3 py-3 text-right text-sm font-medium">
+                                ₹0
                               </td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
-                      {project.boq_items.length > 10 && (
-                        <div className="p-3 text-center text-gray-500 text-sm border-t">
-                          ... and {project.boq_items.length - 10} more items
-                        </div>
-                      )}
                     </div>
                   ) : (
                     <div className="text-center py-8 text-gray-500 bg-white rounded-lg border">
-                      <p>No BOQ items found for this project</p>
+                      <p>No BOQ items available for billing</p>
                     </div>
                   )}
                 </div>
 
-                {/* Project Summary */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="bg-white p-4 rounded-lg border border-gray-200">
-                    <div className="text-sm text-gray-600">Total Items</div>
-                    <div className="text-2xl font-bold text-gray-900">{project.boq_items?.length || 0}</div>
-                  </div>
-                  <div className="bg-white p-4 rounded-lg border border-gray-200">
-                    <div className="text-sm text-gray-600">Total Billed</div>
-                    <div className="text-2xl font-bold text-blue-600">₹{(project.total_billed || 0).toLocaleString('en-IN')}</div>
-                  </div>
-                  <div className="bg-white p-4 rounded-lg border border-gray-200">
-                    <div className="text-sm text-gray-600">Remaining Value</div>
-                    <div className="text-2xl font-bold text-green-600">₹{(project.remaining_value || project.total_project_value || 0).toLocaleString('en-IN')}</div>
-                  </div>
+                {/* Action Buttons */}
+                <div className="flex justify-end space-x-4">
+                  <button
+                    onClick={() => {
+                      setSelectedProject(project);
+                      setShowEnhancedInvoice(true);
+                    }}
+                    className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors"
+                  >
+                    Create {projectBillingData.next_ra} Invoice
+                  </button>
                 </div>
 
               </div>
@@ -876,180 +900,6 @@ const Projects = ({ currentUser }) => {
                 alert('Invoice created successfully!');
               }}
             />
-          </div>
-        </div>
-      )}
-
-      {/* BOQ Upload Modal */}
-      {showBOQModal && parsedData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-screen overflow-y-auto">
-            <div className="p-6">
-              <h3 className="text-xl font-bold mb-4">Review BOQ Data</h3>
-              
-              {/* Project Information */}
-              <div className="bg-blue-50 p-4 rounded-lg mb-6">
-                <h4 className="font-semibold mb-3">Project Information (Edit if needed):</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Project Name *</label>
-                    <input
-                      type="text"
-                      value={editableMetadata.project_name}
-                      onChange={(e) => setEditableMetadata({...editableMetadata, project_name: e.target.value})}
-                      className="w-full px-3 py-2 border rounded-md"
-                      placeholder="Enter project name"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Client Name *</label>
-                    <input
-                      type="text"
-                      value={editableMetadata.client}
-                      onChange={(e) => setEditableMetadata({...editableMetadata, client: e.target.value})}
-                      className="w-full px-3 py-2 border rounded-md"
-                      placeholder="Enter client name"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Architect *</label>
-                    <input
-                      type="text"
-                      value={editableMetadata.architect}
-                      onChange={(e) => setEditableMetadata({...editableMetadata, architect: e.target.value})}
-                      className="w-full px-3 py-2 border rounded-md"
-                      placeholder="Enter architect name"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Location</label>
-                    <input
-                      type="text"
-                      value={editableMetadata.location}
-                      onChange={(e) => setEditableMetadata({...editableMetadata, location: e.target.value})}
-                      className="w-full px-3 py-2 border rounded-md"
-                      placeholder="Enter location"
-                    />
-                  </div>
-                </div>
-
-                {/* Cash Flow Percentages */}
-                <div className="mt-4">
-                  <h5 className="font-semibold mb-2">💰 Cash Flow Management Percentages</h5>
-                  <div className="grid grid-cols-4 gap-4">
-                    <div>
-                      <label className="block text-sm text-blue-600 mb-1">ABG %</label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={editableMetadata.abg_percentage}
-                        onChange={(e) => setEditableMetadata({...editableMetadata, abg_percentage: parseFloat(e.target.value) || 0})}
-                        className="w-full px-3 py-2 border rounded-md text-center"
-                      />
-                      <div className="text-xs text-blue-600 mt-1">Advance Bank Guarantee</div>
-                    </div>
-                    <div>
-                      <label className="block text-sm text-green-600 mb-1">RA Bill %</label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={editableMetadata.ra_percentage}
-                        onChange={(e) => setEditableMetadata({...editableMetadata, ra_percentage: parseFloat(e.target.value) || 0})}
-                        className="w-full px-3 py-2 border rounded-md text-center"
-                      />
-                      <div className="text-xs text-green-600 mt-1">RA Bill with Taxes</div>
-                    </div>
-                    <div>
-                      <label className="block text-sm text-yellow-600 mb-1">Erection %</label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={editableMetadata.erection_percentage}
-                        onChange={(e) => setEditableMetadata({...editableMetadata, erection_percentage: parseFloat(e.target.value) || 0})}
-                        className="w-full px-3 py-2 border rounded-md text-center"
-                      />
-                      <div className="text-xs text-yellow-600 mt-1">Erection Work</div>
-                    </div>
-                    <div>
-                      <label className="block text-sm text-purple-600 mb-1">PBG %</label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={editableMetadata.pbg_percentage}
-                        onChange={(e) => setEditableMetadata({...editableMetadata, pbg_percentage: parseFloat(e.target.value) || 0})}
-                        className="w-full px-3 py-2 border rounded-md text-center"
-                      />
-                      <div className="text-xs text-purple-600 mt-1">Performance Bank Guarantee</div>
-                    </div>
-                  </div>
-                  <div className="mt-2 text-sm">
-                    <span className="text-blue-600">Total: </span>
-                    <span className={`font-bold ${
-                      Math.abs((editableMetadata.abg_percentage + editableMetadata.ra_percentage + 
-                               editableMetadata.erection_percentage + editableMetadata.pbg_percentage) - 100) > 0.01 
-                        ? 'text-red-600' : 'text-green-600'
-                    }`}>
-                      {(editableMetadata.abg_percentage + editableMetadata.ra_percentage + 
-                        editableMetadata.erection_percentage + editableMetadata.pbg_percentage).toFixed(1)}%
-                    </span>
-                    {Math.abs((editableMetadata.abg_percentage + editableMetadata.ra_percentage + 
-                              editableMetadata.erection_percentage + editableMetadata.pbg_percentage) - 100) > 0.01 && (
-                      <span className="text-red-600 ml-2">⚠️ Note: Total doesn't equal 100%</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* BOQ Items Preview */}
-              <div className="mb-6">
-                <h4 className="font-semibold mb-3">Total Project Value: ₹{parsedData?.parsed_data?.total_project_value?.toLocaleString()}</h4>
-                <h4 className="font-semibold mb-2">BOQ Items ({parsedData?.parsed_data?.boq_items?.length || 0}):</h4>
-                <div className="max-h-64 overflow-y-auto border rounded">
-                  <table className="min-w-full text-sm">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-3 py-2 text-left">Description</th>
-                        <th className="px-3 py-2 text-center">Unit</th>
-                        <th className="px-3 py-2 text-center">Qty</th>
-                        <th className="px-3 py-2 text-right">Rate</th>
-                        <th className="px-3 py-2 text-right">Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {parsedData?.parsed_data?.boq_items?.slice(0, 10).map((item, index) => (
-                        <tr key={index} className="border-t">
-                          <td className="px-3 py-2 max-w-xs truncate">{item.description}</td>
-                          <td className="px-3 py-2 text-center">{item.unit}</td>
-                          <td className="px-3 py-2 text-center">{item.quantity}</td>
-                          <td className="px-3 py-2 text-right">₹{item.rate?.toLocaleString()}</td>
-                          <td className="px-3 py-2 text-right">₹{item.amount?.toLocaleString()}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  {parsedData?.parsed_data?.boq_items?.length > 10 && (
-                    <div className="p-2 text-center text-gray-500 text-sm">
-                      ... and {parsedData.parsed_data.boq_items.length - 10} more items
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-4">
-                <button
-                  onClick={() => setShowBOQModal(false)}
-                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={createProjectFromBOQ}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                >
-                  Create Project
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       )}
