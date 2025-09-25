@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
-import config from './config';
 import ErrorBoundary from './components/ErrorBoundary';
 import axios from 'axios';
 import './App.css';
@@ -14,6 +13,11 @@ import PDFProcessor from './components/PDFProcessor';
 import AdminInterface from './components/AdminInterface';
 import CompanyProfileManagement from './components/CompanyProfileManagement';
 import InvoiceDesignCustomizer from './components/InvoiceDesignCustomizer';
+import EnhancedInvoiceCreation from './components/EnhancedInvoiceCreation';
+import Invoices from './components/Invoices';
+import Clients from './components/Clients';
+import BankGuarantees from './components/BankGuarantees';
+import UserManagement from './components/UserManagement';
 
 // API configuration
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
