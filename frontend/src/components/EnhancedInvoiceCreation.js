@@ -1,370 +1,123 @@
 import React, { useState, useEffect } from 'react';
 
 const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess }) => {
-    const [step, setStep] = useState(1); // 1: Invoice Type, 2: GST & Company Selection, 3: RA Quantity Tracking, 4: Review
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-    
     const [project, setProject] = useState(null);
-    const [companyProfiles, setCompanyProfiles] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
     const [raTracking, setRaTracking] = useState([]);
-    const [existingInvoices, setExistingInvoices] = useState([]);
-    
-    const [invoiceData, setInvoiceData] = useState({
-        invoice_type: 'tax_invoice',
-        invoice_gst_type: 'cgst_sgst',
-        company_location_id: '',
-        company_bank_id: '',
-        payment_terms: '',
-        advance_received: 0,
-        selected_items: [],
-        item_gst_mappings: []
-    });
+    const [invoiceItems, setInvoiceItems] = useState([]);
 
-    const [gstSettings, setGstSettings] = useState({
-        default_gst_type: 'cgst_sgst',
-        customer_state: 'Same',
-        supplier_state: 'Same'
-    });
-
-    const [quantityValidation, setQuantityValidation] = useState({
-        valid: true,
-        errors: [],
-        violations: []
-    });
-
-    const backendUrl = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || "http://localhost:8001";
+    const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
     useEffect(() => {
         if (projectId) {
-            fetchProjectDetails();
-            fetchCompanyProfiles();
-            fetchRATracking();
-            fetchExistingInvoices();
+            fetchProjectData();
         }
     }, [projectId]);
 
-    const fetchProjectDetails = async () => {
+    const fetchProjectData = async () => {
         try {
+            setLoading(true);
             const token = localStorage.getItem('token');
-            const response = await fetch(`${backendUrl}/api/projects/${projectId}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setProject(data);
-                
-                // Set default company profile if available
-                if (data.company_profile_id) {
-                    setInvoiceData(prev => ({
-                        ...prev,
-                        company_location_id: data.selected_location_id || '',
-                        company_bank_id: data.selected_bank_id || ''
-                    }));
-                }
-            }
-        } catch (err) {
-            console.error('Error fetching project:', err);
-        }
-    };
-
-    const fetchCompanyProfiles = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`${backendUrl}/api/company-profiles`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setCompanyProfiles(data);
-            }
-        } catch (err) {
-            console.error('Error fetching company profiles:', err);
-        }
-    };
-
-    const fetchRATracking = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`${backendUrl}/api/projects/${projectId}/ra-tracking`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setRaTracking(data.ra_tracking || []);
-                
-                // Initialize selected items with current tracking data
-                setInvoiceData(prev => ({
-                    ...prev,
-                    selected_items: data.ra_tracking.map(item => ({
-                        id: item.item_id,
-                        description: item.description,
-                        unit: item.unit,
-                        overall_qty: item.overall_qty,
-                        balance_qty: item.balance_qty,
-                        rate: item.rate,
-                        requested_qty: 0,
-                        amount: 0,
-                        gst_type: gstSettings.default_gst_type,
-                        gst_rate: item.gst_mapping?.total_gst_rate || 18,
-                        ra_usage: item.ra_usage || {}
-                    }))
-                }));
-            }
-        } catch (err) {
-            console.error('Error fetching RA tracking:', err);
-        }
-    };
-
-    const fetchExistingInvoices = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`${backendUrl}/api/projects/${projectId}/invoices`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setExistingInvoices(data.invoices || []);
-            }
-        } catch (err) {
-            console.error('Error fetching existing invoices:', err);
-        }
-    };
-
-    const validateQuantities = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const itemsToValidate = invoiceData.selected_items
-                .filter(item => item.requested_qty > 0)
-                .map(item => ({
-                    id: item.id,
-                    description: item.description,
-                    quantity: item.requested_qty
-                }));
-
-            const response = await fetch(`${backendUrl}/api/invoices/validate-quantities`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    project_id: projectId,
-                    selected_items: itemsToValidate
+            
+            const [projectResponse, raResponse] = await Promise.all([
+                fetch(`${backendUrl}/api/projects/${projectId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }),
+                fetch(`${backendUrl}/api/projects/${projectId}/ra-tracking`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
                 })
-            });
+            ]);
 
-            if (response.ok) {
-                const result = await response.json();
-                setQuantityValidation(result);
-                return result.valid;
+            if (projectResponse.ok && raResponse.ok) {
+                const projectData = await projectResponse.json();
+                const raData = await raResponse.json();
+                
+                setProject(projectData);
+                setRaTracking(raData.ra_tracking || []);
+                
+                // Initialize invoice items with BOQ data
+                setInvoiceItems(raData.ra_tracking.map(item => ({
+                    ...item,
+                    requested_qty: 0,
+                    gst_percentage: item.gst_mapping?.total_gst_rate || 18,
+                    amount: 0
+                })));
             }
-            return false;
         } catch (err) {
-            console.error('Error validating quantities:', err);
-            return false;
+            console.error('Error fetching project data:', err);
+            setError('Failed to load project data');
+        } finally {
+            setLoading(false);
         }
     };
 
-    const updateItemQuantity = (itemIndex, quantity) => {
-        const updatedItems = [...invoiceData.selected_items];
+    const updateItemQuantity = (itemIndex, qty) => {
+        const updatedItems = [...invoiceItems];
         const item = updatedItems[itemIndex];
         
-        const requestedQty = parseFloat(quantity) || 0;
-        const balanceQty = parseFloat(item.balance_qty || 0);
+        const requestedQty = Math.max(0, parseFloat(qty) || 0);
+        const maxQty = item.balance_qty || 0;
         
-        // Always update the quantity (real-time input validation prevents exceeding)
-        item.requested_qty = requestedQty;
-        
-        // Calculate amount dynamically (NOT from Excel)
-        item.amount = requestedQty * parseFloat(item.rate || 0);
-        
-        // Check if quantity exceeds balance for UI styling
-        const exceedsBalance = requestedQty > balanceQty;
-        item.validation_error = exceedsBalance;
-        
-        // Clear error if all items are valid
-        const allItemsValid = updatedItems.every(item => {
-            const reqQty = parseFloat(item.requested_qty || 0);
-            const balQty = parseFloat(item.balance_qty || 0);
-            return reqQty <= balQty;
-        });
-        
-        if (allItemsValid) {
-            setError('');
+        // Prevent over-quantity
+        if (requestedQty > maxQty) {
+            setError(`Quantity ${requestedQty} exceeds available balance ${maxQty} for item: ${item.description.substring(0, 50)}...`);
+            return;
         }
         
-        setInvoiceData(prev => ({
-            ...prev,
-            selected_items: updatedItems
-        }));
+        item.requested_qty = requestedQty;
+        item.amount = requestedQty * (item.rate || 0);
+        
+        setInvoiceItems(updatedItems);
+        setError(''); // Clear error if quantity is valid
     };
 
-    const updateItemGSTType = (itemIndex, gstType) => {
-        const updatedItems = [...invoiceData.selected_items];
-        updatedItems[itemIndex].gst_type = gstType;
-        
-        const updatedMappings = [...invoiceData.item_gst_mappings];
-        const mappingIndex = updatedMappings.findIndex(m => m.item_id === updatedItems[itemIndex].id);
-        
-        if (mappingIndex >= 0) {
-            updatedMappings[mappingIndex].gst_type = gstType;
-        } else {
-            updatedMappings.push({
-                item_id: updatedItems[itemIndex].id,
-                gst_type: gstType,
-                total_gst_rate: updatedItems[itemIndex].gst_rate,
-                cgst_rate: gstType === 'cgst_sgst' ? updatedItems[itemIndex].gst_rate / 2 : 0,
-                sgst_rate: gstType === 'cgst_sgst' ? updatedItems[itemIndex].gst_rate / 2 : 0,
-                igst_rate: gstType === 'igst' ? updatedItems[itemIndex].gst_rate : 0
-            });
-        }
-        
-        setInvoiceData(prev => ({
-            ...prev,
-            selected_items: updatedItems,
-            item_gst_mappings: updatedMappings
-        }));
+    const updateItemGSTPercentage = (itemIndex, gstPercent) => {
+        const updatedItems = [...invoiceItems];
+        updatedItems[itemIndex].gst_percentage = parseFloat(gstPercent);
+        setInvoiceItems(updatedItems);
     };
 
     const calculateTotals = () => {
-        const selectedItems = invoiceData.selected_items.filter(item => item.requested_qty > 0);
+        const selectedItems = invoiceItems.filter(item => (item.requested_qty || 0) > 0);
         
-        let subtotal = 0;
-        let totalCGST = 0;
-        let totalSGST = 0;
-        let totalIGST = 0;
+        const subtotal = selectedItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+        const totalGST = selectedItems.reduce((sum, item) => {
+            const gstAmount = (item.amount || 0) * (item.gst_percentage || 0) / 100;
+            return sum + gstAmount;
+        }, 0);
+        const grandTotal = subtotal + totalGST;
         
-        selectedItems.forEach(item => {
-            subtotal += item.amount;
-            
-            if (item.gst_type === 'cgst_sgst') {
-                const gstAmount = (item.amount * item.gst_rate) / 100;
-                totalCGST += gstAmount / 2;
-                totalSGST += gstAmount / 2;
-            } else {
-                totalIGST += (item.amount * item.gst_rate) / 100;
-            }
-        });
-        
-        return {
-            subtotal,
-            totalCGST,
-            totalSGST,
-            totalIGST,
-            totalGST: totalCGST + totalSGST + totalIGST,
-            grandTotal: subtotal + totalCGST + totalSGST + totalIGST
-        };
+        return { subtotal, totalGST, grandTotal, selectedItems };
     };
 
     const createInvoice = async () => {
         try {
-            setLoading(true);
-            
-            // SUPER STRICT VALIDATION - Check EVERY item before proceeding
-            let hasErrors = false;
-            const errorItems = [];
-            
-            invoiceData.selected_items.forEach(item => {
-                const requestedQty = parseFloat(item.requested_qty || 0);
-                const balanceQty = parseFloat(item.balance_qty || 0);
-                
-                if (requestedQty > 0 && requestedQty > balanceQty) {
-                    hasErrors = true;
-                    errorItems.push({
-                        description: item.description,
-                        requested: requestedQty,
-                        balance: balanceQty,
-                        excess: (requestedQty - balanceQty).toFixed(3)
-                    });
-                }
-            });
-            
-            if (hasErrors) {
-                const errorMessage = `🚨 INVOICE CREATION BLOCKED!\n\nThe following items exceed balance quantity:\n\n${errorItems.map(err => 
-                    `• ${err.description}\n  Requested: ${err.requested} | Available: ${err.balance}\n  Excess: ${err.excess}`
-                ).join('\n\n')}`;
-                
-                setError(errorMessage);
-                setLoading(false);
-                return; // HARD BLOCK - Don't proceed at all
-            }
-
-            const selectedItems = invoiceData.selected_items.filter(item => parseFloat(item.requested_qty || 0) > 0);
+            const { selectedItems } = calculateTotals();
             
             if (selectedItems.length === 0) {
-                setError('❌ Please select at least one item with valid quantity.');
-                setLoading(false);
+                setError('Please select at least one item with quantity > 0');
                 return;
             }
 
-            // Calculate everything dynamically - NEVER use Excel values
-            let subtotal = 0;
-            let totalCGST = 0;
-            let totalSGST = 0;
-            let totalIGST = 0;
-            
-            selectedItems.forEach(item => {
-                const amount = parseFloat(item.requested_qty) * parseFloat(item.rate);
-                subtotal += amount;
-                
-                const gstRate = parseFloat(item.gst_rate || 18);
-                if (item.gst_type === 'cgst_sgst') {
-                    const halfGST = (amount * gstRate) / 200; // Divide by 200 for half of percentage
-                    totalCGST += halfGST;
-                    totalSGST += halfGST;
-                } else {
-                    totalIGST += (amount * gstRate) / 100;
-                }
-            });
-
-            const totalGST = totalCGST + totalSGST + totalIGST;
-            const grandTotal = subtotal + totalGST;
-            
+            const token = localStorage.getItem('token');
             const invoicePayload = {
                 project_id: projectId,
-                invoice_type: invoiceData.invoice_type,
-                invoice_gst_type: invoiceData.invoice_gst_type,
-                company_location_id: invoiceData.company_location_id,
-                company_bank_id: invoiceData.company_bank_id,
-                payment_terms: invoiceData.payment_terms || 'Net 30 Days',
-                advance_received: parseFloat(invoiceData.advance_received) || 0,
-                invoice_items: selectedItems.map(item => ({
-                    id: item.id,
+                client_id: project.client_id,
+                invoice_type: 'tax_invoice',
+                items: selectedItems.map(item => ({
+                    boq_item_id: item.item_id,
                     description: item.description,
-                    quantity: parseFloat(item.requested_qty),
                     unit: item.unit,
-                    rate: parseFloat(item.rate),
-                    amount: parseFloat(item.requested_qty) * parseFloat(item.rate),
-                    gst_rate: parseFloat(item.gst_rate || 18),
-                    gst_type: item.gst_type || 'cgst_sgst'
+                    quantity: item.requested_qty,
+                    rate: item.rate,
+                    amount: item.amount,
+                    gst_rate: item.gst_percentage
                 })),
-                subtotal: subtotal,
-                cgst_amount: totalCGST,
-                sgst_amount: totalSGST,
-                igst_amount: totalIGST,
-                total_gst_amount: totalGST,
-                total_amount: grandTotal
+                payment_terms: 'Payment due within 30 days'
             };
 
-            const token = localStorage.getItem('token');
-            const response = await fetch(`${backendUrl}/api/invoices/enhanced`, {
+            const response = await fetch(`${backendUrl}/api/invoices`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -374,731 +127,209 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
             });
 
             if (response.ok) {
-                const result = await response.json();
-                alert(`✅ SUCCESS! Invoice created: ${result.ra_number || 'Proforma'}\nTotal: ₹${grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2})}`);
-                
-                // Force refresh of parent component
-                if (onSuccess) {
-                    await onSuccess();
-                }
-                if (onClose) {
-                    onClose();
-                }
-                
-                // Force page reload to show updated data
-                window.location.reload();
+                onSuccess();
             } else {
                 const errorData = await response.json();
-                setError(`❌ Failed to create invoice: ${errorData.detail || 'Unknown error'}`);
+                setError(errorData.detail || 'Failed to create invoice');
             }
         } catch (err) {
-            setError(`❌ Network error: ${err.message}`);
             console.error('Error creating invoice:', err);
-        } finally {
-            setLoading(false);
+            setError('Network error creating invoice');
         }
     };
 
-    const getRAColumns = () => {
-        if (!raTracking.length) return [];
-        
-        // Get all unique RA numbers from tracking data
-        const raNumbers = new Set();
-        raTracking.forEach(item => {
-            Object.keys(item.ra_usage || {}).forEach(raNum => raNumbers.add(raNum));
-        });
-        
-        return Array.from(raNumbers).sort();
-    };
-
-    const raColumns = getRAColumns();
-    const totals = calculateTotals();
-
-    const renderStepIndicator = () => (
-        <div className="mb-8">
-            <div className="flex items-center justify-between">
-                {['Invoice Type', 'GST & Company', 'RA Quantity Tracking', 'Review & Create'].map((stepName, index) => (
-                    <div key={index} className="flex items-center">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                            step > index + 1 ? 'bg-green-500 text-white' : 
-                            step === index + 1 ? 'bg-blue-500 text-white' : 
-                            'bg-gray-200 text-gray-600'
-                        }`}>
-                            {step > index + 1 ? '✓' : index + 1}
-                        </div>
-                        <span className={`ml-2 text-sm ${step === index + 1 ? 'font-medium text-blue-600' : 'text-gray-500'}`}>
-                            {stepName}
-                        </span>
-                        {index < 3 && <div className="flex-1 mx-4 h-0.5 bg-gray-200"></div>}
-                    </div>
-                ))}
+    if (loading) {
+        return (
+            <div className="p-8 text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading project data...</p>
             </div>
-        </div>
-    );
+        );
+    }
+
+    const { subtotal, totalGST, grandTotal, selectedItems } = calculateTotals();
 
     return (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-10 mx-auto p-6 border max-w-7xl shadow-lg rounded-lg bg-white min-h-[600px]">
-                <div className="mb-6">
-                    <h2 className="text-2xl font-bold text-gray-900">Enhanced Invoice Creation</h2>
-                    <p className="text-gray-600">Create invoice with advanced GST logic and RA bill tracking</p>
-                    {project && (
-                        <p className="text-sm text-gray-500 mt-2">Project: {project.project_name} | Client: {project.client_name}</p>
-                    )}
+        <div className="p-6 max-w-7xl">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-6 pb-4 border-b">
+                <div>
+                    <h2 className="text-2xl font-bold text-gray-900">📄 Create Invoice</h2>
+                    <p className="text-gray-600 mt-1">
+                        Project: <span className="font-medium">{project?.project_name}</span> | 
+                        Client: <span className="font-medium">{project?.client_name}</span>
+                    </p>
+                </div>
+                <button
+                    onClick={onClose}
+                    className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+                >
+                    ×
+                </button>
+            </div>
+
+            {error && (
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-red-800 font-medium">⚠️ {error}</p>
+                </div>
+            )}
+
+            {/* Professional BOQ Items Table */}
+            <div className="bg-white rounded-lg border border-gray-200 mb-6">
+                <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900">📋 Select Items & Quantities to Bill</h3>
+                    <p className="text-sm text-gray-600 mt-1">Enter quantities to bill for each item. Available balance is shown for reference.</p>
+                </div>
+                
+                <div className="overflow-x-auto">
+                    <table className="min-w-full">
+                        <thead className="bg-gray-100">
+                            <tr>
+                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Item Description</th>
+                                <th className="px-4 py-4 text-center text-sm font-semibold text-gray-900">Unit</th>
+                                <th className="px-4 py-4 text-center text-sm font-semibold text-gray-900">Available Qty</th>
+                                <th className="px-4 py-4 text-center text-sm font-semibold text-gray-900">Bill Qty</th>
+                                <th className="px-4 py-4 text-right text-sm font-semibold text-gray-900">Rate (₹)</th>
+                                <th className="px-4 py-4 text-center text-sm font-semibold text-gray-900">GST %</th>
+                                <th className="px-4 py-4 text-right text-sm font-semibold text-gray-900">Amount (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200">
+                            {invoiceItems.map((item, index) => {
+                                const hasQty = (item.requested_qty || 0) > 0;
+                                const exceedsBalance = (item.requested_qty || 0) > (item.balance_qty || 0);
+                                
+                                return (
+                                    <tr key={item.item_id} className={`
+                                        ${hasQty ? 'bg-green-50' : 'bg-white'} 
+                                        ${exceedsBalance ? 'bg-red-50 border-2 border-red-300' : ''}
+                                        hover:bg-gray-50 transition-colors
+                                    `}>
+                                        <td className="px-6 py-4">
+                                            <div className="text-sm font-medium text-gray-900 max-w-md">
+                                                {item.description}
+                                            </div>
+                                            {exceedsBalance && (
+                                                <div className="text-xs font-bold text-red-700 mt-1 bg-red-200 px-2 py-1 rounded inline-block">
+                                                    ❌ Exceeds available quantity!
+                                                </div>
+                                            )}
+                                        </td>
+                                        <td className="px-4 py-4 text-center text-sm text-gray-600">
+                                            {item.unit}
+                                        </td>
+                                        <td className="px-4 py-4 text-center">
+                                            <div className="text-sm font-medium text-gray-900">
+                                                {item.balance_qty}
+                                            </div>
+                                            <div className="text-xs text-gray-500">
+                                                Total: {item.overall_qty}
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-4 text-center">
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                max={item.balance_qty}
+                                                value={item.requested_qty || ''}
+                                                onChange={(e) => updateItemQuantity(index, e.target.value)}
+                                                className={`w-24 px-3 py-2 text-sm border rounded-md text-center focus:ring-2 focus:ring-blue-500 ${
+                                                    exceedsBalance ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                                                }`}
+                                                placeholder="0"
+                                            />
+                                            <div className="text-xs text-gray-500 mt-1">
+                                                Max: {item.balance_qty}
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-4 text-right text-sm font-medium text-gray-900">
+                                            ₹{(item.rate || 0).toLocaleString('en-IN')}
+                                        </td>
+                                        <td className="px-4 py-4 text-center">
+                                            <select
+                                                value={item.gst_percentage || 18}
+                                                onChange={(e) => updateItemGSTPercentage(index, e.target.value)}
+                                                className="w-20 px-2 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                                            >
+                                                <option value="0">0%</option>
+                                                <option value="5">5%</option>
+                                                <option value="12">12%</option>
+                                                <option value="18">18%</option>
+                                                <option value="28">28%</option>
+                                                <option value="40">40%</option>
+                                            </select>
+                                        </td>
+                                        <td className="px-4 py-4 text-right">
+                                            <div className="text-sm font-medium text-gray-900">
+                                                ₹{(item.amount || 0).toLocaleString('en-IN')}
+                                            </div>
+                                            {hasQty && (
+                                                <div className="text-xs text-gray-500">
+                                                    GST: ₹{((item.amount || 0) * (item.gst_percentage || 0) / 100).toLocaleString('en-IN')}
+                                                </div>
+                                            )}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* Invoice Summary */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                {/* Selected Items Summary */}
+                <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
+                    <h3 className="text-lg font-semibold text-blue-900 mb-4">📊 Invoice Summary</h3>
+                    <div className="space-y-3">
+                        <div className="flex justify-between">
+                            <span className="text-blue-700">Selected Items:</span>
+                            <span className="font-semibold text-blue-900">{selectedItems.length}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-blue-700">Subtotal:</span>
+                            <span className="font-semibold text-blue-900">₹{subtotal.toLocaleString('en-IN')}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-blue-700">Total GST:</span>
+                            <span className="font-semibold text-blue-900">₹{totalGST.toLocaleString('en-IN')}</span>
+                        </div>
+                        <div className="flex justify-between text-lg border-t border-blue-300 pt-3">
+                            <span className="font-semibold text-blue-800">Grand Total:</span>
+                            <span className="font-bold text-blue-900">₹{grandTotal.toLocaleString('en-IN')}</span>
+                        </div>
+                    </div>
                 </div>
 
-                {renderStepIndicator()}
-
-                {error && (
-                    <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4">
-                        <p className="text-red-800">{error}</p>
-                        <button
-                            onClick={() => setError('')}
-                            className="mt-2 text-sm text-red-600 hover:text-red-800"
-                        >
-                            Dismiss
-                        </button>
-                    </div>
-                )}
-
-                {/* Step 1: Invoice Type Selection */}
-                {step === 1 && (
-                    <div className="space-y-6">
-                        <h3 className="text-lg font-semibold text-gray-900">Invoice Type Selection</h3>
+                {/* Actions */}
+                <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">🚀 Create Invoice</h3>
+                    <div className="space-y-4">
+                        <div className="text-sm text-gray-600">
+                            <p>• This will create a <strong>Tax Invoice</strong> with RA tracking</p>
+                            <p>• GST will be calculated per item based on selected percentages</p>
+                            <p>• Quantities will be deducted from available balance</p>
+                        </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div 
-                                className={`border-2 rounded-lg p-6 cursor-pointer transition-colors ${
-                                    invoiceData.invoice_type === 'proforma' 
-                                        ? 'border-blue-500 bg-blue-50' 
-                                        : 'border-gray-200 hover:border-gray-300'
-                                }`}
-                                onClick={() => setInvoiceData({...invoiceData, invoice_type: 'proforma'})}
-                            >
-                                <div className="flex items-center mb-4">
-                                    <div className={`w-4 h-4 rounded-full mr-3 ${
-                                        invoiceData.invoice_type === 'proforma' ? 'bg-blue-500' : 'bg-gray-300'
-                                    }`}></div>
-                                    <h4 className="text-lg font-semibold text-gray-900">Proforma Invoice</h4>
-                                </div>
-                                <p className="text-gray-600">
-                                    Advance billing without tax implications. Used for quotations and advance payments.
-                                </p>
-                                <ul className="mt-3 text-sm text-gray-500 space-y-1">
-                                    <li>• No GST implications</li>
-                                    <li>• Can be converted to tax invoice later</li>
-                                    <li>• Used for advance collection</li>
-                                </ul>
-                            </div>
-                            
-                            <div 
-                                className={`border-2 rounded-lg p-6 cursor-pointer transition-colors ${
-                                    invoiceData.invoice_type === 'tax_invoice' 
-                                        ? 'border-blue-500 bg-blue-50' 
-                                        : 'border-gray-200 hover:border-gray-300'
-                                }`}
-                                onClick={() => setInvoiceData({...invoiceData, invoice_type: 'tax_invoice'})}
-                            >
-                                <div className="flex items-center mb-4">
-                                    <div className={`w-4 h-4 rounded-full mr-3 ${
-                                        invoiceData.invoice_type === 'tax_invoice' ? 'bg-blue-500' : 'bg-gray-300'
-                                    }`}></div>
-                                    <h4 className="text-lg font-semibold text-gray-900">Tax Invoice (RA Bill)</h4>
-                                </div>
-                                <p className="text-gray-600">
-                                    Running Account (RA) bill with full GST compliance and quantity tracking.
-                                </p>
-                                <ul className="mt-3 text-sm text-gray-500 space-y-1">
-                                    <li>• Full GST compliance</li>
-                                    <li>• Quantity validation against BOQ</li>
-                                    <li>• RA bill numbering (RA1, RA2, etc.)</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div className="flex justify-end">
+                        <div className="flex space-x-4">
                             <button
-                                onClick={() => setStep(2)}
-                                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                                onClick={onClose}
+                                className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                             >
-                                Next: GST & Company
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {/* Step 2: GST & Company Selection */}
-                {step === 2 && (
-                    <div className="space-y-6">
-                        <h3 className="text-lg font-semibold text-gray-900">GST Configuration & Company Selection</h3>
-                        
-                        {/* GST Type Selection */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-3">GST Type</label>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div 
-                                    className={`border-2 rounded-lg p-4 cursor-pointer transition-colors ${
-                                        invoiceData.invoice_gst_type === 'cgst_sgst' 
-                                            ? 'border-blue-500 bg-blue-50' 
-                                            : 'border-gray-200 hover:border-gray-300'
-                                    }`}
-                                    onClick={() => setInvoiceData({...invoiceData, invoice_gst_type: 'cgst_sgst'})}
-                                >
-                                    <div className="flex items-center">
-                                        <div className={`w-4 h-4 rounded-full mr-3 ${
-                                            invoiceData.invoice_gst_type === 'cgst_sgst' ? 'bg-blue-500' : 'bg-gray-300'
-                                        }`}></div>
-                                        <div>
-                                            <h4 className="font-medium text-gray-900">CGST + SGST</h4>
-                                            <p className="text-sm text-gray-600">Central + State GST (Intrastate)</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div 
-                                    className={`border-2 rounded-lg p-4 cursor-pointer transition-colors ${
-                                        invoiceData.invoice_gst_type === 'igst' 
-                                            ? 'border-blue-500 bg-blue-50' 
-                                            : 'border-gray-200 hover:border-gray-300'
-                                    }`}
-                                    onClick={() => setInvoiceData({...invoiceData, invoice_gst_type: 'igst'})}
-                                >
-                                    <div className="flex items-center">
-                                        <div className={`w-4 h-4 rounded-full mr-3 ${
-                                            invoiceData.invoice_gst_type === 'igst' ? 'bg-blue-500' : 'bg-gray-300'
-                                        }`}></div>
-                                        <div>
-                                            <h4 className="font-medium text-gray-900">IGST</h4>
-                                            <p className="text-sm text-gray-600">Integrated GST (Interstate)</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Company Location & Bank Selection */}
-                        {project && project.company_profile_id && (
-                            <>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Company Location</label>
-                                    <select
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        value={invoiceData.company_location_id}
-                                        onChange={(e) => setInvoiceData({...invoiceData, company_location_id: e.target.value})}
-                                    >
-                                        <option value="">Select Location</option>
-                                        {companyProfiles.find(p => p.id === project.company_profile_id)?.locations?.map(location => (
-                                            <option key={location.id} value={location.id}>
-                                                {location.location_name} - {location.city}
-                                                {location.is_default ? ' (Default)' : ''}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Bank Account</label>
-                                    <select
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        value={invoiceData.company_bank_id}
-                                        onChange={(e) => setInvoiceData({...invoiceData, company_bank_id: e.target.value})}
-                                    >
-                                        <option value="">Select Bank Account</option>
-                                        {companyProfiles.find(p => p.id === project.company_profile_id)?.bank_details?.map(bank => (
-                                            <option key={bank.id} value={bank.id}>
-                                                {bank.bank_name} - ****{bank.account_number?.slice(-4)}
-                                                {bank.is_default ? ' (Default)' : ''}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </>
-                        )}
-
-                        {/* Payment Terms */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Payment Terms</label>
-                            <textarea
-                                rows={3}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                value={invoiceData.payment_terms}
-                                onChange={(e) => setInvoiceData({...invoiceData, payment_terms: e.target.value})}
-                                placeholder="Enter payment terms and conditions..."
-                            />
-                        </div>
-
-                        <div className="flex justify-between">
-                            <button
-                                onClick={() => setStep(1)}
-                                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
-                            >
-                                Previous
-                            </button>
-                            <button
-                                onClick={() => setStep(3)}
-                                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                            >
-                                Next: RA Tracking
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {/* Step 3: RA Quantity Tracking */}
-                {step === 3 && (
-                    <div className="space-y-6">
-                        <h3 className="text-lg font-semibold text-gray-900">RA Bill Quantity Tracking</h3>
-                        <p className="text-gray-600">
-                            Select quantities for this RA bill. Red rows indicate quantity exceeding available balance.
-                        </p>
-
-                        {/* RA Tracking Table */}
-                        <div className="overflow-x-auto border border-gray-200 rounded-lg">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unit</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Overall Qty</th>
-                                        {raColumns.map(raNum => (
-                                            <th key={raNum} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                                {raNum} Used
-                                            </th>
-                                        ))}
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Balance Qty</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">This RA Qty</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rate</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">GST Type</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {invoiceData.selected_items.map((item, index) => {
-                                        const requestedQty = parseFloat(item.requested_qty || 0);
-                                        const balanceQty = parseFloat(item.balance_qty || 0);
-                                        const exceedsBalance = requestedQty > balanceQty;
-                                        
-                                        return (
-                                            <tr key={item.id} className={exceedsBalance ? 'bg-red-100 border-2 border-red-500' : 'hover:bg-gray-50'}>
-                                                <td className="px-4 py-4">
-                                                    <div className={`text-sm font-medium ${exceedsBalance ? 'text-red-800' : 'text-gray-900'}`}>
-                                                        {item.description}
-                                                    </div>
-                                                    {exceedsBalance && (
-                                                        <div className="text-xs font-bold text-red-700 mt-1 bg-red-200 px-2 py-1 rounded">
-                                                            ❌ EXCEEDS by {(requestedQty - balanceQty).toFixed(2)} - REDUCE QUANTITY!
-                                                        </div>
-                                                    )}
-                                                </td>
-                                                <td className={`px-4 py-4 text-sm ${exceedsBalance ? 'text-red-800 font-bold' : 'text-gray-900'}`}>
-                                                    {item.unit}
-                                                </td>
-                                                <td className={`px-4 py-4 text-sm font-medium ${exceedsBalance ? 'text-red-800' : 'text-gray-900'}`}>
-                                                    {item.overall_qty}
-                                                </td>
-                                                
-                                                {raColumns.map(raNum => (
-                                                    <td key={raNum} className="px-4 py-4 text-sm text-gray-600">
-                                                        {item.ra_usage[raNum] || 0}
-                                                    </td>
-                                                ))}
-                                                
-                                                <td className="px-4 py-4">
-                                                    <span className={`text-sm font-bold px-2 py-1 rounded ${
-                                                        balanceQty <= 0 ? 'text-red-800 bg-red-200' : 
-                                                        exceedsBalance ? 'text-red-800 bg-red-200' : 'text-green-800 bg-green-200'
-                                                    }`}>
-                                                        {balanceQty.toFixed(2)} {item.unit}
-                                                    </span>
-                                                </td>
-                                                
-                                                <td className="px-4 py-4">
-                                                    <input
-                                                        type="text"
-                                                        pattern="[0-9]*\.?[0-9]*"
-                                                        inputMode="decimal"
-                                                        className={`w-24 px-2 py-1 border-2 rounded text-sm font-bold focus:outline-none focus:ring-2 ${
-                                                            exceedsBalance 
-                                                                ? 'border-red-600 focus:ring-red-600 bg-red-50 text-red-800' 
-                                                                : 'border-green-500 focus:ring-green-500 bg-white'
-                                                        }`}
-                                                        value={item.requested_qty || ''}
-                                                        onChange={(e) => {
-                                                            const inputValue = e.target.value;
-                                                            const numValue = parseFloat(inputValue);
-                                                            const maxAllowed = parseFloat(balanceQty);
-                                                            
-                                                            // HARD BLOCK: Don't allow ANY input above max
-                                                            if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
-                                                                if (inputValue === '' || numValue <= maxAllowed) {
-                                                                    updateItemQuantity(index, inputValue);
-                                                                    if (numValue <= maxAllowed) {
-                                                                        setError(''); // Clear error if valid
-                                                                    }
-                                                                } else {
-                                                                    // COMPLETELY BLOCK - don't update state
-                                                                    setError(`🚫 BLOCKED: Cannot enter ${numValue.toFixed(3)}. Maximum allowed for "${item.description}" is ${maxAllowed.toFixed(3)} ${item.unit}`);
-                                                                }
-                                                            }
-                                                        }}
-                                                        onKeyDown={(e) => {
-                                                            // Block certain keys that might cause issues
-                                                            const currentValue = e.target.value;
-                                                            const key = e.key;
-                                                            
-                                                            // Allow control keys
-                                                            if (['Backspace', 'Delete', 'Tab', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key)) {
-                                                                return;
-                                                            }
-                                                            
-                                                            // Allow numbers and one decimal point
-                                                            if (!/[\d\.]/.test(key) || (key === '.' && currentValue.includes('.'))) {
-                                                                e.preventDefault();
-                                                                return;
-                                                            }
-                                                            
-                                                            // Check if the resulting value would exceed limit
-                                                            let newValue = currentValue;
-                                                            if (e.target.selectionStart === e.target.selectionEnd) {
-                                                                newValue = currentValue.slice(0, e.target.selectionStart) + key + currentValue.slice(e.target.selectionEnd);
-                                                            } else {
-                                                                newValue = currentValue.slice(0, e.target.selectionStart) + key + currentValue.slice(e.target.selectionEnd);
-                                                            }
-                                                            
-                                                            const testValue = parseFloat(newValue);
-                                                            if (!isNaN(testValue) && testValue > parseFloat(balanceQty)) {
-                                                                e.preventDefault();
-                                                                setError(`🚫 Cannot exceed ${balanceQty.toFixed(3)} ${item.unit} for "${item.description}"`);
-                                                            }
-                                                        }}
-                                                        onPaste={(e) => {
-                                                            e.preventDefault();
-                                                            const paste = (e.clipboardData || window.clipboardData).getData('text');
-                                                            const numValue = parseFloat(paste) || 0;
-                                                            const maxAllowed = parseFloat(balanceQty);
-                                                            
-                                                            if (/^\d*\.?\d*$/.test(paste) && numValue <= maxAllowed) {
-                                                                updateItemQuantity(index, paste);
-                                                                setError('');
-                                                            } else {
-                                                                setError(`🚫 Cannot paste ${numValue.toFixed(3)}. Maximum allowed: ${maxAllowed.toFixed(3)} ${item.unit}`);
-                                                            }
-                                                        }}
-                                                        onBlur={(e) => {
-                                                            const value = parseFloat(e.target.value) || 0;
-                                                            if (value > parseFloat(balanceQty)) {
-                                                                // Force back to last valid value or 0
-                                                                updateItemQuantity(index, '0');
-                                                                setError(`🚫 Value reset to 0. Maximum allowed: ${balanceQty.toFixed(3)} ${item.unit}`);
-                                                            }
-                                                        }}
-                                                        placeholder="0.000"
-                                                        maxLength="10"
-                                                        title={`Maximum allowed: ${balanceQty.toFixed(3)} ${item.unit} - NO EXCEEDING ALLOWED`}
-                                                    />
-                                                    <div className="text-xs mt-1">
-                                                        <div className={`px-2 py-1 rounded text-center font-bold ${
-                                                            exceedsBalance ? 'text-red-700 bg-red-200' : 'text-green-700 bg-green-100'
-                                                        }`}>
-                                                            {exceedsBalance ? '🚫 EXCEEDS LIMIT' : '✅ WITHIN LIMIT'}
-                                                        </div>
-                                                        <div className="text-gray-600 mt-1">
-                                                            Max: {balanceQty.toFixed(3)} {item.unit}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                
-                                                <td className={`px-4 py-4 text-sm ${exceedsBalance ? 'text-red-800 font-bold' : 'text-gray-900'}`}>
-                                                    ₹{parseFloat(item.rate || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}
-                                                </td>
-                                                
-                                                <td className={`px-4 py-4 text-sm font-bold ${exceedsBalance ? 'text-red-800' : 'text-gray-900'}`}>
-                                                    ₹{((parseFloat(item.requested_qty || 0)) * parseFloat(item.rate || 0)).toLocaleString('en-IN', {minimumFractionDigits: 2})}
-                                                </td>
-                                                
-                                                <td className="px-4 py-4">
-                                                    <select
-                                                        className="text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                                        value={item.gst_type}
-                                                        onChange={(e) => updateItemGSTType(index, e.target.value)}
-                                                    >
-                                                        <option value="cgst_sgst">CGST+SGST</option>
-                                                        <option value="igst">IGST</option>
-                                                    </select>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {/* Quantity Validation Errors */}
-                        {!quantityValidation.valid && quantityValidation.errors.length > 0 && (
-                            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                                <h4 className="font-medium text-red-800 mb-2">Quantity Validation Errors:</h4>
-                                <ul className="list-disc list-inside space-y-1">
-                                    {quantityValidation.errors.map((error, index) => (
-                                        <li key={index} className="text-red-700 text-sm">{error}</li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-
-                        <div className="flex justify-between">
-                            <button
-                                onClick={() => setStep(2)}
-                                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
-                            >
-                                Previous
-                            </button>
-                            <button
-                                onClick={() => setStep(4)}
-                                disabled={invoiceData.selected_items.some(item => item.validation_error)}
-                                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
-                            >
-                                Next: Review
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {/* Step 4: Review & Create */}
-                {step === 4 && (
-                    <div className="space-y-6">
-                        <h3 className="text-lg font-semibold text-gray-900">Review Invoice Details</h3>
-                        
-                        {/* Invoice Summary */}
-                        <div className="bg-gray-50 rounded-lg p-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <h4 className="font-medium text-gray-900 mb-3">Invoice Details</h4>
-                                    <div className="space-y-2 text-sm">
-                                        <div><span className="text-gray-600">Type:</span> <span className="font-medium">{invoiceData.invoice_type.replace('_', ' ').toUpperCase()}</span></div>
-                                        <div><span className="text-gray-600">GST Type:</span> <span className="font-medium">{invoiceData.invoice_gst_type.replace('_', '+').toUpperCase()}</span></div>
-                                        <div><span className="text-gray-600">Project:</span> <span className="font-medium">{project?.project_name}</span></div>
-                                        <div><span className="text-gray-600">Client:</span> <span className="font-medium">{project?.client_name}</span></div>
-                                    </div>
-                                </div>
-                                
-                                <div>
-                                    <h4 className="font-medium text-gray-900 mb-3">Financial Summary</h4>
-                                    <div className="space-y-2 text-sm">
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600">Subtotal:</span>
-                                            <span className="font-medium">₹{totals.subtotal.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
-                                        </div>
-                                        {totals.totalCGST > 0 && (
-                                            <div className="flex justify-between">
-                                                <span className="text-gray-600">CGST:</span>
-                                                <span className="font-medium">₹{totals.totalCGST.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
-                                            </div>
-                                        )}
-                                        {totals.totalSGST > 0 && (
-                                            <div className="flex justify-between">
-                                                <span className="text-gray-600">SGST:</span>
-                                                <span className="font-medium">₹{totals.totalSGST.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
-                                            </div>
-                                        )}
-                                        {totals.totalIGST > 0 && (
-                                            <div className="flex justify-between">
-                                                <span className="text-gray-600">IGST:</span>
-                                                <span className="font-medium">₹{totals.totalIGST.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
-                                            </div>
-                                        )}
-                                        <div className="border-t border-gray-300 pt-2 mt-2">
-                                            <div className="flex justify-between">
-                                                <span className="font-medium text-gray-900">Total:</span>
-                                                <span className="font-bold text-lg">₹{totals.grandTotal.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Selected Items */}
-                        <div>
-                            <h4 className="font-medium text-gray-900 mb-3">Selected Items</h4>
-                            <div className="overflow-x-auto border border-gray-200 rounded-lg">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unit</th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rate</th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">GST Type</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {invoiceData.selected_items.filter(item => item.requested_qty > 0).map((item) => (
-                                            <tr key={item.id}>
-                                                <td className="px-4 py-3 text-sm text-gray-900">{item.description}</td>
-                                                <td className="px-4 py-3 text-sm text-gray-900">{item.requested_qty}</td>
-                                                <td className="px-4 py-3 text-sm text-gray-900">{item.unit}</td>
-                                                <td className="px-4 py-3 text-sm text-gray-900">₹{item.rate?.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                                                <td className="px-4 py-3 text-sm font-medium text-gray-900">₹{item.amount?.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                                                <td className="px-4 py-3 text-sm text-gray-900">{item.gst_type.replace('_', '+').toUpperCase()}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div className="flex justify-between">
-                            <button
-                                onClick={() => setStep(3)}
-                                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
-                            >
-                                Previous
+                                Cancel
                             </button>
                             <button
                                 onClick={createInvoice}
-                                disabled={loading || invoiceData.selected_items.some(item => parseFloat(item.requested_qty || 0) > parseFloat(item.balance_qty || 0))}
-                                className={`px-6 py-2 rounded-md font-bold transition-colors ${
-                                    loading || invoiceData.selected_items.some(item => parseFloat(item.requested_qty || 0) > parseFloat(item.balance_qty || 0))
-                                        ? 'bg-red-400 text-white cursor-not-allowed' 
-                                        : 'bg-green-600 text-white hover:bg-green-700'
-                                }`}
+                                disabled={selectedItems.length === 0}
+                                className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                             >
-                                {loading ? 'Creating Invoice...' : 
-                                 invoiceData.selected_items.some(item => parseFloat(item.requested_qty || 0) > parseFloat(item.balance_qty || 0)) 
-                                    ? '❌ FIX QUANTITY ERRORS FIRST' 
-                                    : '✅ Create Invoice'}
+                                {selectedItems.length === 0 ? 'Select Items First' : `Create Invoice (₹${grandTotal.toLocaleString('en-IN')})`}
                             </button>
                         </div>
                     </div>
-                )}
-
-                {/* ABG Release Mapping Tracker / Cash Flow Summary Table */}
-                {project && (
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
-                        <h3 className="text-lg font-semibold text-blue-900 mb-4">📊 ABG Release Mapping Tracker / Cash Flow (Project-wise)</h3>
-                        <p className="text-sm text-gray-600 mb-4">💰 Spread - Cash Receivables (Including taxes)</p>
-                        
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full border-2 border-blue-300">
-                                <thead className="bg-blue-600 text-white">
-                                    <tr>
-                                        <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">Particulars</th>
-                                        <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">Type</th>
-                                        <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">Reference No</th>
-                                        <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">Dated</th>
-                                        <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">Basic</th>
-                                        <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">GST (18%)</th>
-                                        <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">PO/Inv Value</th>
-                                        <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">ABG ({(project.cash_flow_percentages?.abg_percentage || project.project_metadata?.abg_percentage || 30)}%)</th>
-                                        <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">RA Bill ({(project.cash_flow_percentages?.ra_bill_percentage || project.project_metadata?.ra_bill_percentage || 45)}%)</th>
-                                        <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">Erection ({(project.cash_flow_percentages?.erection_percentage || project.project_metadata?.erection_percentage || 20)}%)</th>
-                                        <th className="px-3 py-3 text-left text-xs font-bold uppercase">PBG ({(project.cash_flow_percentages?.pbg_percentage || project.project_metadata?.pbg_percentage || 5)}%)</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-200">
-                                    {/* Percentage Header Row */}
-                                    <tr className="bg-yellow-100 font-bold text-center">
-                                        <td className="px-3 py-2 border-r font-bold">%</td>
-                                        <td className="px-3 py-2 border-r">-</td>
-                                        <td className="px-3 py-2 border-r">-</td>
-                                        <td className="px-3 py-2 border-r">-</td>
-                                        <td className="px-3 py-2 border-r text-blue-800">100%</td>
-                                        <td className="px-3 py-2 border-r text-blue-800">18%</td>
-                                        <td className="px-3 py-2 border-r text-blue-800">118%</td>
-                                        <td className="px-3 py-2 border-r text-green-800">{(project.cash_flow_percentages?.abg_percentage || project.project_metadata?.abg_percentage || 30)}%</td>
-                                        <td className="px-3 py-2 border-r text-green-800">{(project.cash_flow_percentages?.ra_bill_percentage || project.project_metadata?.ra_bill_percentage || 45)}%</td>
-                                        <td className="px-3 py-2 border-r text-green-800">{(project.cash_flow_percentages?.erection_percentage || project.project_metadata?.erection_percentage || 20)}%</td>
-                                        <td className="px-3 py-2 text-green-800">{(project.cash_flow_percentages?.pbg_percentage || project.project_metadata?.pbg_percentage || 5)}%</td>
-                                    </tr>
-                                    
-                                    {/* Overall Row */}
-                                    <tr className="hover:bg-gray-50">
-                                        <td className="px-3 py-3 border-r font-bold text-gray-900">Overall</td>
-                                        <td className="px-3 py-3 border-r">Purchase Order</td>
-                                        <td className="px-3 py-3 border-r font-medium">PO-{project.project_name?.slice(0,8) || 'PROJECT'}</td>
-                                        <td className="px-3 py-3 border-r">{new Date().toISOString().split('T')[0]}</td>
-                                        <td className="px-3 py-3 border-r font-bold text-blue-900">₹{(project.total_project_value / 1.18).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                                        <td className="px-3 py-3 border-r font-bold text-blue-900">₹{(project.total_project_value * 0.18 / 1.18).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                                        <td className="px-3 py-3 border-r font-bold text-blue-900">₹{project.total_project_value.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                                        <td className="px-3 py-3 border-r font-bold text-green-800">₹{(project.total_project_value * (project.cash_flow_percentages?.abg_percentage || project.project_metadata?.abg_percentage || 30) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                                        <td className="px-3 py-3 border-r font-bold text-green-800">₹{(project.total_project_value * (project.cash_flow_percentages?.ra_bill_percentage || project.project_metadata?.ra_bill_percentage || 45) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                                        <td className="px-3 py-3 border-r font-bold text-green-800">₹{(project.total_project_value * (project.cash_flow_percentages?.erection_percentage || project.project_metadata?.erection_percentage || 20) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                                        <td className="px-3 py-3 font-bold text-green-800">₹{(project.total_project_value * (project.cash_flow_percentages?.pbg_percentage || project.project_metadata?.pbg_percentage || 5) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                                    </tr>
-                                    
-                                    {/* RA Rows - Show existing RA bills */}
-                                    {existingInvoices && existingInvoices.filter(inv => inv.ra_number).map((invoice, index) => {
-                                        const basic = invoice.subtotal || 0;
-                                        const gst = invoice.total_gst_amount || 0;
-                                        const total = invoice.total_amount || 0;
-                                        
-                                        return (
-                                            <tr key={index} className="hover:bg-blue-50">
-                                                <td className="px-3 py-3 border-r font-bold text-blue-900">{invoice.ra_number}</td>
-                                                <td className="px-3 py-3 border-r">RA Invoice</td>
-                                                <td className="px-3 py-3 border-r font-medium">{invoice.invoice_number || 'INV-' + invoice.ra_number}</td>
-                                                <td className="px-3 py-3 border-r">{new Date(invoice.created_at).toISOString().split('T')[0]}</td>
-                                                <td className="px-3 py-3 border-r font-bold text-blue-900">₹{basic.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                                                <td className="px-3 py-3 border-r font-bold text-blue-900">₹{gst.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                                                <td className="px-3 py-3 border-r font-bold text-blue-900">₹{total.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                                                <td className="px-3 py-3 border-r font-bold text-green-800">₹{(total * (project.cash_flow_percentages?.abg_percentage || project.project_metadata?.abg_percentage || 30) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                                                <td className="px-3 py-3 border-r font-bold text-green-800">₹{(total * (project.cash_flow_percentages?.ra_bill_percentage || project.project_metadata?.ra_bill_percentage || 45) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                                                <td className="px-3 py-3 border-r font-bold text-green-800">₹{(total * (project.cash_flow_percentages?.erection_percentage || project.project_metadata?.erection_percentage || 20) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                                                <td className="px-3 py-3 font-bold text-green-800">₹{(total * (project.cash_flow_percentages?.pbg_percentage || project.project_metadata?.pbg_percentage || 5) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                                            </tr>
-                                        );
-                                    })}
-                                    
-                                    {/* Amount Left to Claim Row */}
-                                    <tr className="bg-green-100 font-bold border-t-2 border-green-400">
-                                        <td className="px-3 py-3 border-r text-green-900">💰 Amount Left to Claim</td>
-                                        <td className="px-3 py-3 border-r text-green-700">Balance</td>
-                                        <td className="px-3 py-3 border-r text-green-700">Available</td>
-                                        <td className="px-3 py-3 border-r text-green-700">-</td>
-                                        <td className="px-3 py-3 border-r text-green-900">
-                                            ₹{((project.total_project_value / 1.18) - (existingInvoices || []).reduce((sum, inv) => sum + (inv.subtotal || 0), 0)).toLocaleString('en-IN', {minimumFractionDigits: 2})}
-                                        </td>
-                                        <td className="px-3 py-3 border-r text-green-900">
-                                            ₹{((project.total_project_value * 0.18 / 1.18) - (existingInvoices || []).reduce((sum, inv) => sum + (inv.total_gst_amount || 0), 0)).toLocaleString('en-IN', {minimumFractionDigits: 2})}
-                                        </td>
-                                        <td className="px-3 py-3 border-r text-green-900 font-bold">
-                                            ₹{(project.total_project_value - (existingInvoices || []).reduce((sum, inv) => sum + (inv.total_amount || 0), 0)).toLocaleString('en-IN', {minimumFractionDigits: 2})}
-                                        </td>
-                                        <td className="px-3 py-3 border-r text-green-800">
-                                            ₹{(project.total_project_value * (project.cash_flow_percentages?.abg_percentage || project.project_metadata?.abg_percentage || 30) / 100 - (existingInvoices || []).reduce((sum, inv) => sum + (inv.total_amount || 0) * (project.cash_flow_percentages?.abg_percentage || project.project_metadata?.abg_percentage || 30) / 100, 0)).toLocaleString('en-IN', {minimumFractionDigits: 2})}
-                                        </td>
-                                        <td className="px-3 py-3 border-r text-green-800">
-                                            ₹{(project.total_project_value * (project.cash_flow_percentages?.ra_bill_percentage || project.project_metadata?.ra_bill_percentage || 45) / 100 - (existingInvoices || []).reduce((sum, inv) => sum + (inv.total_amount || 0) * (project.cash_flow_percentages?.ra_bill_percentage || project.project_metadata?.ra_bill_percentage || 45) / 100, 0)).toLocaleString('en-IN', {minimumFractionDigits: 2})}
-                                        </td>
-                                        <td className="px-3 py-3 border-r text-green-800">
-                                            ₹{(project.total_project_value * (project.cash_flow_percentages?.erection_percentage || project.project_metadata?.erection_percentage || 20) / 100 - (existingInvoices || []).reduce((sum, inv) => sum + (inv.total_amount || 0) * (project.cash_flow_percentages?.erection_percentage || project.project_metadata?.erection_percentage || 20) / 100, 0)).toLocaleString('en-IN', {minimumFractionDigits: 2})}
-                                        </td>
-                                        <td className="px-3 py-3 text-green-800">
-                                            ₹{(project.total_project_value * (project.cash_flow_percentages?.pbg_percentage || project.project_metadata?.pbg_percentage || 5) / 100 - (existingInvoices || []).reduce((sum, inv) => sum + (inv.total_amount || 0) * (project.cash_flow_percentages?.pbg_percentage || project.project_metadata?.pbg_percentage || 5) / 100, 0)).toLocaleString('en-IN', {minimumFractionDigits: 2})}
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                            <p className="text-sm text-blue-800 font-medium">
-                                💡 <strong>Cash Flow Summary:</strong> This table shows your expected cash receivables based on project milestones and payment terms. 
-                                ABG amounts can be claimed upon fulfilling advance bank guarantee requirements.
-                            </p>
-                        </div>
-                    </div>
-                )}
-
-                {/* Modal Actions */}
-                <div className="flex justify-end space-x-3 mt-8 pt-6 border-t border-gray-200">
-                    <button
-                        onClick={onClose}
-                        className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-                    >
-                        Cancel
-                    </button>
                 </div>
             </div>
         </div>
