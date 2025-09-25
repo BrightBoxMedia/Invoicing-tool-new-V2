@@ -585,14 +585,14 @@ const Projects = ({ currentUser }) => {
     }
   };
 
-  const handleViewBilling = async (project) => {
-    if (selectedProject?.id === project.id) {
-      setSelectedProject(null);
-      setProjectBillingData(null);
-    } else {
-      setSelectedProject(project);
-      await fetchProjectBillingData(project.id);
-    }
+  const handleViewProjectDetails = (project) => {
+    setSelectedProject(project);
+    setShowProjectDetails(true);
+  };
+
+  const handleCreateInvoice = (project) => {
+    setSelectedProject(project);
+    setShowEnhancedInvoice(true);
   };
 
   const handleFileUpload = async (e) => {
