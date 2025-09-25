@@ -221,14 +221,16 @@ class ActivusAPITester:
         success, result = self.make_request('POST', 'upload-boq', files=files)
         
         if success:
-            required_fields = ['metadata', 'items', 'total_value', 'filename']
+            required_fields = ['parsed_data', 'filename', 'status']
             has_all_fields = all(field in result for field in required_fields)
             self.log_test("BOQ upload structure", has_all_fields, f"- Fields: {list(result.keys())}")
             
-            if 'items' in result:
-                self.log_test("BOQ items parsed", len(result['items']) > 0, 
-                            f"- Found {len(result['items'])} items, Total: ₹{result.get('total_value', 0)}")
-                return result
+            if 'parsed_data' in result and 'boq_items' in result['parsed_data']:
+                items = result['parsed_data']['boq_items']
+                total_value = result['parsed_data'].get('total_project_value', 0)
+                self.log_test("BOQ items parsed", len(items) > 0, 
+                            f"- Found {len(items)} items, Total: ₹{total_value}")
+                return result['parsed_data']
         else:
             self.log_test("BOQ upload", False, f"- {result}")
             return None
