@@ -457,15 +457,11 @@ const Dashboard = ({ currentUser }) => {
 // ENHANCED Projects Component with REAL-TIME WEBSOCKET SYSTEM
 const Projects = ({ currentUser }) => {
   const [projects, setProjects] = useState([]);
-  const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState(null);
   const [showProjectDetails, setShowProjectDetails] = useState(false);
-  const [showBOQModal, setShowBOQModal] = useState(false);
   const [showEnhancedInvoice, setShowEnhancedInvoice] = useState(false);
-  const [parsedData, setParsedData] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [projectBillingData, setProjectBillingData] = useState(null);
 
   useEffect(() => {
     fetchProjects();
