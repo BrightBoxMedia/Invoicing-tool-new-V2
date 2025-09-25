@@ -1202,8 +1202,20 @@ async def create_client(client_data: ClientInfo, current_user: dict = Depends(ge
 @api_router.get("/clients")
 async def get_clients(current_user: dict = Depends(get_current_user)):
     try:
-        clients = await db.clients.find().to_list(1000)
-        return clients
+        # Fetch clients from MongoDB
+        clients_cursor = db.clients.find()
+        clients = await clients_cursor.to_list(1000)
+        
+        # Convert MongoDB documents to proper format
+        formatted_clients = []
+        for client in clients:
+            # Remove MongoDB _id 
+            if '_id' in client:
+                del client['_id']
+            formatted_clients.append(client)
+        
+        return formatted_clients
+        
     except Exception as e:
         logger.error(f"Error fetching clients: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch clients: {str(e)}")
