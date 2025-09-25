@@ -175,6 +175,16 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
                 </div>
             )}
 
+            {/* Invoice History Table - Same as in Project Details */}
+            <div className="bg-white rounded-lg border border-gray-200 mb-6">
+                <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900">📄 Invoice History</h3>
+                    <p className="text-sm text-gray-600 mt-1">Previous invoices for this project</p>
+                </div>
+                
+                <InvoiceHistoryTable projectId={projectId} />
+            </div>
+
             {/* Professional BOQ Items Table */}
             <div className="bg-white rounded-lg border border-gray-200 mb-6">
                 <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
