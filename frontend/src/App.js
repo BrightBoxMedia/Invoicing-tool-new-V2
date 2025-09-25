@@ -1087,16 +1087,16 @@ function App() {
                 <Routes>
                   <Route path="/dashboard" element={<Dashboard currentUser={user} />} />
                   <Route path="/projects" element={<Projects currentUser={user} />} />
-                  <Route path="/invoices" element={<div className="p-6">Invoices - Coming Soon</div>} />
-                  <Route path="/clients" element={<div className="p-6">Clients - Coming Soon</div>} />
-                  <Route path="/bank-guarantees" element={<div className="p-6">Bank Guarantees - Coming Soon</div>} />
+                  <Route path="/invoices" element={<Invoices currentUser={user} />} />
+                  <Route path="/clients" element={<Clients currentUser={user} />} />
+                  <Route path="/bank-guarantees" element={<BankGuarantees currentUser={user} />} />
                   <Route path="/item-master" element={<ItemMaster currentUser={user} />} />
                   <Route path="/smart-search" element={<SmartSearch currentUser={user} />} />
                   <Route path="/pdf-processor" element={<PDFProcessor currentUser={user} />} />
                   <Route path="/reports" element={<Reports currentUser={user} />} />
                   <Route path="/company-profiles" element={<CompanyProfileManagement currentUser={user} />} />
                   <Route path="/activity-logs" element={<ActivityLogs currentUser={user} />} />
-                  <Route path="/user-management" element={<div className="p-6">User Management - Coming Soon</div>} />
+                  <Route path="/user-management" element={<UserManagement currentUser={user} />} />
                   <Route path="/admin-interface" element={<AdminInterface currentUser={user} />} />
                   <Route path="/invoice-design" element={<InvoiceDesignCustomizer currentUser={user} />} />
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
