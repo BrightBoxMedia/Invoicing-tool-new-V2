@@ -569,39 +569,94 @@ class ExcelParser:
         return None
     
     def _get_enhanced_column_mapping(self, worksheet, header_row: int) -> Dict[str, int]:
-        """Enhanced column mapping with better pattern recognition"""
+        """SUPER INTELLIGENT column mapping - accepts ANY Excel format"""
         column_mapping = {}
         
-        for col_idx in range(1, min(20, worksheet.max_column + 1)):
+        # Debug: Print all headers found
+        logger.info(f"ANALYZING EXCEL HEADERS at row {header_row}:")
+        for col_idx in range(1, min(30, worksheet.max_column + 1)):
+            cell = worksheet.cell(row=header_row, column=col_idx)
+            if cell.value:
+                logger.info(f"  Column {col_idx}: '{cell.value}'")
+        
+        for col_idx in range(1, min(30, worksheet.max_column + 1)):
             cell = worksheet.cell(row=header_row, column=col_idx)
             if not cell.value:
                 continue
                 
             cell_lower = str(cell.value).lower().strip()
+            cell_original = str(cell.value).strip()
             
-            # Serial number mapping
-            if any(h in cell_lower for h in ['sr', 'serial', 's.no', 'sno', '#']):
+            # SUPER FLEXIBLE Serial number mapping
+            if any(h in cell_lower for h in ['sr', 'serial', 's.no', 'sno', 's no', 'sl', 'sl.no', 'sl no', '#', 'no.', 'no', 'item no', 'item_no']):
                 column_mapping['sr_no'] = col_idx
+                logger.info(f"✅ FOUND SR_NO at column {col_idx}: '{cell_original}'")
                 
-            # Description mapping (most important)
-            elif any(h in cell_lower for h in ['description', 'particular', 'item', 'work', 'activity']):
+            # SUPER FLEXIBLE Description mapping (most critical)
+            elif any(h in cell_lower for h in [
+                'description', 'particular', 'particulars', 'item', 'work', 'activity', 
+                'scope', 'specification', 'details', 'desc', 'work item', 'work_item',
+                'item description', 'item_description', 'scope of work', 'scope_of_work',
+                'material', 'service', 'product', 'component', 'task'
+            ]):
                 column_mapping['description'] = col_idx
+                logger.info(f"✅ FOUND DESCRIPTION at column {col_idx}: '{cell_original}'")
                 
-            # Unit mapping
-            elif any(h in cell_lower for h in ['unit', 'uom', 'u.o.m']) and 'rate' not in cell_lower:
+            # SUPER FLEXIBLE Unit mapping
+            elif any(h in cell_lower for h in [
+                'unit', 'uom', 'u.o.m', 'u o m', 'units', 'measure', 'measurement',
+                'unit of measurement', 'unit_of_measurement', 'nos', 'each', 'pcs', 'pieces'
+            ]) and not any(x in cell_lower for x in ['rate', 'amount', 'price', 'cost']):
                 column_mapping['unit'] = col_idx
+                logger.info(f"✅ FOUND UNIT at column {col_idx}: '{cell_original}'")
                 
-            # Quantity mapping
-            elif any(h in cell_lower for h in ['qty', 'quantity']) and 'rate' not in cell_lower:
+            # SUPER FLEXIBLE Quantity mapping
+            elif any(h in cell_lower for h in [
+                'qty', 'quantity', 'qnty', 'quantities', 'total qty', 'total_qty',
+                'req qty', 'req_qty', 'required qty', 'required_qty', 'nos', 'count',
+                'total quantity', 'total_quantity', 'amount qty', 'amount_qty'
+            ]) and not any(x in cell_lower for x in ['rate', 'price', 'cost', 'amount', 'value']):
                 column_mapping['quantity'] = col_idx
+                logger.info(f"✅ FOUND QUANTITY at column {col_idx}: '{cell_original}'")
                 
-            # Rate mapping
-            elif any(h in cell_lower for h in ['rate', 'price']) and 'amount' not in cell_lower:
+            # SUPER FLEXIBLE Rate mapping
+            elif any(h in cell_lower for h in [
+                'rate', 'price', 'unit rate', 'unit_rate', 'unit price', 'unit_price',
+                'cost', 'per unit', 'per_unit', 'rate per unit', 'rate_per_unit',
+                'unit cost', 'unit_cost', 'basic rate', 'basic_rate'
+            ]) and not any(x in cell_lower for x in ['total', 'amount', 'sum']):
                 column_mapping['rate'] = col_idx
+                logger.info(f"✅ FOUND RATE at column {col_idx}: '{cell_original}'")
                 
-            # Amount mapping
-            elif any(h in cell_lower for h in ['amount', 'total', 'value']) and 'rate' not in cell_lower:
+            # SUPER FLEXIBLE Amount mapping
+            elif any(h in cell_lower for h in [
+                'amount', 'total', 'value', 'total amount', 'total_amount', 'total value', 'total_value',
+                'basic amount', 'basic_amount', 'subtotal', 'sub total', 'sub_total',
+                'line total', 'line_total', 'extended amount', 'extended_amount'
+            ]) and not any(x in cell_lower for x in ['rate', 'unit', 'gst', 'tax']):
                 column_mapping['amount'] = col_idx
+                logger.info(f"✅ FOUND AMOUNT at column {col_idx}: '{cell_original}'")
+        
+        logger.info(f"📋 FINAL COLUMN MAPPING: {column_mapping}")
+        
+        # Validate essential columns
+        if 'description' not in column_mapping:
+            logger.warning("❌ No description column found - trying fallback detection")
+            # Try to find any text-heavy column as description
+            for col_idx in range(1, min(30, worksheet.max_column + 1)):
+                # Check if this column has long text values (likely description)
+                sample_rows = min(10, worksheet.max_row - header_row)
+                text_lengths = []
+                for r in range(header_row + 1, header_row + sample_rows + 1):
+                    cell_val = worksheet.cell(row=r, column=col_idx).value
+                    if cell_val and isinstance(cell_val, str):
+                        text_lengths.append(len(str(cell_val).strip()))
+                
+                avg_length = sum(text_lengths) / len(text_lengths) if text_lengths else 0
+                if avg_length > 20:  # Likely description column
+                    column_mapping['description'] = col_idx
+                    logger.info(f"✅ FALLBACK DESCRIPTION found at column {col_idx} (avg length: {avg_length:.1f})")
+                    break
         
         return column_mapping
     
