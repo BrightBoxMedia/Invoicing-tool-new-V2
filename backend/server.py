@@ -854,21 +854,37 @@ async def create_project(project_data: dict, current_user: dict = Depends(get_cu
 @api_router.get("/projects")
 async def get_projects(current_user: dict = Depends(get_current_user)):
     try:
-        projects = await db.projects.find().to_list(1000)
+        # Fetch projects from MongoDB
+        projects_cursor = db.projects.find()
+        projects = await projects_cursor.to_list(1000)
         
-        # Add calculated fields
+        # Convert MongoDB documents to proper format
+        formatted_projects = []
         for project in projects:
-            # Calculate billing status
-            total_billed = sum(item.get('billed_quantity', 0) * item.get('rate', 0) 
-                             for item in project.get('boq_items', []))
+            # Remove MongoDB _id and convert to proper format
+            if '_id' in project:
+                del project['_id']
+            
+            # Add calculated fields
+            boq_items = project.get('boq_items', [])
+            total_billed = 0
+            
+            # Calculate total billed from BOQ items
+            for item in boq_items:
+                billed_qty = item.get('billed_quantity', 0)
+                rate = item.get('rate', 0)
+                total_billed += billed_qty * rate
+            
             total_value = project.get('total_project_value', 0)
             completion_percentage = (total_billed / total_value * 100) if total_value > 0 else 0
             
             project['total_billed'] = total_billed
             project['remaining_value'] = total_value - total_billed
             project['completion_percentage'] = round(completion_percentage, 2)
+            
+            formatted_projects.append(project)
         
-        return projects
+        return formatted_projects
         
     except Exception as e:
         logger.error(f"Error fetching projects: {str(e)}")
