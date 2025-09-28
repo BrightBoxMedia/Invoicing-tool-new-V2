@@ -225,10 +225,10 @@ const EnhancedProjectDetails = ({ project, onClose, onCreateInvoice }) => {
               <div className="bg-green-100 p-3 rounded border border-green-300 group relative">
                 <div className="text-green-600 font-medium">RA Bill %</div>
                 <div className="text-2xl font-bold text-green-800">{project.ra_percentage || 0}%</div>
-                <div className="text-xs text-green-600">RA Bill with Taxes</div>
-                <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                  Current RA Bill Amount = (RA Bill % × Remaining Value)
+                <div className="text-sm font-bold text-green-700 mt-1">
+                  ₹{((project.ra_percentage || 0) * remainingValue / 100).toLocaleString('en-IN')}
                 </div>
+                <div className="text-xs text-green-600">RA Bill with Taxes</div>
               </div>
               <div className="bg-yellow-100 p-3 rounded border border-yellow-300 group relative">
                 <div className="text-yellow-600 font-medium">Erection %</div>
