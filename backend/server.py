@@ -20,6 +20,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import Response, FileResponse, StreamingResponse
+from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, Field, validator
 import uvicorn
 import json
@@ -34,6 +35,17 @@ try:
 except AttributeError:
     # For newer Pydantic versions, we'll handle ObjectId serialization in the models
     pass
+
+# Custom JSON encoder for ObjectId
+def custom_jsonable_encoder(obj):
+    if isinstance(obj, ObjectId):
+        return str(obj)
+    elif isinstance(obj, dict):
+        return {key: custom_jsonable_encoder(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [custom_jsonable_encoder(item) for item in obj]
+    else:
+        return jsonable_encoder(obj)
 
 # Database
 import motor.motor_asyncio
