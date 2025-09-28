@@ -334,7 +334,7 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
                             <tr>
                                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Item Description</th>
                                 <th className="px-4 py-4 text-center text-sm font-semibold text-gray-900">Unit</th>
-                                <th className="px-4 py-4 text-center text-sm font-semibold text-gray-900">Total Qty</th>
+                                <th className="px-4 py-4 text-center text-lg font-bold text-gray-900">Original Qty</th>
                                 <th className="px-4 py-4 text-center text-sm font-semibold text-gray-900">Available Qty</th>
                                 <th className="px-4 py-4 text-center text-sm font-semibold text-gray-900">Bill Qty</th>
                                 <th className="px-4 py-4 text-right text-sm font-semibold text-gray-900">Rate (₹)</th>
