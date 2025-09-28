@@ -156,12 +156,20 @@ const Sidebar = ({ currentUser }) => {
           </Link>
         ))}
 
-        {currentUser && (currentUser.role === 'admin' || currentUser.role === 'super_admin') && (
+        {currentUser && (currentUser.role === 'admin' || currentUser.role === 'super_admin' || currentUser.role === 'Manager' || currentUser.role === 'SuperAdmin') && (
           <>
             <div className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 mt-8">
               Admin
             </div>
-            {adminItems.map((item) => (
+            {adminItems.filter(item => {
+              // Show all items to admin and super_admin
+              if (currentUser.role === 'admin' || currentUser.role === 'super_admin') return true;
+              // For role-specific items, check if user has required role
+              if (item.roles) {
+                return item.roles.includes(currentUser.role);
+              }
+              return false;
+            }).map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
