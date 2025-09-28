@@ -566,77 +566,149 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
                             </div>
                         </div>
 
-                        {/* Project Percentages Section */}
-                        <div className="mt-8">
-                            <h4 className="text-md font-semibold text-gray-900 mb-4">💼 Project Percentages</h4>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                
-                                {/* ABG Percentage */}
+                        {/* Project Percentages */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    ABG % <span className="text-gray-500">(Advance Bank Guarantee)</span>
+                                </label>
+                                <input
+                                    type="number"
+                                    step="0.1"
+                                    min="0"
+                                    max="100"
+                                    value={projectData.abg_percentage}
+                                    onChange={(e) => setProjectData({...projectData, abg_percentage: parseFloat(e.target.value) || 0})}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="10"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    RA Bill % <span className="text-gray-500">(Running Account Bill)</span>
+                                </label>
+                                <input
+                                    type="number"
+                                    step="0.1"
+                                    min="0"
+                                    max="100"
+                                    value={projectData.ra_bill_percentage}
+                                    onChange={(e) => setProjectData({...projectData, ra_bill_percentage: parseFloat(e.target.value) || 0})}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="80"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Erection % <span className="text-gray-500">(Erection/Installation)</span>
+                                </label>
+                                <input
+                                    type="number"
+                                    step="0.1"
+                                    min="0"
+                                    max="100"
+                                    value={projectData.erection_percentage}
+                                    onChange={(e) => setProjectData({...projectData, erection_percentage: parseFloat(e.target.value) || 0})}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="10"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    PBG % <span className="text-gray-500">(Performance Bank Guarantee)</span>
+                                </label>
+                                <input
+                                    type="number"
+                                    step="0.1"
+                                    min="0"
+                                    max="100"
+                                    value={projectData.pbg_percentage}
+                                    onChange={(e) => setProjectData({...projectData, pbg_percentage: parseFloat(e.target.value) || 0})}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="5"
+                                />
+                            </div>
+                        </div>
+
+                        {/* GST Configuration */}
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+                            <h4 className="text-lg font-semibold text-gray-900 mb-4">🧾 GST Configuration</h4>
+                            <p className="text-sm text-gray-600 mb-4">
+                                Select GST type for this project. This will determine how GST is calculated on all invoices.
+                            </p>
+                            
+                            <div className="space-y-4">
+                                {/* GST Type Selection */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">ABG % *</label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        max="100"
-                                        step="0.1"
-                                        required
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        value={projectData.abg_percentage}
-                                        onChange={(e) => setProjectData({...projectData, abg_percentage: parseFloat(e.target.value) || 0})}
-                                        placeholder="0.0"
-                                    />
-                                    <div className="text-xs text-gray-500 mt-1">Advance Bank Guarantee</div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-3">GST Type</label>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div 
+                                            className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                                                projectData.gst_type === 'CGST_SGST' 
+                                                    ? 'border-blue-500 bg-blue-50' 
+                                                    : 'border-gray-200 hover:border-gray-300'
+                                            }`}
+                                            onClick={() => setProjectData({...projectData, gst_type: 'CGST_SGST'})}
+                                        >
+                                            <div className="flex items-center space-x-3">
+                                                <input
+                                                    type="radio"
+                                                    name="gst_type"
+                                                    value="CGST_SGST"
+                                                    checked={projectData.gst_type === 'CGST_SGST'}
+                                                    onChange={() => setProjectData({...projectData, gst_type: 'CGST_SGST'})}
+                                                    className="h-4 w-4 text-blue-600"
+                                                />
+                                                <div>
+                                                    <div className="font-medium text-gray-900">CGST + SGST</div>
+                                                    <div className="text-sm text-gray-500">For intra-state transactions</div>
+                                                    <div className="text-xs text-blue-600 mt-1">Example: 9% CGST + 9% SGST = 18%</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div 
+                                            className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                                                projectData.gst_type === 'IGST' 
+                                                    ? 'border-blue-500 bg-blue-50' 
+                                                    : 'border-gray-200 hover:border-gray-300'
+                                            }`}
+                                            onClick={() => setProjectData({...projectData, gst_type: 'IGST'})}
+                                        >
+                                            <div className="flex items-center space-x-3">
+                                                <input
+                                                    type="radio"
+                                                    name="gst_type"
+                                                    value="IGST"
+                                                    checked={projectData.gst_type === 'IGST'}
+                                                    onChange={() => setProjectData({...projectData, gst_type: 'IGST'})}
+                                                    className="h-4 w-4 text-blue-600"
+                                                />
+                                                <div>
+                                                    <div className="font-medium text-gray-900">IGST</div>
+                                                    <div className="text-sm text-gray-500">For inter-state transactions</div>
+                                                    <div className="text-xs text-blue-600 mt-1">Example: 18% IGST</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                
-                                {/* RA Bill Percentage */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">RA Bill % *</label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        max="100"
-                                        step="0.1"
-                                        required
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        value={projectData.ra_percentage}
-                                        onChange={(e) => setProjectData({...projectData, ra_percentage: parseFloat(e.target.value) || 0})}
-                                        placeholder="0.0"
-                                    />
-                                    <div className="text-xs text-gray-500 mt-1">RA Bill with Taxes</div>
-                                </div>
-                                
-                                {/* Erection Percentage */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Erection % *</label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        max="100"
-                                        step="0.1"
-                                        required
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        value={projectData.erection_percentage}
-                                        onChange={(e) => setProjectData({...projectData, erection_percentage: parseFloat(e.target.value) || 0})}
-                                        placeholder="0.0"
-                                    />
-                                    <div className="text-xs text-gray-500 mt-1">Erection Work</div>
-                                </div>
-                                
-                                {/* PBG Percentage */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">PBG % *</label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        max="100"
-                                        step="0.1"
-                                        required
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        value={projectData.pbg_percentage}
-                                        onChange={(e) => setProjectData({...projectData, pbg_percentage: parseFloat(e.target.value) || 0})}
-                                        placeholder="0.0"
-                                    />
-                                    <div className="text-xs text-gray-500 mt-1">Performance Bank Guarantee</div>
+
+                                {/* GST Notice */}
+                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                    <div className="flex items-start space-x-2">
+                                        <svg className="h-5 w-5 text-blue-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <div className="text-sm text-blue-800">
+                                            <p className="font-medium">GST Approval Process:</p>
+                                            <ul className="mt-1 space-y-1 text-xs">
+                                                <li>• Executive creates project with GST configuration</li>
+                                                <li>• Manager/SuperAdmin reviews and approves GST percentages</li>
+                                                <li>• Once approved, GST settings are locked for all invoices</li>
+                                            </ul>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
