@@ -2494,7 +2494,7 @@ def _calculate_gst_by_rate(invoices):
     
     return gst_rates
 
-def _calculate_monthly_trends(self, invoices):
+def _calculate_monthly_trends(invoices):
     """Helper function to calculate monthly trends"""
     from collections import defaultdict
     import datetime
