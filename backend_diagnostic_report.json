@@ -1,0 +1,696 @@
+{
+  "timestamp": "2025-09-28T08:19:59.210421",
+  "base_url": "https://activus-manager.preview.emergentagent.com",
+  "authentication_status": "SUCCESS",
+  "diagnostics": {
+    "dashboard_stats": {
+      "dashboard/stats": {
+        "timestamp": "2025-09-28T08:19:55.902600",
+        "endpoint": "dashboard/stats",
+        "status": "FIELD_MISMATCH",
+        "details": "Field issues found. Missing: ['advance_received', 'pending_payment'], Extra: ['total_project_value', 'pending_collections', 'collection_efficiency'], Type issues: []",
+        "expected_vs_actual": {
+          "expected_fields": [
+            "total_projects",
+            "total_invoices",
+            "total_invoiced_value",
+            "advance_received",
+            "pending_payment"
+          ],
+          "actual_fields": [
+            "total_projects",
+            "total_project_value",
+            "total_invoices",
+            "total_invoiced_value",
+            "pending_collections",
+            "collection_efficiency"
+          ],
+          "missing_fields": [
+            "advance_received",
+            "pending_payment"
+          ],
+          "extra_fields": [
+            "total_project_value",
+            "pending_collections",
+            "collection_efficiency"
+          ],
+          "field_match_percentage": 60.0
+        }
+      }
+    },
+    "advanced_endpoints": {
+      "GET item-master": {
+        "timestamp": "2025-09-28T08:19:55.921322",
+        "endpoint": "GET item-master",
+        "status": "NOT_FOUND_404",
+        "details": "List all master items - Endpoint not implemented or misconfigured",
+        "expected_vs_actual": {
+          "expected_status_range": "200-299 or 400-422 (for test data)",
+          "actual_status": 404,
+          "response_time_ms": 18.39,
+          "content_type": "application/json"
+        }
+      },
+      "POST item-master": {
+        "timestamp": "2025-09-28T08:19:55.979174",
+        "endpoint": "POST item-master",
+        "status": "NOT_FOUND_404",
+        "details": "Create master item - Endpoint not implemented or misconfigured",
+        "expected_vs_actual": {
+          "expected_status_range": "200-299 or 400-422 (for test data)",
+          "actual_status": 404,
+          "response_time_ms": 57.47,
+          "content_type": "application/json"
+        }
+      },
+      "GET item-master/search": {
+        "timestamp": "2025-09-28T08:19:56.176957",
+        "endpoint": "GET item-master/search",
+        "status": "NOT_FOUND_404",
+        "details": "Search master items - Endpoint not implemented or misconfigured",
+        "expected_vs_actual": {
+          "expected_status_range": "200-299 or 400-422 (for test data)",
+          "actual_status": 404,
+          "response_time_ms": 197.41,
+          "content_type": "application/json"
+        }
+      },
+      "POST item-master/auto-populate": {
+        "timestamp": "2025-09-28T08:19:56.192317",
+        "endpoint": "POST item-master/auto-populate",
+        "status": "NOT_FOUND_404",
+        "details": "Auto-populate from BOQ - Endpoint not implemented or misconfigured",
+        "expected_vs_actual": {
+          "expected_status_range": "200-299 or 400-422 (for test data)",
+          "actual_status": 404,
+          "response_time_ms": 15.07,
+          "content_type": "application/json"
+        }
+      },
+      "GET search": {
+        "timestamp": "2025-09-28T08:19:56.209210",
+        "endpoint": "GET search",
+        "status": "NOT_FOUND_404",
+        "details": "Global search - Endpoint not implemented or misconfigured",
+        "expected_vs_actual": {
+          "expected_status_range": "200-299 or 400-422 (for test data)",
+          "actual_status": 404,
+          "response_time_ms": 16.58,
+          "content_type": "application/json"
+        }
+      },
+      "GET search?query=test": {
+        "timestamp": "2025-09-28T08:19:56.266739",
+        "endpoint": "GET search?query=test",
+        "status": "NOT_FOUND_404",
+        "details": "Global search with query - Endpoint not implemented or misconfigured",
+        "expected_vs_actual": {
+          "expected_status_range": "200-299 or 400-422 (for test data)",
+          "actual_status": 404,
+          "response_time_ms": 57.17,
+          "content_type": "application/json"
+        }
+      },
+      "GET filters/projects": {
+        "timestamp": "2025-09-28T08:19:56.282949",
+        "endpoint": "GET filters/projects",
+        "status": "NOT_FOUND_404",
+        "details": "Filter projects - Endpoint not implemented or misconfigured",
+        "expected_vs_actual": {
+          "expected_status_range": "200-299 or 400-422 (for test data)",
+          "actual_status": 404,
+          "response_time_ms": 15.9,
+          "content_type": "application/json"
+        }
+      },
+      "GET filters/invoices": {
+        "timestamp": "2025-09-28T08:19:56.301489",
+        "endpoint": "GET filters/invoices",
+        "status": "NOT_FOUND_404",
+        "details": "Filter invoices - Endpoint not implemented or misconfigured",
+        "expected_vs_actual": {
+          "expected_status_range": "200-299 or 400-422 (for test data)",
+          "actual_status": 404,
+          "response_time_ms": 18.27,
+          "content_type": "application/json"
+        }
+      },
+      "GET reports/gst-summary": {
+        "timestamp": "2025-09-28T08:19:56.355317",
+        "endpoint": "GET reports/gst-summary",
+        "status": "NOT_FOUND_404",
+        "details": "GST summary report - Endpoint not implemented or misconfigured",
+        "expected_vs_actual": {
+          "expected_status_range": "200-299 or 400-422 (for test data)",
+          "actual_status": 404,
+          "response_time_ms": 53.48,
+          "content_type": "application/json"
+        }
+      },
+      "GET reports/insights": {
+        "timestamp": "2025-09-28T08:19:56.372072",
+        "endpoint": "GET reports/insights",
+        "status": "NOT_FOUND_404",
+        "details": "Business insights report - Endpoint not implemented or misconfigured",
+        "expected_vs_actual": {
+          "expected_status_range": "200-299 or 400-422 (for test data)",
+          "actual_status": 404,
+          "response_time_ms": 16.45,
+          "content_type": "application/json"
+        }
+      },
+      "GET reports/client-summary/test-id": {
+        "timestamp": "2025-09-28T08:19:56.430623",
+        "endpoint": "GET reports/client-summary/test-id",
+        "status": "NOT_FOUND_404",
+        "details": "Client summary report - Endpoint not implemented or misconfigured",
+        "expected_vs_actual": {
+          "expected_status_range": "200-299 or 400-422 (for test data)",
+          "actual_status": 404,
+          "response_time_ms": 58.17,
+          "content_type": "application/json"
+        }
+      },
+      "GET pdf-processor/extractions": {
+        "timestamp": "2025-09-28T08:19:56.444967",
+        "endpoint": "GET pdf-processor/extractions",
+        "status": "NOT_FOUND_404",
+        "details": "List PDF extractions - Endpoint not implemented or misconfigured",
+        "expected_vs_actual": {
+          "expected_status_range": "200-299 or 400-422 (for test data)",
+          "actual_status": 404,
+          "response_time_ms": 14.03,
+          "content_type": "application/json"
+        }
+      },
+      "GET pdf-processor/extractions/test-id": {
+        "timestamp": "2025-09-28T08:19:56.463183",
+        "endpoint": "GET pdf-processor/extractions/test-id",
+        "status": "NOT_FOUND_404",
+        "details": "Get specific extraction - Endpoint not implemented or misconfigured",
+        "expected_vs_actual": {
+          "expected_status_range": "200-299 or 400-422 (for test data)",
+          "actual_status": 404,
+          "response_time_ms": 17.95,
+          "content_type": "application/json"
+        }
+      },
+      "POST pdf-processor/convert-to-project": {
+        "timestamp": "2025-09-28T08:19:56.522086",
+        "endpoint": "POST pdf-processor/convert-to-project",
+        "status": "NOT_FOUND_404",
+        "details": "Convert PDF to project - Endpoint not implemented or misconfigured",
+        "expected_vs_actual": {
+          "expected_status_range": "200-299 or 400-422 (for test data)",
+          "actual_status": 404,
+          "response_time_ms": 58.47,
+          "content_type": "application/json"
+        }
+      }
+    },
+    "authentication_inconsistencies": {
+      "auth_patterns": {
+        "timestamp": "2025-09-28T08:19:57.038214",
+        "endpoint": "auth_patterns",
+        "status": "CONSISTENT",
+        "details": "Auth patterns: 401 responses: 0, 403 responses: 5, No auth required: 0",
+        "expected_vs_actual": {
+          "unauthorized_responses": {
+            "dashboard/stats": {
+              "status_code": 403,
+              "description": "Dashboard stats",
+              "method": "GET"
+            },
+            "projects": {
+              "status_code": 403,
+              "description": "Create project",
+              "method": "POST"
+            },
+            "invoices": {
+              "status_code": 403,
+              "description": "Create invoice",
+              "method": "POST"
+            },
+            "clients": {
+              "status_code": 403,
+              "description": "Clients list",
+              "method": "GET"
+            },
+            "activity-logs": {
+              "status_code": 403,
+              "description": "Activity logs",
+              "method": "GET"
+            },
+            "item-master": {
+              "status_code": 404,
+              "description": "Item master",
+              "method": "GET"
+            },
+            "reports/gst-summary": {
+              "status_code": 404,
+              "description": "GST reports",
+              "method": "GET"
+            }
+          },
+          "invalid_token_responses": {
+            "dashboard/stats": 401,
+            "projects": 401,
+            "invoices": 401
+          },
+          "inconsistencies": [],
+          "auth_401_endpoints": [],
+          "auth_403_endpoints": [
+            "dashboard/stats",
+            "projects",
+            "invoices",
+            "clients",
+            "activity-logs"
+          ],
+          "no_auth_required": []
+        }
+      }
+    },
+    "all_endpoints": {
+      "auth/login": {
+        "timestamp": "2025-09-28T08:19:57.056107",
+        "endpoint": "auth/login",
+        "status": "ERROR",
+        "details": "HTTP 405: Method Not Allowed",
+        "expected_vs_actual": {
+          "endpoint_pattern": "auth/login",
+          "test_endpoint": "auth/login",
+          "status_code": 405,
+          "response_time_ms": 17.52
+        }
+      },
+      "dashboard/stats": {
+        "timestamp": "2025-09-28T08:19:57.080389",
+        "endpoint": "dashboard/stats",
+        "status": "WORKING",
+        "details": "Endpoint available and responding",
+        "expected_vs_actual": {
+          "endpoint_pattern": "dashboard/stats",
+          "test_endpoint": "dashboard/stats",
+          "status_code": 200,
+          "response_time_ms": 23.91
+        }
+      },
+      "projects": {
+        "timestamp": "2025-09-28T08:19:57.105639",
+        "endpoint": "projects",
+        "status": "WORKING",
+        "details": "Endpoint available and responding",
+        "expected_vs_actual": {
+          "endpoint_pattern": "projects",
+          "test_endpoint": "projects",
+          "status_code": 200,
+          "response_time_ms": 24.18
+        }
+      },
+      "projects/{id}": {
+        "timestamp": "2025-09-28T08:19:57.122828",
+        "endpoint": "projects/{id}",
+        "status": "MISSING_404",
+        "details": "Endpoint not found - may not be implemented",
+        "expected_vs_actual": {
+          "endpoint_pattern": "projects/{id}",
+          "test_endpoint": "projects/test-id-12345",
+          "status_code": 404,
+          "response_time_ms": 16.76
+        }
+      },
+      "invoices": {
+        "timestamp": "2025-09-28T08:19:57.159687",
+        "endpoint": "invoices",
+        "status": "WORKING",
+        "details": "Endpoint available and responding",
+        "expected_vs_actual": {
+          "endpoint_pattern": "invoices",
+          "test_endpoint": "invoices",
+          "status_code": 200,
+          "response_time_ms": 36.38
+        }
+      },
+      "invoices/{id}": {
+        "timestamp": "2025-09-28T08:19:57.174726",
+        "endpoint": "invoices/{id}",
+        "status": "MISSING_404",
+        "details": "Endpoint not found - may not be implemented",
+        "expected_vs_actual": {
+          "endpoint_pattern": "invoices/{id}",
+          "test_endpoint": "invoices/test-id-12345",
+          "status_code": 404,
+          "response_time_ms": 14.72
+        }
+      },
+      "clients": {
+        "timestamp": "2025-09-28T08:19:57.193032",
+        "endpoint": "clients",
+        "status": "WORKING",
+        "details": "Endpoint available and responding",
+        "expected_vs_actual": {
+          "endpoint_pattern": "clients",
+          "test_endpoint": "clients",
+          "status_code": 200,
+          "response_time_ms": 17.93
+        }
+      },
+      "clients/{id}": {
+        "timestamp": "2025-09-28T08:19:57.211382",
+        "endpoint": "clients/{id}",
+        "status": "MISSING_404",
+        "details": "Endpoint not found - may not be implemented",
+        "expected_vs_actual": {
+          "endpoint_pattern": "clients/{id}",
+          "test_endpoint": "clients/test-id-12345",
+          "status_code": 404,
+          "response_time_ms": 18.03
+        }
+      },
+      "upload-boq": {
+        "timestamp": "2025-09-28T08:19:57.377640",
+        "endpoint": "upload-boq",
+        "status": "ERROR",
+        "details": "HTTP 405: Method Not Allowed",
+        "expected_vs_actual": {
+          "endpoint_pattern": "upload-boq",
+          "test_endpoint": "upload-boq",
+          "status_code": 405,
+          "response_time_ms": 165.85
+        }
+      },
+      "activity-logs": {
+        "timestamp": "2025-09-28T08:19:57.409021",
+        "endpoint": "activity-logs",
+        "status": "WORKING",
+        "details": "Endpoint available and responding",
+        "expected_vs_actual": {
+          "endpoint_pattern": "activity-logs",
+          "test_endpoint": "activity-logs",
+          "status_code": 200,
+          "response_time_ms": 30.56
+        }
+      },
+      "item-master": {
+        "timestamp": "2025-09-28T08:19:57.425982",
+        "endpoint": "item-master",
+        "status": "MISSING_404",
+        "details": "Endpoint not found - may not be implemented",
+        "expected_vs_actual": {
+          "endpoint_pattern": "item-master",
+          "test_endpoint": "item-master",
+          "status_code": 404,
+          "response_time_ms": 16.59
+        }
+      },
+      "search": {
+        "timestamp": "2025-09-28T08:19:57.480721",
+        "endpoint": "search",
+        "status": "MISSING_404",
+        "details": "Endpoint not found - may not be implemented",
+        "expected_vs_actual": {
+          "endpoint_pattern": "search",
+          "test_endpoint": "search",
+          "status_code": 404,
+          "response_time_ms": 54.38
+        }
+      },
+      "filters/projects": {
+        "timestamp": "2025-09-28T08:19:57.495802",
+        "endpoint": "filters/projects",
+        "status": "MISSING_404",
+        "details": "Endpoint not found - may not be implemented",
+        "expected_vs_actual": {
+          "endpoint_pattern": "filters/projects",
+          "test_endpoint": "filters/projects",
+          "status_code": 404,
+          "response_time_ms": 14.78
+        }
+      },
+      "filters/invoices": {
+        "timestamp": "2025-09-28T08:19:57.511907",
+        "endpoint": "filters/invoices",
+        "status": "MISSING_404",
+        "details": "Endpoint not found - may not be implemented",
+        "expected_vs_actual": {
+          "endpoint_pattern": "filters/invoices",
+          "test_endpoint": "filters/invoices",
+          "status_code": 404,
+          "response_time_ms": 15.82
+        }
+      },
+      "reports/gst-summary": {
+        "timestamp": "2025-09-28T08:19:57.569819",
+        "endpoint": "reports/gst-summary",
+        "status": "MISSING_404",
+        "details": "Endpoint not found - may not be implemented",
+        "expected_vs_actual": {
+          "endpoint_pattern": "reports/gst-summary",
+          "test_endpoint": "reports/gst-summary",
+          "status_code": 404,
+          "response_time_ms": 57.61
+        }
+      },
+      "reports/insights": {
+        "timestamp": "2025-09-28T08:19:57.588469",
+        "endpoint": "reports/insights",
+        "status": "MISSING_404",
+        "details": "Endpoint not found - may not be implemented",
+        "expected_vs_actual": {
+          "endpoint_pattern": "reports/insights",
+          "test_endpoint": "reports/insights",
+          "status_code": 404,
+          "response_time_ms": 18.36
+        }
+      },
+      "pdf-processor/extractions": {
+        "timestamp": "2025-09-28T08:19:57.606076",
+        "endpoint": "pdf-processor/extractions",
+        "status": "MISSING_404",
+        "details": "Endpoint not found - may not be implemented",
+        "expected_vs_actual": {
+          "endpoint_pattern": "pdf-processor/extractions",
+          "test_endpoint": "pdf-processor/extractions",
+          "status_code": 404,
+          "response_time_ms": 17.29
+        }
+      },
+      "admin/workflows": {
+        "timestamp": "2025-09-28T08:19:57.665442",
+        "endpoint": "admin/workflows",
+        "status": "MISSING_404",
+        "details": "Endpoint not found - may not be implemented",
+        "expected_vs_actual": {
+          "endpoint_pattern": "admin/workflows",
+          "test_endpoint": "admin/workflows",
+          "status_code": 404,
+          "response_time_ms": 59.04
+        }
+      },
+      "admin/system-config": {
+        "timestamp": "2025-09-28T08:19:57.683890",
+        "endpoint": "admin/system-config",
+        "status": "MISSING_404",
+        "details": "Endpoint not found - may not be implemented",
+        "expected_vs_actual": {
+          "endpoint_pattern": "admin/system-config",
+          "test_endpoint": "admin/system-config",
+          "status_code": 404,
+          "response_time_ms": 18.06
+        }
+      },
+      "admin/system-health": {
+        "timestamp": "2025-09-28T08:19:57.696759",
+        "endpoint": "admin/system-health",
+        "status": "MISSING_404",
+        "details": "Endpoint not found - may not be implemented",
+        "expected_vs_actual": {
+          "endpoint_pattern": "admin/system-health",
+          "test_endpoint": "admin/system-health",
+          "status_code": 404,
+          "response_time_ms": 12.56
+        }
+      },
+      "admin/clear-database": {
+        "timestamp": "2025-09-28T08:19:57.710222",
+        "endpoint": "admin/clear-database",
+        "status": "MISSING_404",
+        "details": "Endpoint not found - may not be implemented",
+        "expected_vs_actual": {
+          "endpoint_pattern": "admin/clear-database",
+          "test_endpoint": "admin/clear-database",
+          "status_code": 404,
+          "response_time_ms": 13.17
+        }
+      },
+      "admin/upload-logo": {
+        "timestamp": "2025-09-28T08:19:58.175272",
+        "endpoint": "admin/upload-logo",
+        "status": "ERROR",
+        "details": "HTTP 405: Method Not Allowed",
+        "expected_vs_actual": {
+          "endpoint_pattern": "admin/upload-logo",
+          "test_endpoint": "admin/upload-logo",
+          "status_code": 405,
+          "response_time_ms": 464.67
+        }
+      },
+      "company-profiles": {
+        "timestamp": "2025-09-28T08:19:58.189600",
+        "endpoint": "company-profiles",
+        "status": "MISSING_404",
+        "details": "Endpoint not found - may not be implemented",
+        "expected_vs_actual": {
+          "endpoint_pattern": "company-profiles",
+          "test_endpoint": "company-profiles",
+          "status_code": 404,
+          "response_time_ms": 14.0
+        }
+      },
+      "projects/enhanced": {
+        "timestamp": "2025-09-28T08:19:58.208468",
+        "endpoint": "projects/enhanced",
+        "status": "MISSING_404",
+        "details": "Endpoint not found - may not be implemented",
+        "expected_vs_actual": {
+          "endpoint_pattern": "projects/enhanced",
+          "test_endpoint": "projects/enhanced",
+          "status_code": 404,
+          "response_time_ms": 18.58
+        }
+      },
+      "projects/{id}/ra-tracking": {
+        "timestamp": "2025-09-28T08:19:58.267625",
+        "endpoint": "projects/{id}/ra-tracking",
+        "status": "MISSING_404",
+        "details": "Endpoint not found - may not be implemented",
+        "expected_vs_actual": {
+          "endpoint_pattern": "projects/{id}/ra-tracking",
+          "test_endpoint": "projects/test-id-12345/ra-tracking",
+          "status_code": 404,
+          "response_time_ms": 58.79
+        }
+      },
+      "projects/{id}/gst-approval": {
+        "timestamp": "2025-09-28T08:19:58.323400",
+        "endpoint": "projects/{id}/gst-approval",
+        "status": "ERROR",
+        "details": "HTTP 405: Method Not Allowed",
+        "expected_vs_actual": {
+          "endpoint_pattern": "projects/{id}/gst-approval",
+          "test_endpoint": "projects/test-id-12345/gst-approval",
+          "status_code": 405,
+          "response_time_ms": 55.44
+        }
+      },
+      "projects/pending-gst-approval": {
+        "timestamp": "2025-09-28T08:19:58.679762",
+        "endpoint": "projects/pending-gst-approval",
+        "status": "WORKING",
+        "details": "Endpoint available and responding",
+        "expected_vs_actual": {
+          "endpoint_pattern": "projects/pending-gst-approval",
+          "test_endpoint": "projects/pending-gst-approval",
+          "status_code": 200,
+          "response_time_ms": 355.87
+        }
+      },
+      "invoices/enhanced": {
+        "timestamp": "2025-09-28T08:19:58.696509",
+        "endpoint": "invoices/enhanced",
+        "status": "MISSING_404",
+        "details": "Endpoint not found - may not be implemented",
+        "expected_vs_actual": {
+          "endpoint_pattern": "invoices/enhanced",
+          "test_endpoint": "invoices/enhanced",
+          "status_code": 404,
+          "response_time_ms": 16.44
+        }
+      },
+      "invoices/validate-quantities": {
+        "timestamp": "2025-09-28T08:19:59.177722",
+        "endpoint": "invoices/validate-quantities",
+        "status": "MISSING_404",
+        "details": "Endpoint not found - may not be implemented",
+        "expected_vs_actual": {
+          "endpoint_pattern": "invoices/validate-quantities",
+          "test_endpoint": "invoices/validate-quantities",
+          "status_code": 404,
+          "response_time_ms": 480.83
+        }
+      },
+      "projects/{id}/metadata-template": {
+        "timestamp": "2025-09-28T08:19:59.192302",
+        "endpoint": "projects/{id}/metadata-template",
+        "status": "MISSING_404",
+        "details": "Endpoint not found - may not be implemented",
+        "expected_vs_actual": {
+          "endpoint_pattern": "projects/{id}/metadata-template",
+          "test_endpoint": "projects/test-id-12345/metadata-template",
+          "status_code": 404,
+          "response_time_ms": 14.25
+        }
+      },
+      "projects/validate-metadata": {
+        "timestamp": "2025-09-28T08:19:59.210331",
+        "endpoint": "projects/validate-metadata",
+        "status": "MISSING_404",
+        "details": "Endpoint not found - may not be implemented",
+        "expected_vs_actual": {
+          "endpoint_pattern": "projects/validate-metadata",
+          "test_endpoint": "projects/validate-metadata",
+          "status_code": 404,
+          "response_time_ms": 17.7
+        }
+      },
+      "SUMMARY": {
+        "timestamp": "2025-09-28T08:19:59.210384",
+        "endpoint": "SUMMARY",
+        "status": "ANALYSIS_COMPLETE",
+        "details": "Total: 31, Working: 6, Missing: 21, Failing: 4",
+        "expected_vs_actual": {
+          "total_endpoints_tested": 31,
+          "working_endpoints": [
+            "dashboard/stats",
+            "projects",
+            "invoices",
+            "clients",
+            "activity-logs",
+            "projects/pending-gst-approval"
+          ],
+          "missing_endpoints": [
+            "projects/{id}",
+            "invoices/{id}",
+            "clients/{id}",
+            "item-master",
+            "search",
+            "filters/projects",
+            "filters/invoices",
+            "reports/gst-summary",
+            "reports/insights",
+            "pdf-processor/extractions",
+            "admin/workflows",
+            "admin/system-config",
+            "admin/system-health",
+            "admin/clear-database",
+            "company-profiles",
+            "projects/enhanced",
+            "projects/{id}/ra-tracking",
+            "invoices/enhanced",
+            "invoices/validate-quantities",
+            "projects/{id}/metadata-template",
+            "projects/validate-metadata"
+          ],
+          "failing_endpoints": [
+            "auth/login",
+            "upload-boq",
+            "admin/upload-logo",
+            "projects/{id}/gst-approval"
+          ],
+          "success_rate_percentage": 19.35483870967742
+        }
+      }
+    },
+    "summary": {}
+  }
+}
