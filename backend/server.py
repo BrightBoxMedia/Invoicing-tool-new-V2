@@ -28,7 +28,12 @@ import pydantic
 from bson import ObjectId
 
 # Fix ObjectId serialization for JSON responses
-pydantic.json.ENCODERS_BY_TYPE[ObjectId] = str
+# Note: In newer Pydantic versions, this is handled differently
+try:
+    pydantic.json.ENCODERS_BY_TYPE[ObjectId] = str
+except AttributeError:
+    # For newer Pydantic versions, we'll handle ObjectId serialization in the models
+    pass
 
 # Database
 import motor.motor_asyncio
