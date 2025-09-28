@@ -253,7 +253,7 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
                     setError('Metadata validation failed. Please check the errors and correct them.');
                 } else {
                     setError('');
-                    setStep(5); // Move to final review
+                    setStep(4); // Move to final review
                 }
             } else {
                 const errorData = await response.json();
