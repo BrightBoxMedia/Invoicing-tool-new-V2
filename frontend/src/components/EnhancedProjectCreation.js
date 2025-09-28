@@ -774,182 +774,123 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
 
 
 
-                {/* Step 3: Validation Results & Final Review */}
+                {/* Step 3: Review BOQ & Create Project */}
                 {step === 3 && (
                     <div className="space-y-6">
-                        <h3 className="text-lg font-semibold text-gray-900">Validation Results & Review</h3>
+                        <h3 className="text-lg font-semibold text-gray-900">📋 Review BOQ Items & Create Project</h3>
 
-                        {validationResult && (
-                            <div className={`border rounded-lg p-4 ${validationResult.valid ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
-                                <div className="flex items-center">
-                                    <div className={`w-5 h-5 rounded-full flex items-center justify-center mr-3 ${
-                                        validationResult.valid ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-                                    }`}>
-                                        {validationResult.valid ? '✓' : '✗'}
-                                    </div>
-                                    <h4 className={`font-medium ${validationResult.valid ? 'text-green-800' : 'text-red-800'}`}>
-                                        {validationResult.valid ? 'Validation Passed' : 'Validation Failed'}
-                                    </h4>
-                                </div>
-                                
-                                {validationResult.errors && validationResult.errors.length > 0 && (
-                                    <div className="mt-3">
-                                        <p className="text-red-800 font-medium mb-2">Errors found:</p>
-                                        <ul className="list-disc list-inside space-y-1">
-                                            {validationResult.errors.map((error, index) => (
-                                                <li key={index} className="text-red-700 text-sm">{error}</li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-
-                                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                                    <div>
-                                        <span className="font-medium text-gray-700">BOQ Total:</span>
-                                        <p className="text-gray-900">₹{validationResult.boq_total?.toLocaleString('en-IN', {minimumFractionDigits: 2})}</p>
-                                    </div>
-                                    <div>
-                                        <span className="font-medium text-gray-700">Metadata Total:</span>
-                                        <p className="text-gray-900">₹{validationResult.metadata_total?.toLocaleString('en-IN', {minimumFractionDigits: 2})}</p>
-                                    </div>
-                                    <div>
-                                        <span className="font-medium text-gray-700">Variance:</span>
-                                        <p className="text-gray-900">₹{validationResult.variance?.toLocaleString('en-IN', {minimumFractionDigits: 2})}</p>
+                        {/* BOQ Items Display */}
+                        {boqItems && boqItems.length > 0 ? (
+                            <>
+                                {/* BOQ Summary */}
+                                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                                    <h4 className="font-medium text-green-900 mb-3">✅ BOQ Successfully Parsed</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div className="text-center">
+                                            <div className="text-2xl font-bold text-green-800">{boqItems.length}</div>
+                                            <div className="text-sm text-green-600">Total Items</div>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="text-2xl font-bold text-blue-600">
+                                                ₹{boqItems.reduce((sum, item) => sum + (item.amount || 0), 0).toLocaleString('en-IN')}
+                                            </div>
+                                            <div className="text-sm text-gray-600">Total Amount</div>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="text-2xl font-bold text-orange-600">
+                                                {boqItems.reduce((sum, item) => sum + (item.quantity || 0), 0).toFixed(2)}
+                                            </div>
+                                            <div className="text-sm text-gray-600">Total Quantity</div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        )}
-                        
-                        {/* ABG Release Mapping Tracker / Cash Flow Summary Table */}
-                        {projectData.project_metadata.length > 0 && (
-                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
-                                <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 ABG Release Mapping Tracker / Cash Flow (Project-wise)</h3>
-                                <p className="text-sm text-gray-600 mb-4">Spread - Cash Receivables (Including taxes)</p>
-                                
-                                <div className="overflow-x-auto">
-                                    <table className="min-w-full border-2 border-gray-300">
-                                        <thead className="bg-blue-600 text-white">
-                                            <tr>
-                                                <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">Particulars</th>
-                                                <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">Type</th>
-                                                <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">Reference No</th>
-                                                <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">Dated</th>
-                                                <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">Basic</th>
-                                                <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">GST (18%)</th>
-                                                <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">PO/Inv Value</th>
-                                                <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">ABG</th>
-                                                <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">RA Bill</th>
-                                                <th className="px-3 py-3 text-left text-xs font-bold uppercase border-r border-white">Erection</th>
-                                                <th className="px-3 py-3 text-left text-xs font-bold uppercase">PBG</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-200">
-                                            {/* Percentage Header Row */}
-                                            <tr className="bg-yellow-100 font-bold text-center">
-                                                <td className="px-3 py-2 border-r font-bold">%</td>
-                                                <td className="px-3 py-2 border-r">-</td>
-                                                <td className="px-3 py-2 border-r">-</td>
-                                                <td className="px-3 py-2 border-r">-</td>
-                                                <td className="px-3 py-2 border-r text-blue-800">100%</td>
-                                                <td className="px-3 py-2 border-r text-blue-800">18%</td>
-                                                <td className="px-3 py-2 border-r text-blue-800">118%</td>
-                                                <td className="px-3 py-2 border-r text-green-800">{(projectData.abg_percentage || 30)}%</td>
-                                                <td className="px-3 py-2 border-r text-green-800">{(projectData.ra_bill_percentage || 45)}%</td>
-                                                <td className="px-3 py-2 border-r text-green-800">{(projectData.erection_percentage || 20)}%</td>
-                                                <td className="px-3 py-2 text-green-800">{(projectData.pbg_percentage || 5)}%</td>
-                                            </tr>
-                                            
-                                            {/* Data Rows */}
-                                            {projectData.project_metadata.map((row, index) => {
-                                                const basic = parseFloat(row.po_inv_value || row.basic || 0);
-                                                const gst = basic * 0.18;
-                                                const poValue = basic + gst;
-                                                const abgPerc = parseFloat(row.abg_percentage || projectData.abg_percentage || 30);
-                                                const raPerc = parseFloat(row.ra_bill_with_taxes_percentage || projectData.ra_bill_percentage || 45);
-                                                const erectionPerc = parseFloat(row.erection_percentage || projectData.erection_percentage || 20);
-                                                const pbgPerc = parseFloat(row.pbg_percentage || projectData.pbg_percentage || 5);
-                                                
-                                                return (
-                                                    <tr key={index} className="hover:bg-gray-50">
-                                                        <td className="px-3 py-3 border-r font-bold text-gray-900">Overall</td>
-                                                        <td className="px-3 py-3 border-r">{row.type || 'Supply'}</td>
-                                                        <td className="px-3 py-3 border-r font-medium">{row.purchase_order_number || 'PO-PENDING'}</td>
-                                                        <td className="px-3 py-3 border-r">{row.dated || new Date().toISOString().split('T')[0]}</td>
-                                                        <td className="px-3 py-3 border-r font-bold text-blue-900">₹{basic.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                                                        <td className="px-3 py-3 border-r font-bold text-blue-900">₹{gst.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                                                        <td className="px-3 py-3 border-r font-bold text-blue-900">₹{poValue.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                                                        <td className="px-3 py-3 border-r font-bold text-green-800">₹{((poValue * abgPerc) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                                                        <td className="px-3 py-3 border-r font-bold text-green-800">₹{((poValue * raPerc) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                                                        <td className="px-3 py-3 border-r font-bold text-green-800">₹{((poValue * erectionPerc) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                                                        <td className="px-3 py-3 font-bold text-green-800">₹{((poValue * pbgPerc) / 100).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+
+                                {/* BOQ Items Table */}
+                                <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                                    <h4 className="font-medium text-gray-900 p-4 bg-gray-50 border-b">BOQ Items Preview</h4>
+                                    <div className="overflow-x-auto max-h-96">
+                                        <table className="min-w-full divide-y divide-gray-200">
+                                            <thead className="bg-gray-50">
+                                                <tr>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sr. No</th>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                                                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Unit</th>
+                                                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Quantity</th>
+                                                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Rate</th>
+                                                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="bg-white divide-y divide-gray-200">
+                                                {boqItems.slice(0, 10).map((item, index) => (
+                                                    <tr key={item.id || index} className="hover:bg-gray-50">
+                                                        <td className="px-4 py-3 text-sm text-gray-900">{item.sr_no || index + 1}</td>
+                                                        <td className="px-4 py-3 text-sm text-gray-900 max-w-xs">
+                                                            {item.description || 'Unknown Item'}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-sm text-gray-600 text-center">
+                                                            {item.unit || 'Nos'}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-sm text-gray-900 text-center font-medium">
+                                                            {item.quantity || 0}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-sm text-gray-900 text-right">
+                                                            ₹{(item.rate || 0).toFixed(2)}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-sm text-gray-900 text-right font-medium">
+                                                            ₹{(item.amount || 0).toFixed(2)}
+                                                        </td>
                                                     </tr>
-                                                );
-                                            })}
-                                            
-                                            {/* Total Row */}
-                                            <tr className="bg-gray-100 font-bold border-t-2 border-gray-400">
-                                                <td className="px-3 py-3 border-r text-gray-900">TOTAL</td>
-                                                <td className="px-3 py-3 border-r">-</td>
-                                                <td className="px-3 py-3 border-r">-</td>
-                                                <td className="px-3 py-3 border-r">-</td>
-                                                <td className="px-3 py-3 border-r text-blue-900">
-                                                    ₹{projectData.project_metadata.reduce((sum, row) => sum + parseFloat(row.po_inv_value || row.basic || 0), 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}
-                                                </td>
-                                                <td className="px-3 py-3 border-r text-blue-900">
-                                                    ₹{(projectData.project_metadata.reduce((sum, row) => sum + parseFloat(row.po_inv_value || row.basic || 0), 0) * 0.18).toLocaleString('en-IN', {minimumFractionDigits: 2})}
-                                                </td>
-                                                <td className="px-3 py-3 border-r text-blue-900 font-bold">
-                                                    ₹{(projectData.project_metadata.reduce((sum, row) => sum + parseFloat(row.po_inv_value || row.basic || 0), 0) * 1.18).toLocaleString('en-IN', {minimumFractionDigits: 2})}
-                                                </td>
-                                                <td className="px-3 py-3 border-r text-green-800">
-                                                    ₹{projectData.project_metadata.reduce((sum, row) => sum + ((parseFloat(row.po_inv_value || row.basic || 0) * 1.18 * parseFloat(row.abg_percentage || 30)) / 100), 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}
-                                                </td>
-                                                <td className="px-3 py-3 border-r text-green-800">
-                                                    ₹{projectData.project_metadata.reduce((sum, row) => sum + ((parseFloat(row.po_inv_value || row.basic || 0) * 1.18 * parseFloat(row.ra_bill_with_taxes_percentage || 45)) / 100), 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}
-                                                </td>
-                                                <td className="px-3 py-3 border-r text-green-800">
-                                                    ₹{projectData.project_metadata.reduce((sum, row) => sum + ((parseFloat(row.po_inv_value || row.basic || 0) * 1.18 * parseFloat(row.erection_percentage || 20)) / 100), 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}
-                                                </td>
-                                                <td className="px-3 py-3 text-green-800">
-                                                    ₹{projectData.project_metadata.reduce((sum, row) => sum + ((parseFloat(row.po_inv_value || row.basic || 0) * 1.18 * parseFloat(row.pbg_percentage || 5)) / 100), 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                        {boqItems.length > 10 && (
+                                            <div className="px-4 py-3 bg-gray-50 text-sm text-gray-600 text-center">
+                                                ... and {boqItems.length - 10} more items
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                                
-                                <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                                    <p className="text-sm text-blue-800 font-medium">
-                                        💡 <strong>Cash Flow Summary:</strong> This table shows your expected cash receivables based on project milestones and payment terms. 
-                                        ABG amounts can be claimed upon fulfilling advance bank guarantee requirements.
-                                    </p>
-                                </div>
+                            </>
+                        ) : (
+                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                <h4 className="font-medium text-yellow-900">⚠️ No BOQ Items Found</h4>
+                                <p className="text-yellow-700 text-sm mt-1">
+                                    No BOQ items were parsed from the uploaded file. Please check the file format and try again.
+                                </p>
                             </div>
                         )}
+
+                        {/* Project Summary */}
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h4 className="font-medium text-blue-900 mb-3">🏗️ Project Summary</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                <div><strong>Project Name:</strong> {projectData.project_name}</div>
+                                <div><strong>Purchase Order:</strong> {projectData.purchase_order_number}</div>
+                                <div><strong>Architect:</strong> {projectData.architect_name}</div>
+                                <div><strong>Client:</strong> {projectData.client_name}</div>
+                                <div><strong>Company:</strong> {selectedProfile?.company_name}</div>
+                                <div><strong>ABG %:</strong> {projectData.abg_percentage}%</div>
+                                <div><strong>RA Bill %:</strong> {projectData.ra_percentage}%</div>
+                                <div><strong>Erection %:</strong> {projectData.erection_percentage}%</div>
+                                <div><strong>PBG %:</strong> {projectData.pbg_percentage}%</div>
+                            </div>
+                        </div>
 
                         <div className="flex justify-between">
                             <button
-                                onClick={() => setStep(3)}
+                                onClick={() => setStep(2)}
                                 className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
                             >
-                                Previous
+                                Previous: Company Selection
                             </button>
-                            {validationResult?.valid ? (
-                                <button
-                                    onClick={createProject}
-                                    disabled={loading}
-                                    className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 transition-colors"
-                                >
-                                    {loading ? 'Creating...' : 'Create Project'}
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={() => setStep(3)}
-                                    className="px-6 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
-                                >
-                                    Fix BOQ Issues
-                                </button>
-                            )}
+                            
+                            <button
+                                onClick={createProject}
+                                disabled={loading || !boqItems || boqItems.length === 0}
+                                className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 transition-colors"
+                            >
+                                {loading ? 'Creating Project...' : '🎉 Create Project'}
+                            </button>
                         </div>
                     </div>
                 )}
