@@ -1840,7 +1840,7 @@ async def create_invoice(invoice_data: dict, current_user: dict = Depends(get_cu
         advance_received = float(invoice_data.get('advance_received', 0))
         net_amount_due = total_amount - advance_received
         
-        # Create invoice
+        # Create invoice with GST breakdown
         invoice = Invoice(
             invoice_number=invoice_number,
             project_id=invoice_data['project_id'],
@@ -1848,7 +1848,11 @@ async def create_invoice(invoice_data: dict, current_user: dict = Depends(get_cu
             invoice_type=invoice_data.get('invoice_type', 'tax_invoice'),
             items=invoice_items,
             subtotal=subtotal,
-            total_gst_amount=total_gst,
+            gst_type=project_gst_type,
+            cgst_amount=cgst_amount,
+            sgst_amount=sgst_amount,
+            igst_amount=igst_amount,
+            total_gst_amount=total_gst_amount,
             total_amount=total_amount,
             payment_terms=invoice_data.get('payment_terms', 'Payment due within 30 days'),
             advance_received=advance_received,
