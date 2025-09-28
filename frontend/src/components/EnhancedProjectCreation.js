@@ -353,12 +353,13 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
                     </div>
                 )}
 
-                {/* Step 1: Basic Info */}
+                {/* Step 1: Basic Info - ENHANCED AS PER REQUIREMENTS */}
                 {step === 1 && (
                     <div className="space-y-6">
                         <h3 className="text-lg font-semibold text-gray-900">Basic Project Information</h3>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Project Name */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Project Name *</label>
                                 <input
@@ -367,47 +368,155 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     value={projectData.project_name}
                                     onChange={(e) => setProjectData({...projectData, project_name: e.target.value})}
+                                    placeholder="Enter project name"
                                 />
                             </div>
                             
+                            {/* Purchase Order Number */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Architect *</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Purchase Order Number *</label>
                                 <input
                                     type="text"
                                     required
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    value={projectData.architect}
-                                    onChange={(e) => setProjectData({...projectData, architect: e.target.value})}
+                                    value={projectData.purchase_order_number}
+                                    onChange={(e) => setProjectData({...projectData, purchase_order_number: e.target.value})}
+                                    placeholder="Enter PO number"
                                 />
                             </div>
                             
+                            {/* Architect Name */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Client *</label>
-                                <select
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Architect Name *</label>
+                                <input
+                                    type="text"
                                     required
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    value={projectData.client_id}
-                                    onChange={(e) => {
-                                        const selectedClient = clients.find(c => c.id === e.target.value);
-                                        setProjectData({
-                                            ...projectData, 
-                                            client_id: e.target.value,
-                                            client_name: selectedClient?.name || ''
-                                        });
-                                    }}
-                                >
-                                    <option value="">Select Client</option>
-                                    {clients.map(client => (
-                                        <option key={client.id} value={client.id}>{client.name}</option>
-                                    ))}
-                                </select>
+                                    value={projectData.architect_name}
+                                    onChange={(e) => setProjectData({...projectData, architect_name: e.target.value})}
+                                    placeholder="Enter architect name"
+                                />
+                            </div>
+                            
+                            {/* Architect Address */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Architect Address *</label>
+                                <input
+                                    type="text"
+                                    required
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    value={projectData.architect_address}
+                                    onChange={(e) => setProjectData({...projectData, architect_address: e.target.value})}
+                                    placeholder="Enter architect address"
+                                />
+                            </div>
+                            
+                            {/* Client Name */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Client Name *</label>
+                                <input
+                                    type="text"
+                                    required
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    value={projectData.client_name}
+                                    onChange={(e) => setProjectData({...projectData, client_name: e.target.value})}
+                                    placeholder="Enter client name"
+                                />
+                            </div>
+                            
+                            {/* Client Address */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Client Address *</label>
+                                <input
+                                    type="text"
+                                    required
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    value={projectData.client_address}
+                                    onChange={(e) => setProjectData({...projectData, client_address: e.target.value})}
+                                    placeholder="Enter client address"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Project Percentages Section */}
+                        <div className="mt-8">
+                            <h4 className="text-md font-semibold text-gray-900 mb-4">💼 Project Percentages</h4>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                
+                                {/* ABG Percentage */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">ABG % *</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        step="0.1"
+                                        required
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        value={projectData.abg_percentage}
+                                        onChange={(e) => setProjectData({...projectData, abg_percentage: parseFloat(e.target.value) || 0})}
+                                        placeholder="0.0"
+                                    />
+                                    <div className="text-xs text-gray-500 mt-1">Advance Bank Guarantee</div>
+                                </div>
+                                
+                                {/* RA Bill Percentage */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">RA Bill % *</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        step="0.1"
+                                        required
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        value={projectData.ra_percentage}
+                                        onChange={(e) => setProjectData({...projectData, ra_percentage: parseFloat(e.target.value) || 0})}
+                                        placeholder="0.0"
+                                    />
+                                    <div className="text-xs text-gray-500 mt-1">RA Bill with Taxes</div>
+                                </div>
+                                
+                                {/* Erection Percentage */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Erection % *</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        step="0.1"
+                                        required
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        value={projectData.erection_percentage}
+                                        onChange={(e) => setProjectData({...projectData, erection_percentage: parseFloat(e.target.value) || 0})}
+                                        placeholder="0.0"
+                                    />
+                                    <div className="text-xs text-gray-500 mt-1">Erection Work</div>
+                                </div>
+                                
+                                {/* PBG Percentage */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">PBG % *</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        step="0.1"
+                                        required
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        value={projectData.pbg_percentage}
+                                        onChange={(e) => setProjectData({...projectData, pbg_percentage: parseFloat(e.target.value) || 0})}
+                                        placeholder="0.0"
+                                    />
+                                    <div className="text-xs text-gray-500 mt-1">Performance Bank Guarantee</div>
+                                </div>
                             </div>
                         </div>
 
                         <div className="flex justify-end">
                             <button
                                 onClick={() => setStep(2)}
-                                disabled={!projectData.project_name || !projectData.architect || !projectData.client_id}
+                                disabled={!projectData.project_name || !projectData.purchase_order_number || !projectData.architect_name || !projectData.architect_address || !projectData.client_name || !projectData.client_address}
                                 className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
                             >
                                 Next: Company Selection
