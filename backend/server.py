@@ -317,9 +317,15 @@ class Project(BaseModel):
     
     # Cash flow percentages - must total 100%
     abg_percentage: float = 0.0  # Advance Bank Guarantee
-    ra_percentage: float = 0.0   # RA Bill with Taxes
+    ra_bill_percentage: float = 0.0   # RA Bill with Taxes (renamed for consistency)
     erection_percentage: float = 0.0  # Erection Work
     pbg_percentage: float = 0.0  # Performance Bank Guarantee
+    
+    # GST Configuration
+    gst_type: str = "IGST"  # CGST_SGST or IGST (default to IGST)
+    gst_approval_status: str = "pending"  # pending, approved, rejected
+    gst_approved_by: Optional[str] = None  # User ID who approved GST
+    gst_approved_at: Optional[datetime] = None  # When GST was approved
     
     total_project_value: float
     boq_items: List[BOQItem] = []
