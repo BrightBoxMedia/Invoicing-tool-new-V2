@@ -633,31 +633,34 @@ class ExcelParser:
         }
     
     def _is_summary_row(self, row_data: Dict) -> bool:
-        """Check if this row is a summary/total row that should be ignored"""
+        """Check if this row is a summary/total row - ENHANCED for user's format"""
         description = str(row_data.get('description', '')).lower().strip()
         
-        # Common summary row indicators
+        # More specific summary row indicators (don't be too aggressive)
         summary_indicators = [
-            'total', 'grand total', 'subtotal', 'sum', 'gst', 'tax',
+            'total', 'grand total', 'subtotal', 'sum', 'gst at', 'tax', 
             'amount left to claim', 'balance', 'remaining', 'summary',
             'provisional sum', 'p.sum', 'contingency', 'overhead',
             'profit', 'margin', 'discount'
         ]
         
+        # Only reject if description exactly matches or contains clear summary indicators
         for indicator in summary_indicators:
-            if indicator in description:
-                return True
+            if indicator in description and len(description) > len(indicator):
+                # Only reject if it's a substantial match, not just a substring
+                if description.startswith(indicator) or description.endswith(indicator):
+                    return True
         
-        # Check if description is too short (likely a summary)
-        if len(description.strip()) < 10:
-            return True
+        # Don't reject based on short description length for user's format
+        # User has valid items like "TOP", "Left", "Right" which are short but valid
         
         # Check if all numeric fields are zero (empty summary row)
         quantity = row_data.get('quantity', 0)
-        rate = row_data.get('rate', 0)
+        rate = row_data.get('rate', 0)  
         amount = row_data.get('amount', 0)
         
-        if quantity == 0 and rate == 0 and amount == 0:
+        # Only reject if completely empty (no description AND no numbers)
+        if not description and quantity == 0 and rate == 0 and amount == 0:
             return True
         
         return False
