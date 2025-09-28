@@ -377,7 +377,14 @@ class Invoice(BaseModel):
     due_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc) + timedelta(days=30))
     items: List[InvoiceItem]
     subtotal: float
+    
+    # GST Breakdown
+    gst_type: str  # CGST_SGST or IGST
+    cgst_amount: float = 0.0  # Only for CGST_SGST type
+    sgst_amount: float = 0.0  # Only for CGST_SGST type  
+    igst_amount: float = 0.0  # Only for IGST type
     total_gst_amount: float
+    
     total_amount: float
     payment_terms: str = "Payment due within 30 days"
     advance_received: float = 0.0
