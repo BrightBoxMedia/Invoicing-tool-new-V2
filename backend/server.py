@@ -789,7 +789,7 @@ class ExcelParser:
         return None
     
     def _get_enhanced_column_mapping(self, worksheet, header_row: int) -> Dict[str, int]:
-        """SUPER INTELLIGENT column mapping - accepts ANY Excel format"""
+        """ENHANCED column mapping - handles user's specific Excel format"""
         column_mapping = {}
         
         # Debug: Print all headers found
@@ -807,49 +807,52 @@ class ExcelParser:
             cell_lower = str(cell.value).lower().strip()
             cell_original = str(cell.value).strip()
             
-            # SUPER FLEXIBLE Serial number mapping
-            if any(h in cell_lower for h in ['sr', 'serial', 's.no', 'sno', 's no', 'sl', 'sl.no', 'sl no', '#', 'no.', 'no', 'item no', 'item_no']):
+            # Enhanced Serial number mapping - handles user's "Sl. No." format
+            if any(h in cell_lower for h in [
+                'sl. no', 'sl.no', 'slno', 'sl no', 'sr. no', 'sr.no', 'srno', 'sr no', 
+                'serial', 's.no', 'sno', 's no', '#', 'no.', 'no', 'item no', 'item_no'
+            ]):
                 column_mapping['sr_no'] = col_idx
                 logger.info(f"✅ FOUND SR_NO at column {col_idx}: '{cell_original}'")
                 
-            # SUPER FLEXIBLE Description mapping (most critical)
+            # Enhanced Description mapping - handles user's "Description Of Item" format
             elif any(h in cell_lower for h in [
-                'description', 'particular', 'particulars', 'item', 'work', 'activity', 
-                'scope', 'specification', 'details', 'desc', 'work item', 'work_item',
-                'item description', 'item_description', 'scope of work', 'scope_of_work',
-                'material', 'service', 'product', 'component', 'task'
+                'description of item', 'description', 'particular', 'particulars', 'item', 
+                'work', 'activity', 'scope', 'specification', 'details', 'desc', 
+                'work item', 'work_item', 'item description', 'item_description', 
+                'scope of work', 'scope_of_work', 'material', 'service', 'product', 
+                'component', 'task'
             ]):
                 column_mapping['description'] = col_idx
                 logger.info(f"✅ FOUND DESCRIPTION at column {col_idx}: '{cell_original}'")
                 
-            # SUPER FLEXIBLE Unit mapping
-            elif any(h in cell_lower for h in [
+            # Enhanced Unit mapping - simple and direct for user's format
+            elif cell_lower == 'unit' or any(h in cell_lower for h in [
                 'unit', 'uom', 'u.o.m', 'u o m', 'units', 'measure', 'measurement',
-                'unit of measurement', 'unit_of_measurement', 'nos', 'each', 'pcs', 'pieces'
+                'unit of measurement', 'unit_of_measurement'
             ]) and not any(x in cell_lower for x in ['rate', 'amount', 'price', 'cost']):
                 column_mapping['unit'] = col_idx
                 logger.info(f"✅ FOUND UNIT at column {col_idx}: '{cell_original}'")
                 
-            # SUPER FLEXIBLE Quantity mapping
+            # Enhanced Quantity mapping - handles user's " Qty" format (with space)
             elif any(h in cell_lower for h in [
                 'qty', 'quantity', 'qnty', 'quantities', 'total qty', 'total_qty',
-                'req qty', 'req_qty', 'required qty', 'required_qty', 'nos', 'count',
-                'total quantity', 'total_quantity', 'amount qty', 'amount_qty'
+                'req qty', 'req_qty', 'required qty', 'required_qty'
             ]) and not any(x in cell_lower for x in ['rate', 'price', 'cost', 'amount', 'value']):
                 column_mapping['quantity'] = col_idx
                 logger.info(f"✅ FOUND QUANTITY at column {col_idx}: '{cell_original}'")
                 
-            # SUPER FLEXIBLE Rate mapping
+            # Enhanced Rate mapping - handles user's "Rate/ Unit" format
             elif any(h in cell_lower for h in [
-                'rate', 'price', 'unit rate', 'unit_rate', 'unit price', 'unit_price',
-                'cost', 'per unit', 'per_unit', 'rate per unit', 'rate_per_unit',
-                'unit cost', 'unit_cost', 'basic rate', 'basic_rate'
-            ]) and not any(x in cell_lower for x in ['total', 'amount', 'sum']):
+                'rate/ unit', 'rate/unit', 'rate / unit', 'rate', 'price', 'unit rate', 
+                'unit_rate', 'unit price', 'unit_price', 'cost', 'per unit', 'per_unit', 
+                'rate per unit', 'rate_per_unit', 'unit cost', 'unit_cost', 'basic rate', 'basic_rate'
+            ]) and not any(x in cell_lower for x in ['total', 'sum']) and 'amount' not in cell_lower:
                 column_mapping['rate'] = col_idx
                 logger.info(f"✅ FOUND RATE at column {col_idx}: '{cell_original}'")
                 
-            # SUPER FLEXIBLE Amount mapping
-            elif any(h in cell_lower for h in [
+            # Enhanced Amount mapping - simple and direct
+            elif cell_lower == 'amount' or any(h in cell_lower for h in [
                 'amount', 'total', 'value', 'total amount', 'total_amount', 'total value', 'total_value',
                 'basic amount', 'basic_amount', 'subtotal', 'sub total', 'sub_total',
                 'line total', 'line_total', 'extended amount', 'extended_amount'
@@ -859,24 +862,39 @@ class ExcelParser:
         
         logger.info(f"📋 FINAL COLUMN MAPPING: {column_mapping}")
         
-        # Validate essential columns
+        # Enhanced validation - try to find description column more intelligently
         if 'description' not in column_mapping:
-            logger.warning("❌ No description column found - trying fallback detection")
-            # Try to find any text-heavy column as description
-            for col_idx in range(1, min(30, worksheet.max_column + 1)):
-                # Check if this column has long text values (likely description)
-                sample_rows = min(10, worksheet.max_row - header_row)
+            logger.warning("❌ No description column found - trying enhanced fallback detection")
+            # Find the column with the longest average text length (likely description)
+            best_desc_col = None
+            best_avg_length = 0
+            
+            for col_idx in range(1, min(10, worksheet.max_column + 1)):  # Check first 10 columns
+                sample_rows = min(5, worksheet.max_row - header_row)  # Sample fewer rows for speed
                 text_lengths = []
+                text_content = []
+                
                 for r in range(header_row + 1, header_row + sample_rows + 1):
                     cell_val = worksheet.cell(row=r, column=col_idx).value
                     if cell_val and isinstance(cell_val, str):
-                        text_lengths.append(len(str(cell_val).strip()))
+                        text_val = str(cell_val).strip()
+                        if len(text_val) > 2:  # Skip very short values
+                            text_lengths.append(len(text_val))
+                            text_content.append(text_val.lower())
                 
-                avg_length = sum(text_lengths) / len(text_lengths) if text_lengths else 0
-                if avg_length > 20:  # Likely description column
-                    column_mapping['description'] = col_idx
-                    logger.info(f"✅ FALLBACK DESCRIPTION found at column {col_idx} (avg length: {avg_length:.1f})")
-                    break
+                if text_lengths:
+                    avg_length = sum(text_lengths) / len(text_lengths)
+                    # Also check if content looks like descriptions (contains alphabetic characters)
+                    has_descriptive_content = any(any(c.isalpha() for c in text) for text in text_content)
+                    
+                    if avg_length > best_avg_length and has_descriptive_content and avg_length > 5:
+                        best_avg_length = avg_length
+                        best_desc_col = col_idx
+                        logger.info(f"Column {col_idx} candidate: avg length {avg_length:.1f}, samples: {text_content[:2]}")
+            
+            if best_desc_col:
+                column_mapping['description'] = best_desc_col
+                logger.info(f"✅ ENHANCED FALLBACK DESCRIPTION found at column {best_desc_col} (avg length: {best_avg_length:.1f})")
         
         return column_mapping
     
