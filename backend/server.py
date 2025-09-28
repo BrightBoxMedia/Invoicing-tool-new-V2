@@ -2158,7 +2158,15 @@ async def get_activity_logs(current_user: dict = Depends(get_current_user)):
             raise HTTPException(status_code=403, detail="Only super admin can view activity logs")
         
         logs = await db.activity_logs.find().sort("timestamp", -1).limit(1000).to_list(1000)
-        return logs
+        
+        # Convert ObjectId to string for JSON serialization
+        serialized_logs = []
+        for log in logs:
+            if '_id' in log:
+                log['_id'] = str(log['_id'])
+            serialized_logs.append(log)
+        
+        return serialized_logs
         
     except Exception as e:
         logger.error(f"Activity logs error: {str(e)}")
