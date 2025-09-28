@@ -779,8 +779,8 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
                     </div>
                 )}
 
-                {/* Step 4: Validation Results & Final Review */}
-                {step === 4 && (
+                {/* Step 3: Validation Results & Final Review */}
+                {step === 3 && (
                     <div className="space-y-6">
                         <h3 className="text-lg font-semibold text-gray-900">Validation Results & Review</h3>
 
