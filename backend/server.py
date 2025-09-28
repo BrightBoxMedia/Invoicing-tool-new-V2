@@ -1515,6 +1515,43 @@ async def update_gst_approval(
         logger.error(f"GST approval error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to update GST approval: {str(e)}")
 
+@api_router.get("/projects/pending-gst-approval")
+async def get_projects_pending_gst_approval(current_user: dict = Depends(get_current_user)):
+    """Get projects that need GST approval (for Managers/SuperAdmins)"""
+    try:
+        # Check if user has permission to approve GST
+        if current_user.get('role') not in ['Manager', 'SuperAdmin']:
+            raise HTTPException(
+                status_code=403, 
+                detail="Only Managers or SuperAdmins can view pending GST approvals"
+            )
+        
+        projects = await db.projects.find({
+            "gst_approval_status": "pending"
+        }).to_list(length=None)
+        
+        # Format projects for GST review
+        gst_pending_projects = []
+        for project in projects:
+            gst_pending_projects.append({
+                "id": project.get("id"),
+                "project_name": project.get("project_name"),
+                "client_name": project.get("client_name"),
+                "gst_type": project.get("gst_type"),
+                "created_at": project.get("created_at"),
+                "boq_items_count": len(project.get("boq_items", [])),
+                "total_project_value": project.get("total_project_value"),
+                "boq_items": project.get("boq_items", [])  # For GST percentage review
+            })
+        
+        return gst_pending_projects
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching pending GST approvals: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch pending GST approvals")
+
 @api_router.get("/projects")
 async def get_projects(current_user: dict = Depends(get_current_user)):
     try:
