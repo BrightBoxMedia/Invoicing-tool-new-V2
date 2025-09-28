@@ -652,6 +652,28 @@ const Projects = ({ currentUser }) => {
           onCreateInvoice={handleCreateInvoice}
         />
       )}
+
+      {/* Enhanced Project Creation Modal - BOQ Upload Workflow */}
+      {showEnhancedProjectCreation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
+          <div className="bg-white rounded-lg max-w-6xl w-full max-h-screen overflow-y-auto">
+            <EnhancedProjectCreation
+              currentUser={currentUser}
+              parsedBoqData={parsedData}
+              onClose={() => {
+                setShowEnhancedProjectCreation(false);
+                setParsedData(null);
+              }}
+              onSuccess={() => {
+                setShowEnhancedProjectCreation(false);
+                setParsedData(null);
+                fetchProjects(); // Refresh projects list
+                alert('🎉 Project created successfully with BOQ items!');
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
