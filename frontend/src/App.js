@@ -781,6 +781,7 @@ function App() {
                     <Route path="/activity-logs" element={<ActivityLogs currentUser={user} />} />
                     <Route path="/user-management" element={<UserManagement currentUser={user} />} />
                     <Route path="/admin-interface" element={<AdminInterface currentUser={user} />} />
+                    <Route path="/gst-approval" element={<GSTApprovalInterface currentUser={user} />} />
                     <Route path="/invoice-design" element={<InvoiceDesignCustomizer currentUser={user} />} />
                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
                   </Routes>
