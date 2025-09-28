@@ -381,6 +381,7 @@
 
 ## test_plan:
   current_focus:
+    - "COMPLETED: User's Critical BOQ Parsing Issue Testing"
     - "COMPLETED: WebSocket Infrastructure Testing"
     - "COMPLETED: Server-Sent Events (SSE) Fallback Testing"
     - "COMPLETED: Project Snapshot API Testing"
@@ -389,7 +390,7 @@
   stuck_tasks:
     - "Real-time Event Emission - requires valid BOQ item IDs for testing"
   test_all: false
-  test_priority: "websocket_system_verification"
+  test_priority: "user_boq_parsing_verification"
 
   - task: "Proforma Invoice Tax Options"
     implemented: true
