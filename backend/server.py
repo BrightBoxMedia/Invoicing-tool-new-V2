@@ -404,70 +404,232 @@ class ExcelParser:
             raise HTTPException(status_code=422, detail=f"Failed to parse Excel file: {str(e)}")
     
     async def _parse_boq_data(self, worksheet, filename: str) -> Dict:
-        """Enhanced BOQ parsing that ignores totals, GST, and grand totals"""
+        """SUPER INTELLIGENT BOQ parsing - handles ANY Excel format including complex layouts"""
         
-        # Find header row
-        header_row = self._find_header_row(worksheet)
-        if not header_row:
-            raise ValueError("Could not find BOQ headers in the Excel file")
+        logger.info(f"🚀 STARTING SUPER INTELLIGENT BOQ PARSING for {filename}")
+        logger.info(f"📊 Worksheet dimensions: {worksheet.max_row} rows × {worksheet.max_column} columns")
         
-        # Get column mapping
-        column_mapping = self._get_enhanced_column_mapping(worksheet, header_row)
-        logger.info(f"Column mapping: {column_mapping}")
-        
-        # Extract project metadata from top section
-        project_info = self._extract_project_metadata(worksheet)
-        
-        # Parse BOQ items (ignore summary rows)
+        # STRATEGY 1: Try standard header-based parsing
         boq_items = []
-        row_idx = header_row + 1
+        try:
+            logger.info("🔍 STRATEGY 1: Standard header-based parsing")
+            header_row = self._find_header_row(worksheet)
+            if header_row:
+                column_mapping = self._get_enhanced_column_mapping(worksheet, header_row)
+                logger.info(f"📋 Column mapping found: {column_mapping}")
+                
+                if column_mapping and 'description' in column_mapping:
+                    boq_items = await self._extract_items_with_mapping(worksheet, header_row, column_mapping)
+                    if boq_items:
+                        logger.info(f"✅ STRATEGY 1 SUCCESS: Found {len(boq_items)} items")
+                        return await self._finalize_boq_data(boq_items, filename)
+        except Exception as e:
+            logger.warning(f"⚠️ Strategy 1 failed: {e}")
         
-        while row_idx <= worksheet.max_row:
+        # STRATEGY 2: Pattern-based parsing (no strict headers)  
+        try:
+            logger.info("🔍 STRATEGY 2: Pattern-based parsing")
+            boq_items = await self._extract_items_by_pattern(worksheet)
+            if boq_items:
+                logger.info(f"✅ STRATEGY 2 SUCCESS: Found {len(boq_items)} items")
+                return await self._finalize_boq_data(boq_items, filename)
+        except Exception as e:
+            logger.warning(f"⚠️ Strategy 2 failed: {e}")
+        
+        # STRATEGY 3: Brute force - scan all cells for BOQ-like data
+        try:
+            logger.info("🔍 STRATEGY 3: Brute force scanning")
+            boq_items = await self._extract_items_brute_force(worksheet)
+            if boq_items:
+                logger.info(f"✅ STRATEGY 3 SUCCESS: Found {len(boq_items)} items")
+                return await self._finalize_boq_data(boq_items, filename)
+        except Exception as e:
+            logger.warning(f"⚠️ Strategy 3 failed: {e}")
+        
+        # If all strategies fail
+        logger.error("❌ ALL STRATEGIES FAILED - No valid BOQ items found")
+        raise ValueError("No valid BOQ items found in the Excel file. Please check the file format and ensure it contains item descriptions with quantities, rates, or amounts.")
+    
+    async def _extract_items_with_mapping(self, worksheet, header_row: int, column_mapping: Dict) -> List[BOQItem]:
+        """Extract items using column mapping"""
+        boq_items = []
+        
+        for row_idx in range(header_row + 1, min(worksheet.max_row + 1, header_row + 500)):
             try:
                 row_data = self._extract_row_data(worksheet, row_idx, column_mapping)
                 
                 # Skip if this is a summary/total row
                 if self._is_summary_row(row_data):
                     logger.info(f"Skipping summary row {row_idx}: {row_data.get('description', 'Unknown')}")
-                    row_idx += 1
                     continue
                 
                 # Validate if this is a proper BOQ item
                 if self._is_valid_boq_item(row_data):
-                    # Ensure GST rate is valid (add 40% option)
-                    if 'gst_rate' not in row_data or row_data['gst_rate'] == 0:
-                        row_data['gst_rate'] = 18.0  # Default
-                    
-                    boq_item = BOQItem(
-                        sr_no=len(boq_items) + 1,
-                        description=row_data['description'],
-                        unit=row_data.get('unit', 'Nos'),
-                        quantity=row_data.get('quantity', 0.0),
-                        rate=row_data.get('rate', 0.0),
-                        amount=row_data.get('amount', 0.0),
-                        gst_rate=row_data.get('gst_rate', 18.0),
-                        billed_quantity=0.0  # Initialize as unbilled
-                    )
+                    boq_item = self._create_boq_item(row_data, len(boq_items) + 1)
                     boq_items.append(boq_item)
-                    logger.info(f"Added BOQ item {len(boq_items)}: {boq_item.description[:50]}...")
-                
+                    logger.info(f"✓ Mapped item {len(boq_items)}: {row_data['description'][:50]}")
+                    
             except Exception as e:
-                logger.warning(f"Error parsing row {row_idx}: {str(e)}")
+                logger.warning(f"Error processing row {row_idx}: {e}")
+                continue
+        
+        return boq_items
+    
+    async def _extract_items_by_pattern(self, worksheet) -> List[BOQItem]:
+        """Extract items by detecting BOQ patterns without strict headers"""
+        boq_items = []
+        
+        logger.info("🔍 PATTERN SCANNING: Looking for BOQ data patterns...")
+        
+        for row_num in range(1, min(worksheet.max_row + 1, 200)):
+            row_cells = []
             
-            row_idx += 1
+            # Get all non-empty cells in this row
+            for col_num in range(1, min(worksheet.max_column + 1, 50)):
+                cell = worksheet.cell(row=row_num, column=col_num)
+                if cell.value is not None:
+                    row_cells.append({
+                        'value': cell.value,
+                        'column': col_num,
+                        'is_number': isinstance(cell.value, (int, float)),
+                        'is_text': isinstance(cell.value, str)
+                    })
+            
+            # Pattern detection: Look for rows with description + numbers
+            if len(row_cells) >= 3:
+                description_cell = None
+                quantity_cell = None
+                rate_cell = None
+                amount_cell = None
+                
+                # Find description (longest text or first substantial text)
+                text_cells = [cell for cell in row_cells if cell['is_text'] and len(str(cell['value']).strip()) > 5]
+                if text_cells:
+                    # Take the longest text as description
+                    description_cell = max(text_cells, key=lambda x: len(str(x['value']).strip()))
+                
+                # Find numbers (quantity, rate, amount)
+                number_cells = [cell for cell in row_cells if cell['is_number'] and cell['value'] > 0]
+                
+                if description_cell and len(number_cells) >= 2:
+                    # Create row data
+                    row_data = {
+                        'description': str(description_cell['value']).strip(),
+                        'quantity': float(number_cells[0]['value']) if len(number_cells) >= 1 else 1.0,
+                        'rate': float(number_cells[1]['value']) if len(number_cells) >= 2 else float(number_cells[0]['value']),
+                        'amount': float(number_cells[2]['value']) if len(number_cells) >= 3 else float(number_cells[0]['value']) * float(number_cells[1]['value']),
+                        'unit': 'Nos',
+                        'gst_rate': 18.0
+                    }
+                    
+                    if self._is_valid_boq_item(row_data):
+                        boq_item = self._create_boq_item(row_data, len(boq_items) + 1)
+                        boq_items.append(boq_item)
+                        logger.info(f"✓ Pattern item {len(boq_items)}: {row_data['description'][:50]} | Q:{row_data['quantity']} R:{row_data['rate']}")
         
+        return boq_items
+    
+    async def _extract_items_brute_force(self, worksheet) -> List[BOQItem]:
+        """Brute force extraction - find ANY rows that look like BOQ items"""
+        boq_items = []
+        
+        logger.info("💪 BRUTE FORCE SCANNING: Extracting any BOQ-like data...")
+        
+        # Collect all meaningful data from worksheet
+        rows_data = {}
+        
+        for row_num in range(1, min(worksheet.max_row + 1, 500)):
+            for col_num in range(1, min(worksheet.max_column + 1, 50)):
+                cell = worksheet.cell(row=row_num, column=col_num)
+                if cell.value is not None:
+                    if row_num not in rows_data:
+                        rows_data[row_num] = []
+                    rows_data[row_num].append({
+                        'value': cell.value,
+                        'col': col_num,
+                        'is_number': isinstance(cell.value, (int, float)),
+                        'is_text': isinstance(cell.value, str)
+                    })
+        
+        # Analyze each row for BOQ potential
+        for row_num, row_data in rows_data.items():
+            texts = [item for item in row_data if item['is_text']]
+            numbers = [item for item in row_data if item['is_number'] and item['value'] > 0]
+            
+            # Basic BOQ criteria: at least 1 substantial text + 2 numbers
+            if len(texts) >= 1 and len(numbers) >= 2:
+                
+                # Find best description candidate
+                description_candidate = None
+                for text_item in texts:
+                    text_val = str(text_item['value']).strip()
+                    # Skip obvious non-descriptions
+                    skip_terms = ['total', 'sum', 'gst', 'tax', 'nil', 'na', 'n/a', 'subtotal', 'grand total']
+                    if any(skip in text_val.lower() for skip in skip_terms):
+                        continue
+                    if len(text_val) >= 5:  # Reasonable description length
+                        description_candidate = text_val
+                        break
+                
+                if description_candidate:
+                    # Use available numbers
+                    sorted_numbers = sorted(numbers, key=lambda x: x['col'])
+                    
+                    quantity = float(sorted_numbers[0]['value']) if len(sorted_numbers) >= 1 else 1.0
+                    rate = float(sorted_numbers[1]['value']) if len(sorted_numbers) >= 2 else quantity
+                    amount = float(sorted_numbers[2]['value']) if len(sorted_numbers) >= 3 else quantity * rate
+                    
+                    row_data_dict = {
+                        'description': description_candidate,
+                        'quantity': quantity,
+                        'rate': rate,
+                        'amount': amount,
+                        'unit': 'Nos',
+                        'gst_rate': 18.0
+                    }
+                    
+                    if self._is_valid_boq_item(row_data_dict):
+                        boq_item = self._create_boq_item(row_data_dict, len(boq_items) + 1)
+                        boq_items.append(boq_item)
+                        logger.info(f"✓ Brute force item {len(boq_items)}: {description_candidate[:40]} | Q:{quantity} R:{rate}")
+        
+        return boq_items
+    
+    def _create_boq_item(self, row_data: Dict, sr_no: int) -> BOQItem:
+        """Create a standardized BOQ item"""
+        # Ensure GST rate is valid
+        gst_rate = row_data.get('gst_rate', 18.0)
+        if gst_rate not in [0, 5, 12, 18, 28, 40]:
+            gst_rate = 18.0  # Default
+        
+        return BOQItem(
+            sr_no=sr_no,
+            description=row_data.get('description', 'Unknown Item'),
+            unit=row_data.get('unit', 'Nos'),
+            quantity=float(row_data.get('quantity', 0.0)),
+            rate=float(row_data.get('rate', 0.0)),
+            amount=float(row_data.get('amount', 0.0)),
+            gst_rate=float(gst_rate),
+            billed_quantity=0.0  # Initialize as unbilled
+        )
+    
+    async def _finalize_boq_data(self, boq_items: List[BOQItem], filename: str) -> Dict:
+        """Finalize and return BOQ data"""
         if not boq_items:
-            raise ValueError("No valid BOQ items found in the Excel file")
+            raise ValueError("No valid BOQ items found")
         
-        # Calculate total project value
-        total_value = sum(item.amount for item in boq_items)
+        # Extract project metadata
+        project_info = {
+            "project_name": filename.replace('.xlsx', '').replace('.xls', ''),
+            "total_items": len(boq_items),
+            "total_amount": sum(item.amount for item in boq_items)
+        }
+        
+        logger.info(f"🎉 PARSING COMPLETE: {len(boq_items)} items found, total amount: ₹{project_info['total_amount']:,.2f}")
         
         return {
             "project_info": project_info,
-            "boq_items": [item.dict() for item in boq_items],
-            "total_items": len(boq_items),
-            "total_project_value": total_value,
-            "filename": filename
+            "boq_items": [item.dict() for item in boq_items]
         }
     
     def _is_summary_row(self, row_data: Dict) -> bool:
