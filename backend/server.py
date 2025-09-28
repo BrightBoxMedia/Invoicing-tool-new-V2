@@ -1359,9 +1359,9 @@ async def upload_boq(
 @api_router.post("/projects")
 async def create_project(project_data: dict, current_user: dict = Depends(get_current_user)):
     try:
-        # Validate percentages
+        # Validate percentages - handle backward compatibility
         abg = project_data.get('abg_percentage', 0)
-        ra_bill = project_data.get('ra_bill_percentage', 0)  # Updated field name
+        ra_bill = project_data.get('ra_bill_percentage', project_data.get('ra_percentage', 0))  # Handle old field name
         erection = project_data.get('erection_percentage', 0)
         pbg = project_data.get('pbg_percentage', 0)
         
