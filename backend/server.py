@@ -1423,6 +1423,98 @@ async def create_project(project_data: dict, current_user: dict = Depends(get_cu
         logger.error(f"Project creation error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to create project: {str(e)}")
 
+@api_router.post("/projects/{project_id}/gst-approval")
+async def update_gst_approval(
+    project_id: str, 
+    approval_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update GST approval status and BOQ item GST percentages"""
+    try:
+        # Check if user has permission (Manager or SuperAdmin)
+        if current_user.get('role') not in ['Manager', 'SuperAdmin']:
+            raise HTTPException(
+                status_code=403, 
+                detail="Only Managers or SuperAdmins can approve GST configurations"
+            )
+        
+        project = await db.projects.find_one({"id": project_id})
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+            
+        # Check if already approved (locked)
+        if project.get('gst_approval_status') == 'approved':
+            raise HTTPException(
+                status_code=400, 
+                detail="GST configuration is already approved and locked"
+            )
+        
+        action = approval_data.get('action')  # 'approve' or 'reject'
+        boq_gst_updates = approval_data.get('boq_gst_updates', [])  # GST % for each BOQ item
+        
+        if action == 'approve':
+            # Update BOQ items with approved GST percentages
+            if boq_gst_updates:
+                for update in boq_gst_updates:
+                    item_id = update.get('item_id')
+                    gst_rate = update.get('gst_rate')
+                    
+                    # Find and update the specific BOQ item
+                    for item in project.get('boq_items', []):
+                        if item.get('id') == item_id:
+                            item['gst_rate'] = gst_rate
+                            break
+            
+            # Approve the GST configuration
+            update_data = {
+                "gst_approval_status": "approved",
+                "gst_approved_by": current_user['id'],
+                "gst_approved_at": datetime.now(timezone.utc),
+                "boq_items": project.get('boq_items', []),
+                "updated_at": datetime.now(timezone.utc)
+            }
+            
+            await log_activity(
+                current_user["id"], current_user["email"], current_user["role"],
+                "gst_approved", f"Approved GST configuration for project: {project['project_name']}"
+            )
+            
+        elif action == 'reject':
+            update_data = {
+                "gst_approval_status": "rejected",
+                "updated_at": datetime.now(timezone.utc)
+            }
+            
+            await log_activity(
+                current_user["id"], current_user["email"], current_user["role"],
+                "gst_rejected", f"Rejected GST configuration for project: {project['project_name']}"
+            )
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail="Action must be 'approve' or 'reject'"
+            )
+        
+        result = await db.projects.update_one(
+            {"id": project_id},
+            {"$set": update_data}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Project not found or no changes made")
+            
+        return {
+            "message": f"GST configuration {action}d successfully",
+            "project_id": project_id,
+            "status": action + "d"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"GST approval error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to update GST approval: {str(e)}")
+
 @api_router.get("/projects")
 async def get_projects(current_user: dict = Depends(get_current_user)):
     try:
