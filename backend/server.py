@@ -1354,15 +1354,23 @@ async def create_project(project_data: dict, current_user: dict = Depends(get_cu
     try:
         # Validate percentages
         abg = project_data.get('abg_percentage', 0)
-        ra = project_data.get('ra_percentage', 0)
+        ra_bill = project_data.get('ra_bill_percentage', 0)  # Updated field name
         erection = project_data.get('erection_percentage', 0)
         pbg = project_data.get('pbg_percentage', 0)
         
-        total_percentage = abg + ra + erection + pbg
+        total_percentage = abg + ra_bill + erection + pbg
         if abs(total_percentage - 100.0) > 0.01:
             raise HTTPException(
                 status_code=400, 
                 detail=f"Percentages must total 100%. Current total: {total_percentage}%"
+            )
+            
+        # Validate GST configuration
+        gst_type = project_data.get('gst_type', 'IGST')
+        if gst_type not in ['CGST_SGST', 'IGST']:
+            raise HTTPException(
+                status_code=400,
+                detail="GST type must be either CGST_SGST or IGST"
             )
         
         # Process BOQ items
