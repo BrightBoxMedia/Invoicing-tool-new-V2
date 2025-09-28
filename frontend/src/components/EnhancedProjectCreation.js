@@ -61,29 +61,43 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
         if (parsedBoqData) {
             console.log('📋 Received parsed BOQ data:', parsedBoqData);
             
+            // Extract BOQ items from the correct path: parsed_data.boq_items
+            const boqItemsData = parsedBoqData.parsed_data?.boq_items || parsedBoqData.boq_items;
+            const projectInfo = parsedBoqData.parsed_data?.project_info || parsedBoqData.project_info;
+            
             // Set BOQ items if available
-            if (parsedBoqData.boq_items) {
-                setBoqItems(parsedBoqData.boq_items);
-                console.log(`✅ Loaded ${parsedBoqData.boq_items.length} BOQ items`);
+            if (boqItemsData && boqItemsData.length > 0) {
+                setBoqItems(boqItemsData);
+                console.log(`✅ Loaded ${boqItemsData.length} BOQ items from parsed_data`);
             }
             
             // Set project name from filename or project info
-            if (parsedBoqData.project_info?.project_name) {
+            if (projectInfo?.project_name) {
                 setProjectData(prev => ({
                     ...prev,
-                    project_name: parsedBoqData.project_info.project_name
+                    project_name: projectInfo.project_name
+                }));
+            } else if (parsedBoqData.filename) {
+                // Fallback to filename
+                const projectName = parsedBoqData.filename.replace('.xlsx', '').replace('.xls', '');
+                setProjectData(prev => ({
+                    ...prev,
+                    project_name: projectName
                 }));
             }
             
             // Auto-advance to review step if BOQ items exist  
-            if (parsedBoqData.boq_items?.length > 0) {
+            if (boqItemsData?.length > 0) {
                 setStep(3); // Go directly to review step
                 setValidationResult({
                     success: true,
-                    message: `Successfully loaded ${parsedBoqData.boq_items.length} BOQ items`,
-                    items_count: parsedBoqData.boq_items.length,
-                    total_amount: parsedBoqData.project_info?.total_amount || 0
+                    message: `Successfully loaded ${boqItemsData.length} BOQ items`,
+                    items_count: boqItemsData.length,
+                    total_amount: projectInfo?.total_amount || 0
                 });
+                console.log(`🎯 Auto-advanced to Step 3 with ${boqItemsData.length} BOQ items`);
+            } else {
+                console.log('❌ No BOQ items found in parsed data');
             }
         }
     }, [parsedBoqData]);
