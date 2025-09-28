@@ -2430,7 +2430,7 @@ async def get_business_insights(current_user: dict = Depends(get_current_user)):
                 "active_projects": len([p for p in projects if p.get('status') == 'active'])
             },
             "top_clients": [{"name": name, "value": value} for name, value in top_clients],
-            "monthly_trends": self._calculate_monthly_trends(invoices)
+            "monthly_trends": _calculate_monthly_trends(invoices)
         }
         
     except Exception as e:
