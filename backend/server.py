@@ -1527,7 +1527,7 @@ async def get_projects_pending_gst_approval(current_user: dict = Depends(get_cur
     """Get projects that need GST approval (for Managers/SuperAdmins)"""
     try:
         # Check if user has permission to approve GST
-        if current_user.get('role') not in ['Manager', 'SuperAdmin']:
+        if current_user.get('role') not in ['Manager', 'SuperAdmin', 'super_admin']:
             raise HTTPException(
                 status_code=403, 
                 detail="Only Managers or SuperAdmins can view pending GST approvals"
