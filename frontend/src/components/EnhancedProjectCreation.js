@@ -47,7 +47,7 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
     const [validationResult, setValidationResult] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [step, setStep] = useState(1); // 1: Basic Info, 2: Company Selection, 3: BOQ Upload, 4: Review & Create
+    const [step, setStep] = useState(1); // 1: Basic Info, 2: Company Selection, 3: Review BOQ & Create
 
     const backendUrl = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL || "http://localhost:8001";
 
