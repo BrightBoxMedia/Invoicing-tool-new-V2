@@ -2478,7 +2478,7 @@ async def get_client_summary(client_id: str, current_user: dict = Depends(get_cu
         logger.error(f"Client summary error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get client summary: {str(e)}")
 
-def _calculate_gst_by_rate(self, invoices):
+def _calculate_gst_by_rate(invoices):
     """Helper function to calculate GST by rate"""
     gst_rates = {}
     
