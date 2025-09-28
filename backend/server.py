@@ -2372,6 +2372,149 @@ async def get_activity_logs(current_user: dict = Depends(get_current_user)):
         logger.error(f"Activity logs error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get activity logs: {str(e)}")
 
+# Reports System
+@api_router.get("/reports/gst-summary")
+async def get_gst_summary(current_user: dict = Depends(get_current_user)):
+    try:
+        invoices = await db.invoices.find().to_list(1000)
+        
+        total_taxable = sum(inv.get('subtotal', 0) for inv in invoices)
+        total_cgst = sum(inv.get('cgst_amount', 0) for inv in invoices)
+        total_sgst = sum(inv.get('sgst_amount', 0) for inv in invoices)
+        total_igst = sum(inv.get('igst_amount', 0) for inv in invoices)
+        total_gst = total_cgst + total_sgst + total_igst
+        
+        return {
+            "summary": {
+                "total_invoices": len(invoices),
+                "total_taxable_amount": total_taxable,
+                "total_cgst": total_cgst,
+                "total_sgst": total_sgst,
+                "total_igst": total_igst,
+                "total_gst": total_gst,
+                "total_amount": total_taxable + total_gst
+            },
+            "by_gst_rate": self._calculate_gst_by_rate(invoices)
+        }
+        
+    except Exception as e:
+        logger.error(f"GST summary error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get GST summary: {str(e)}")
+
+@api_router.get("/reports/insights")
+async def get_business_insights(current_user: dict = Depends(get_current_user)):
+    try:
+        # Get data for insights
+        projects = await db.projects.find().to_list(1000)
+        invoices = await db.invoices.find().to_list(1000)
+        clients = await db.clients.find().to_list(1000)
+        
+        # Calculate insights
+        avg_project_value = sum(p.get('total_project_value', 0) for p in projects) / len(projects) if projects else 0
+        total_revenue = sum(inv.get('total_amount', 0) for inv in invoices)
+        
+        # Top clients by project value
+        client_values = {}
+        for project in projects:
+            client_name = project.get('client_name', 'Unknown')
+            client_values[client_name] = client_values.get(client_name, 0) + project.get('total_project_value', 0)
+        
+        top_clients = sorted(client_values.items(), key=lambda x: x[1], reverse=True)[:5]
+        
+        return {
+            "metrics": {
+                "total_projects": len(projects),
+                "total_clients": len(clients),
+                "avg_project_value": avg_project_value,
+                "total_revenue": total_revenue,
+                "active_projects": len([p for p in projects if p.get('status') == 'active'])
+            },
+            "top_clients": [{"name": name, "value": value} for name, value in top_clients],
+            "monthly_trends": self._calculate_monthly_trends(invoices)
+        }
+        
+    except Exception as e:
+        logger.error(f"Business insights error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get business insights: {str(e)}")
+
+@api_router.get("/reports/client-summary/{client_id}")
+async def get_client_summary(client_id: str, current_user: dict = Depends(get_current_user)):
+    try:
+        # Get client data
+        client = await db.clients.find_one({"id": client_id})
+        if not client:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        # Get client's projects and invoices
+        projects = await db.projects.find({"client_id": client_id}).to_list(1000)
+        invoices = await db.invoices.find({"client_id": client_id}).to_list(1000)
+        
+        total_project_value = sum(p.get('total_project_value', 0) for p in projects)
+        total_invoiced = sum(inv.get('total_amount', 0) for inv in invoices)
+        pending_amount = sum(inv.get('net_amount_due', 0) for inv in invoices)
+        
+        return {
+            "client": {
+                "id": client.get('id'),
+                "name": client.get('name'),
+                "email": client.get('email'),
+                "phone": client.get('phone')
+            },
+            "summary": {
+                "total_projects": len(projects),
+                "total_project_value": total_project_value,
+                "total_invoices": len(invoices),
+                "total_invoiced": total_invoiced,
+                "pending_amount": pending_amount,
+                "collection_efficiency": ((total_invoiced - pending_amount) / total_invoiced * 100) if total_invoiced > 0 else 0
+            },
+            "projects": projects,
+            "recent_invoices": sorted(invoices, key=lambda x: x.get('created_at', ''), reverse=True)[:10]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Client summary error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get client summary: {str(e)}")
+
+def _calculate_gst_by_rate(self, invoices):
+    """Helper function to calculate GST by rate"""
+    gst_rates = {}
+    
+    for invoice in invoices:
+        for item in invoice.get('items', []):
+            rate = item.get('gst_rate', 18.0)
+            if rate not in gst_rates:
+                gst_rates[rate] = {"taxable_amount": 0, "gst_amount": 0, "count": 0}
+            
+            gst_rates[rate]["taxable_amount"] += item.get('amount', 0)
+            gst_rates[rate]["gst_amount"] += item.get('amount', 0) * rate / 100
+            gst_rates[rate]["count"] += 1
+    
+    return gst_rates
+
+def _calculate_monthly_trends(self, invoices):
+    """Helper function to calculate monthly trends"""
+    from collections import defaultdict
+    import datetime
+    
+    monthly_data = defaultdict(lambda: {"count": 0, "amount": 0})
+    
+    for invoice in invoices:
+        created_at = invoice.get('created_at')
+        if created_at:
+            if isinstance(created_at, str):
+                date_obj = datetime.datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+            else:
+                date_obj = created_at
+            
+            month_key = date_obj.strftime('%Y-%m')
+            monthly_data[month_key]["count"] += 1
+            monthly_data[month_key]["amount"] += invoice.get('total_amount', 0)
+    
+    return dict(monthly_data)
+
 # WebSocket Endpoint for Real-time Project Updates
 @app.websocket("/ws/projects/{project_id}")
 async def websocket_endpoint(websocket: WebSocket, project_id: str):
