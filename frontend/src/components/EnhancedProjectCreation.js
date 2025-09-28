@@ -9,9 +9,10 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
         client_address: '',
         purchase_order_number: '',
         abg_percentage: 0,
-        ra_percentage: 0,
+        ra_bill_percentage: 0,
         erection_percentage: 0,
         pbg_percentage: 0,
+        gst_type: 'IGST', // Default to IGST
         company_profile_id: '',
         selected_location_id: '',
         selected_bank_id: ''
