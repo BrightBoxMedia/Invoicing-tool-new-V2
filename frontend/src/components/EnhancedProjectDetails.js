@@ -241,10 +241,10 @@ const EnhancedProjectDetails = ({ project, onClose, onCreateInvoice }) => {
               <div className="bg-purple-100 p-3 rounded border border-purple-300 group relative">
                 <div className="text-purple-600 font-medium">PBG %</div>
                 <div className="text-2xl font-bold text-purple-800">{project.pbg_percentage || 0}%</div>
-                <div className="text-xs text-purple-600">Performance Bank Guarantee</div>
-                <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                  PBG Reserved = {((project.pbg_percentage || 0) * totalProjectValue / 100).toLocaleString('en-IN')}
+                <div className="text-sm font-bold text-purple-700 mt-1">
+                  ₹{((project.pbg_percentage || 0) * totalProjectValue / 100).toLocaleString('en-IN')}
                 </div>
+                <div className="text-xs text-purple-600">Performance Bank Guarantee</div>
               </div>
             </div>
           </div>
