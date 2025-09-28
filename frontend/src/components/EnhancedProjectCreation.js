@@ -934,7 +934,7 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
 
                         <div className="flex justify-between">
                             <button
-                                onClick={() => setStep(4)}
+                                onClick={() => setStep(3)}
                                 className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
                             >
                                 Previous
