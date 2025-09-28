@@ -1388,7 +1388,7 @@ async def create_project(project_data: dict, current_user: dict = Depends(get_cu
             )
             boq_items.append(boq_item)
         
-        # Create project
+        # Create project with GST configuration
         project = Project(
             project_name=project_data['project_name'],
             client_id=project_data['client_id'],
@@ -1396,9 +1396,11 @@ async def create_project(project_data: dict, current_user: dict = Depends(get_cu
             architect=project_data.get('architect', ''),
             location=project_data.get('location', ''),
             abg_percentage=abg,
-            ra_percentage=ra,
+            ra_bill_percentage=ra_bill,  # Updated field name
             erection_percentage=erection,
             pbg_percentage=pbg,
+            gst_type=gst_type,
+            gst_approval_status='pending',  # All new projects start as pending GST approval
             total_project_value=project_data['total_project_value'],
             boq_items=boq_items
         )
