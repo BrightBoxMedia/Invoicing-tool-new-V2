@@ -13,6 +13,7 @@ import CompanyProfileManagement from './components/CompanyProfileManagement';
 import InvoiceDesignCustomizer from './components/InvoiceDesignCustomizer';
 import EnhancedInvoiceCreation from './components/EnhancedInvoiceCreation';
 import InvoiceSuccessModal from './components/InvoiceSuccessModal';
+import GSTApprovalInterface from './components/GSTApprovalInterface';
 import EnhancedProjectCreation from './components/EnhancedProjectCreation';
 import Invoices from './components/Invoices';
 import Clients from './components/Clients';
