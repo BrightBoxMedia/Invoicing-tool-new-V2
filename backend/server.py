@@ -1742,6 +1742,13 @@ async def create_invoice(invoice_data: dict, current_user: dict = Depends(get_cu
         if not project:
             raise HTTPException(status_code=404, detail="Project not found")
         
+        # Check GST approval status
+        if project.get('gst_approval_status') != 'approved':
+            raise HTTPException(
+                status_code=400, 
+                detail="Cannot create invoice: Project GST configuration is not approved yet"
+            )
+        
         # Validate quantities against BOQ (CRITICAL FIX)
         for item_data in invoice_data.get('items', []):
             boq_item = next((bi for bi in project.get('boq_items', []) 
