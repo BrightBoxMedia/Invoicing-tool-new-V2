@@ -636,6 +636,10 @@ const Projects = ({ currentUser }) => {
               }}
               onSuccess={(invoiceData) => {
                 console.log('✅ Invoice created successfully:', invoiceData);
+                // Ensure invoice has proper ID for PDF download
+                if (invoiceData && !invoiceData.id && invoiceData.invoice_id) {
+                  invoiceData.id = invoiceData.invoice_id;
+                }
                 setCreatedInvoiceData(invoiceData);
                 setShowInvoiceSuccess(true);
                 setShowEnhancedInvoice(false);
