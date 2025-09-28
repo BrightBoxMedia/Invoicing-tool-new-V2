@@ -710,8 +710,8 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
 
 
 
-                {/* Step 4: BOQ Upload */}
-                {step === 4 && (
+                {/* Step 3: BOQ Upload */}
+                {step === 3 && (
                     <div className="space-y-6">
                         <h3 className="text-lg font-semibold text-gray-900">BOQ Upload & Validation</h3>
                         
