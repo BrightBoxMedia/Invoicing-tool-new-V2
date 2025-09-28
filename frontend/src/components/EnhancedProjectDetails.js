@@ -174,6 +174,32 @@ const EnhancedProjectDetails = ({ project, onClose, onCreateInvoice }) => {
                   <div className="font-bold text-lg text-green-600">₹{totalProjectValue.toLocaleString('en-IN')}</div>
                 </div>
               </div>
+              
+              {/* GST Status */}
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-500">GST Status:</span>
+                    <div className="flex items-center space-x-2 mt-1">
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        project.gst_approval_status === 'approved' 
+                          ? 'bg-green-100 text-green-800' 
+                          : project.gst_approval_status === 'rejected'
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {project.gst_approval_status === 'approved' && '✅ Approved'}
+                        {project.gst_approval_status === 'rejected' && '❌ Rejected'}
+                        {project.gst_approval_status === 'pending' && '⏳ Pending Approval'}
+                        {!project.gst_approval_status && '⏳ Pending Approval'}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        ({project.gst_type || 'IGST'})
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
             
             <div className="flex items-center space-x-3">
