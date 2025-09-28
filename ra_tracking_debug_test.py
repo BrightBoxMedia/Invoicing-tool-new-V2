@@ -11,7 +11,7 @@ from datetime import datetime
 
 class RATrackingDebugTester:
     def __init__(self):
-        self.base_url = "https://billing-maestro.preview.emergentagent.com"
+        self.base_url = "https://activus-manager.preview.emergentagent.com"
         self.api_url = f"{self.base_url}/api"
         self.token = None
         self.user_data = None

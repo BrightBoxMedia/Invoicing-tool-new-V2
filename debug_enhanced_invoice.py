@@ -8,7 +8,7 @@ import requests
 import json
 
 def test_enhanced_invoice_debug():
-    base_url = "https://billing-maestro.preview.emergentagent.com"
+    base_url = "https://activus-manager.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     # Login first
