@@ -270,11 +270,14 @@
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: true
         - agent: "testing"
         - comment: "🎯 COMPREHENSIVE BOQ PARSING TESTING COMPLETED: Performed extensive testing of improved BOQ parsing functionality as requested. OUTSTANDING RESULTS: ✅ 100% success rate for all BOQ parsing tests (20/20 passed), ✅ Unit/UOM Column Extraction working perfectly - correctly extracts text units like 'Cum', 'Sqm', 'Nos', 'Kg', 'Ton', 'Ltr', ✅ Enhanced column mapping with debug output functioning correctly, ✅ BOQ item structure validation passed - all items have proper unit values as text (not numbers), ✅ GST rates properly initialized to 18% default, ✅ Edge cases and unit variations handled correctly, ✅ Project creation with parsed BOQ data working seamlessly. The improved column mapping logic correctly identifies Unit columns and preserves text values. Created specialized test suite /app/boq_parsing_test.py for ongoing BOQ validation. BOQ parsing functionality is fully working and ready for production use."
+        - working: true
+        - agent: "main"
+        - comment: "🎉 CRITICAL BOQ PARSING FIX COMPLETED: Fixed the user's exact Excel file parsing issue. ENHANCEMENTS MADE: ✅ Enhanced _find_header_row() to specifically detect user's format ('Sl. No.', 'Description Of Item', ' Qty', 'Unit', 'Rate/ Unit', 'Amount'), ✅ Enhanced _get_enhanced_column_mapping() to handle exact column names from user's Excel, ✅ Fixed _is_summary_row() validation - was rejecting valid short descriptions like 'TOP', 'Left', 'Right', ✅ Enhanced _is_valid_boq_item() validation for user's specific data format. VERIFIED RESULTS: Successfully extracted all 6 BOQ items from 'Activus sample check.xlsx': TOP (10 Ltr @ ₹100 = ₹1000), Left (5 Meter @ ₹150 = ₹750), Right (4 MM @ ₹200 = ₹800), Buttom (3 Cum @ ₹250 = ₹750), Side (2 Pack @ ₹300 = ₹600), FUN (1 Nos @ ₹350 = ₹350). Total: ₹4,250. Parser now handles headers at any row (found at row 9), accepts various serial number formats, and validates items appropriately."
 
 ## frontend:
   - task: "Projects Page Error Fix"
