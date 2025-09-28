@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const EnhancedProjectCreation = ({ currentUser, onClose, onSuccess }) => {
+const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSuccess }) => {
     const [projectData, setProjectData] = useState({
         project_name: '',
         architect: '',
