@@ -634,11 +634,12 @@ const Projects = ({ currentUser }) => {
                 setShowEnhancedInvoice(false);
                 setSelectedProject(null);
               }}
-              onSuccess={() => {
+              onSuccess={(invoiceData) => {
+                console.log('✅ Invoice created successfully:', invoiceData);
+                setCreatedInvoiceData(invoiceData);
+                setShowInvoiceSuccess(true);
                 setShowEnhancedInvoice(false);
-                setSelectedProject(null);
-                fetchProjects();
-                alert('Invoice created successfully!');
+                fetchProjects(); // Refresh projects to update data
               }}
             />
           </div>
