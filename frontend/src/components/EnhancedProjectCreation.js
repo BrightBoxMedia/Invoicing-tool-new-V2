@@ -318,7 +318,7 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
     const renderStepIndicator = () => (
         <div className="mb-8">
             <div className="flex items-center justify-between">
-                {['Basic Info', 'Company Selection', 'Project Metadata', 'BOQ Upload', 'Review & Create'].map((stepName, index) => (
+                {['Basic Info', 'Company Selection', 'BOQ Upload', 'Review & Create'].map((stepName, index) => (
                     <div key={index} className="flex items-center">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                             step > index + 1 ? 'bg-green-500 text-white' : 
