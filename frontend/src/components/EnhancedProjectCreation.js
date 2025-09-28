@@ -3,9 +3,15 @@ import React, { useState, useEffect } from 'react';
 const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSuccess }) => {
     const [projectData, setProjectData] = useState({
         project_name: '',
-        architect: '',
-        client_id: '',
+        architect_name: '',
+        architect_address: '',
         client_name: '',
+        client_address: '',
+        purchase_order_number: '',
+        abg_percentage: 0,
+        ra_percentage: 0,
+        erection_percentage: 0,
+        pbg_percentage: 0,
         company_profile_id: '',
         selected_location_id: '',
         selected_bank_id: ''
