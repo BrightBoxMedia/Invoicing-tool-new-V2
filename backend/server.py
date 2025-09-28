@@ -919,33 +919,63 @@ class ExcelParser:
         return row_data
     
     def _is_valid_boq_item(self, row_data: Dict) -> bool:
-        """FLEXIBLE validation - accepts various BOQ item formats"""
+        """ENHANCED validation - specifically handles user's Excel format"""
         description = str(row_data.get('description', '')).strip()
         
-        # More flexible description validation
-        if not description or len(description) < 3:  # Reduced from 10 to 3
+        # Enhanced description validation - be more forgiving
+        if not description or len(description) < 2:
             return False
         
-        # Skip clearly invalid descriptions
-        invalid_patterns = ['total', 'sum', 'subtotal', 'grand total', 'gst', 'tax', 'nil', 'n/a', 'na']
-        desc_lower = description.lower()
-        if any(pattern in desc_lower for pattern in invalid_patterns):
+        # Skip clearly invalid descriptions (but be more specific)
+        invalid_patterns = [
+            'total', 'sum', 'subtotal', 'grand total', 'gst', 'tax', 'nil', 'n/a', 'na',
+            'provisional sum', 'p.sum', 'contingency', 'overhead', 'profit', 'margin'
+        ]
+        desc_lower = description.lower().strip()
+        
+        # Only reject if the ENTIRE description matches invalid patterns
+        if desc_lower in invalid_patterns or any(desc_lower == pattern for pattern in invalid_patterns):
+            logger.info(f"❌ Rejecting invalid description: '{description}'")
             return False
         
-        # More flexible numeric validation - accept if ANY numeric field exists
+        # More flexible numeric validation - handle user's data format
         quantity = row_data.get('quantity', 0) 
         rate = row_data.get('rate', 0)
         amount = row_data.get('amount', 0)
         
-        # Valid if description exists AND (has quantity OR rate OR amount > 0)
-        has_numeric = quantity > 0 or rate > 0 or amount > 0
+        # Convert to float safely
+        try:
+            quantity = float(quantity) if quantity else 0.0
+            rate = float(rate) if rate else 0.0
+            amount = float(amount) if amount else 0.0
+        except (ValueError, TypeError):
+            logger.info(f"❌ Invalid numeric values for: '{description[:30]}...'")
+            return False
         
-        # Also valid if we have good description and at least qty/rate to calculate amount
-        has_calculable = (quantity > 0 and rate > 0) or amount > 0
+        # Enhanced validation logic
+        has_quantity = quantity > 0
+        has_rate = rate > 0  
+        has_amount = amount > 0
         
-        logger.info(f"🔍 Validating: '{description[:30]}...' | Qty: {quantity} | Rate: {rate} | Amount: {amount} | Valid: {has_numeric or has_calculable}")
+        # Valid BOQ item criteria:
+        # 1. Has description AND (quantity AND rate) OR
+        # 2. Has description AND amount > 0 OR
+        # 3. Has description AND any two numeric fields
+        is_valid = (
+            (has_quantity and has_rate) or  # Can calculate amount
+            has_amount or  # Has final amount
+            (sum([has_quantity, has_rate, has_amount]) >= 2)  # At least 2 numeric fields
+        )
         
-        return has_numeric or has_calculable
+        # Special handling for user's specific items like "TOP", "Left", "Right", etc.
+        if not is_valid and len(description) >= 3 and any(desc_lower.startswith(prefix) for prefix in ['top', 'left', 'right', 'buttom', 'side']):
+            # These are likely valid items even with less strict validation
+            is_valid = has_quantity or has_rate or has_amount
+            logger.info(f"🔍 Special handling for user's item: '{description}'")
+        
+        logger.info(f"🔍 Validating: '{description[:30]}...' | Qty: {quantity} | Rate: {rate} | Amount: {amount} | Valid: {is_valid}")
+        
+        return is_valid
     
     def _safe_float_conversion(self, value):
         """Safely convert value to float"""
