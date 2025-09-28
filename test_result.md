@@ -384,6 +384,8 @@
 
 ## test_plan:
   current_focus:
+    - "COMPLETED: Enhanced Invoice Creation UX Flow Testing"
+    - "COMPLETED: InvoiceSuccessModal Implementation Verification"
     - "COMPLETED: User's Critical BOQ Parsing Issue Testing"
     - "COMPLETED: WebSocket Infrastructure Testing"
     - "COMPLETED: Server-Sent Events (SSE) Fallback Testing"
@@ -392,8 +394,10 @@
     - "NEEDS ATTENTION: Real-time Event Emission Testing"
   stuck_tasks:
     - "Real-time Event Emission - requires valid BOQ item IDs for testing"
+    - "PDF Download functionality - invoice ID undefined issue"
+    - "Create Another button - modal state management issue"
   test_all: false
-  test_priority: "user_boq_parsing_verification"
+  test_priority: "enhanced_invoice_ux_verification"
 
   - task: "Proforma Invoice Tax Options"
     implemented: true
