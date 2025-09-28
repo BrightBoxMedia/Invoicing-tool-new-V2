@@ -658,6 +658,25 @@ const Projects = ({ currentUser }) => {
         />
       )}
 
+      {/* Invoice Success Modal */}
+      {showInvoiceSuccess && createdInvoiceData && (
+        <InvoiceSuccessModal
+          invoice={createdInvoiceData}
+          project={selectedProject}
+          onClose={() => {
+            setShowInvoiceSuccess(false);
+            setCreatedInvoiceData(null);
+            setSelectedProject(null);
+          }}
+          onCreateAnother={() => {
+            setShowInvoiceSuccess(false);
+            setCreatedInvoiceData(null);
+            // Keep selectedProject and reopen invoice creation
+            setShowEnhancedInvoice(true);
+          }}
+        />
+      )}
+
       {/* Enhanced Project Creation Modal - BOQ Upload Workflow */}
       {showEnhancedProjectCreation && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
