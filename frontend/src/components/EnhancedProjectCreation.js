@@ -63,7 +63,7 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
             
             // Set BOQ items if available
             if (parsedBoqData.boq_items) {
-                setBOQItems(parsedBoqData.boq_items);
+                setBoqItems(parsedBoqData.boq_items);
                 console.log(`✅ Loaded ${parsedBoqData.boq_items.length} BOQ items`);
             }
             
