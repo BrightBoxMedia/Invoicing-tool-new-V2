@@ -292,7 +292,31 @@ const EnhancedProjectDetails = ({ project, onClose, onCreateInvoice }) => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <button
                               className="text-blue-600 hover:text-blue-800 underline font-medium"
-                              onClick={() => window.open(`/invoices/${invoice.id}`, '_blank')}
+                              onClick={async () => {
+                                try {
+                                  const token = localStorage.getItem('token');
+                                  const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/invoices/${invoice.id}/pdf`, {
+                                    headers: { Authorization: `Bearer ${token}` }
+                                  });
+                                  
+                                  if (response.ok) {
+                                    const blob = await response.blob();
+                                    const url = window.URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.href = url;
+                                    a.download = `${invoice.invoice_number}.pdf`;
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    window.URL.revokeObjectURL(url);
+                                    document.body.removeChild(a);
+                                  } else {
+                                    alert('Error downloading PDF. Please try again.');
+                                  }
+                                } catch (error) {
+                                  console.error('Error downloading PDF:', error);
+                                  alert('Error downloading PDF. Please try again.');
+                                }
+                              }}
                             >
                               {invoice.invoice_number}
                             </button>
