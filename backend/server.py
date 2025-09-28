@@ -899,7 +899,7 @@ class ExcelParser:
         return column_mapping
     
     def _extract_row_data(self, worksheet, row_idx: int, column_mapping: Dict[str, int]) -> Dict:
-        """Extract data from a specific row using column mapping"""
+        """Enhanced row data extraction - handles user's Excel format"""
         row_data = {}
         
         for field, col_idx in column_mapping.items():
@@ -907,15 +907,54 @@ class ExcelParser:
             cell_value = cell.value
             
             if field == 'description':
-                row_data[field] = str(cell_value).strip() if cell_value else ''
+                # Enhanced description extraction
+                desc_value = str(cell_value).strip() if cell_value else ''
+                # Handle cases where description might have extra spaces or formatting
+                desc_value = ' '.join(desc_value.split())  # Normalize whitespace
+                row_data[field] = desc_value
+                
             elif field == 'unit':
-                unit_str = str(cell_value).strip() if cell_value else 'Nos'
+                # Enhanced unit extraction - handle various formats
+                if cell_value:
+                    unit_str = str(cell_value).strip()
+                    # Clean up common unit formats
+                    unit_str = unit_str.replace('/', '').replace('\\', '').strip()
+                    if not unit_str or unit_str.lower() in ['', 'nil', 'na', 'n/a']:
+                        unit_str = 'Nos'
+                else:
+                    unit_str = 'Nos'
                 row_data[field] = unit_str
+                
             elif field in ['quantity', 'rate', 'amount']:
+                # Enhanced numeric extraction
                 row_data[field] = self._safe_float_conversion(cell_value)
+                
+            elif field == 'sr_no':
+                # Enhanced serial number handling - can be text or number
+                if cell_value:
+                    sr_value = str(cell_value).strip()
+                    row_data[field] = sr_value
+                else:
+                    row_data[field] = ''
             else:
                 row_data[field] = cell_value
         
+        # Enhanced data completion - fill missing fields intelligently
+        if 'description' not in row_data:
+            row_data['description'] = ''
+        if 'unit' not in row_data:
+            row_data['unit'] = 'Nos'
+        if 'quantity' not in row_data:
+            row_data['quantity'] = 0.0
+        if 'rate' not in row_data:
+            row_data['rate'] = 0.0  
+        if 'amount' not in row_data:
+            row_data['amount'] = 0.0
+        
+        # Calculate missing amount if we have quantity and rate
+        if row_data['amount'] == 0.0 and row_data['quantity'] > 0 and row_data['rate'] > 0:
+            row_data['amount'] = row_data['quantity'] * row_data['rate']
+            
         return row_data
     
     def _is_valid_boq_item(self, row_data: Dict) -> bool:
