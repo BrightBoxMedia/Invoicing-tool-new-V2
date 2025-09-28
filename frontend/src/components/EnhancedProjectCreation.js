@@ -710,74 +710,7 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
 
 
 
-                {/* Step 3: BOQ Upload */}
-                {step === 3 && (
-                    <div className="space-y-6">
-                        <h3 className="text-lg font-semibold text-gray-900">BOQ Upload & Validation</h3>
-                        
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                            <div className="mx-auto w-12 h-12 text-gray-400 mb-4">
-                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                </svg>
-                            </div>
-                            <div className="mb-4">
-                                <label htmlFor="boq-upload" className="cursor-pointer">
-                                    <span className="text-blue-600 font-medium hover:text-blue-700">
-                                        Click to upload BOQ file
-                                    </span>
-                                    <span className="text-gray-500"> or drag and drop</span>
-                                </label>
-                                <input
-                                    id="boq-upload"
-                                    type="file"
-                                    className="hidden"
-                                    accept=".xlsx,.xls"
-                                    onChange={handleBOQUpload}
-                                />
-                            </div>
-                            <p className="text-sm text-gray-500">Excel files (.xlsx, .xls) up to 10MB</p>
-                            
-                            {boqFile && (
-                                <div className="mt-4 text-sm text-gray-600">
-                                    Selected: {boqFile.name}
-                                </div>
-                            )}
-                        </div>
 
-                        {loading && (
-                            <div className="text-center">
-                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                                <p className="text-sm text-gray-600">Processing BOQ...</p>
-                            </div>
-                        )}
-
-                        {boqItems.length > 0 && (
-                            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                                <h4 className="font-medium text-green-800">BOQ Processed Successfully</h4>
-                                <p className="text-green-700 mt-1">
-                                    {boqItems.length} items loaded. Total value: ₹{boqItems.reduce((sum, item) => sum + (item.total_with_gst || 0), 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}
-                                </p>
-                            </div>
-                        )}
-
-                        <div className="flex justify-between">
-                            <button
-                                onClick={() => setStep(2)}
-                                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
-                            >
-                                Previous
-                            </button>
-                            <button
-                                onClick={validateMetadata}
-                                disabled={boqItems.length === 0 || loading}
-                                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
-                            >
-                                Validate & Continue
-                            </button>
-                        </div>
-                    </div>
-                )}
 
                 {/* Step 3: Validation Results & Final Review */}
                 {step === 3 && (
