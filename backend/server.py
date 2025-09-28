@@ -24,6 +24,11 @@ from pydantic import BaseModel, Field, validator
 import uvicorn
 import json
 import websockets
+import pydantic
+from bson import ObjectId
+
+# Fix ObjectId serialization for JSON responses
+pydantic.json.ENCODERS_BY_TYPE[ObjectId] = str
 
 # Database
 import motor.motor_asyncio
