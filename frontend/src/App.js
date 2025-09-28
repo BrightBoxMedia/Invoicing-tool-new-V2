@@ -502,6 +502,8 @@ const Projects = ({ currentUser }) => {
 
     const formData = new FormData();
     formData.append('file', file);
+    
+    setLoading(true);
 
     try {
       const token = localStorage.getItem('token');
@@ -511,10 +513,21 @@ const Projects = ({ currentUser }) => {
           'Content-Type': 'multipart/form-data'
         }
       });
-      // BOQ Upload successful - for now, just show alert
-      alert('BOQ uploaded successfully! Use Enhanced Project Creation for full workflow.');
+      
+      // BOQ Upload successful - trigger Enhanced Project Creation
+      console.log('✅ BOQ parsed successfully:', response.data);
+      
+      // Set the parsed data and show Enhanced Project Creation modal
+      setParsedData(response.data);
+      setShowEnhancedProjectCreation(true);
+      
     } catch (error) {
+      console.error('❌ BOQ upload failed:', error);
       alert('Error uploading file: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setLoading(false);
+      // Reset file input
+      e.target.value = '';
     }
   };
 
