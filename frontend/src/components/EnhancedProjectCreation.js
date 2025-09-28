@@ -276,7 +276,7 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
 
             if (response.ok) {
                 const data = await response.json();
-                setBOQItems(data.items || []);
+                setBoqItems(data.items || []);
                 setError('');
             } else {
                 const errorData = await response.json();
