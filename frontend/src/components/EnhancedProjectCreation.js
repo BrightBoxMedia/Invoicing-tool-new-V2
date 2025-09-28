@@ -258,7 +258,7 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
         const file = event.target.files[0];
         if (!file) return;
 
-        setBOQFile(file);
+        setBoqFile(file);
         
         try {
             setLoading(true);
