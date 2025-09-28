@@ -702,7 +702,7 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
                                 disabled={!projectData.company_profile_id || !projectData.selected_bank_id}
                                 className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
                             >
-                                Next: BOQ Upload
+                                Next: Review BOQ
                             </button>
                         </div>
                     </div>
