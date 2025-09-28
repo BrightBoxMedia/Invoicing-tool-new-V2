@@ -532,8 +532,8 @@ const Projects = ({ currentUser }) => {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">🏗️ Projects</h2>
-        <label className="text-white px-4 py-2 rounded-lg hover:opacity-90 cursor-pointer transition-colors bg-blue-600">
-          📄 Upload BOQ Excel
+        <label className="text-white px-4 py-2 rounded-lg hover:opacity-90 cursor-pointer transition-colors bg-green-600">
+          🏗️ Create Project
           <input type="file" accept=".xlsx,.xls" onChange={handleFileUpload} className="hidden" />
         </label>
       </div>
