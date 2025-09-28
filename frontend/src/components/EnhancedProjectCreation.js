@@ -12,7 +12,8 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
         ra_bill_percentage: 0,
         erection_percentage: 0,
         pbg_percentage: 0,
-        gst_type: 'IGST', // Default to IGST
+        gst_type: 'IGST', // Default to IGST as specified
+        gst_approval_status: 'pending', // pending, approved, rejected
         company_profile_id: '',
         selected_location_id: '',
         selected_bank_id: ''
