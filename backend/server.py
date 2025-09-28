@@ -707,65 +707,83 @@ class ExcelParser:
         return project_info
     
     def _find_header_row(self, worksheet) -> Optional[int]:
-        """SUPER INTELLIGENT header detection for ANY Excel format"""
-        logger.info("🔍 SEARCHING for header row in Excel...")
+        """ENHANCED header detection - specifically handles user's Excel format"""
+        logger.info("🔍 ENHANCED HEADER SEARCH for user's Excel format...")
         
-        for row in range(1, min(50, worksheet.max_row + 1)):  # Increased search range
+        for row in range(1, min(50, worksheet.max_row + 1)):
             row_text = []
             non_empty_count = 0
             
-            for col in range(1, min(30, worksheet.max_column + 1)):  # Increased column range
+            for col in range(1, min(30, worksheet.max_column + 1)):
                 cell_value = worksheet.cell(row=row, column=col).value
                 if cell_value:
-                    row_text.append(str(cell_value).lower())
+                    row_text.append(str(cell_value).lower().strip())
                     non_empty_count += 1
             
             row_combined = ' '.join(row_text)
             logger.info(f"Row {row}: {non_empty_count} cells | '{row_combined[:100]}...'")
             
-            # SUPER FLEXIBLE header detection
-            description_indicators = [
-                'description', 'particular', 'particulars', 'item', 'work', 'activity', 'scope', 
-                'specification', 'details', 'desc', 'material', 'service', 'task', 'component'
-            ]
+            # ENHANCED detection for user's specific format
+            # Look for the exact pattern: "Sl. No." + "Description Of Item" + quantity/unit indicators
+            has_sl_no = any(indicator in row_combined for indicator in [
+                'sl. no', 'sl.no', 'slno', 'sl no', 'sr. no', 'sr.no', 'srno', 'sr no', 'serial'
+            ])
             
-            numeric_indicators = [
-                'quantity', 'qty', 'qnty', 'rate', 'amount', 'price', 'cost', 'value', 
-                'total', 'unit', 'nos', 'each', 'measure', 'measurement'
-            ]
+            has_description_of_item = any(indicator in row_combined for indicator in [
+                'description of item', 'description', 'item', 'particulars', 'work item'
+            ])
             
-            has_description = any(indicator in row_combined for indicator in description_indicators)
-            has_numeric = any(indicator in row_combined for indicator in numeric_indicators)
+            has_qty = any(indicator in row_combined for indicator in [
+                'qty', 'quantity', 'qnty'
+            ])
             
-            # Additional heuristics
-            has_enough_columns = non_empty_count >= 3  # At least 3 non-empty columns
-            looks_like_header = any(word in row_combined for word in ['sr', 'sl', 'no', 'column', 'field'])
+            has_unit = any(indicator in row_combined for indicator in [
+                'unit', 'uom', 'u.o.m'
+            ])
             
-            # Score-based detection
+            has_rate = any(indicator in row_combined for indicator in [
+                'rate', 'rate/', 'rate /', 'rate/unit', 'rate / unit', 'unit rate'
+            ])
+            
+            has_amount = any(indicator in row_combined for indicator in [
+                'amount', 'total', 'value'
+            ])
+            
+            # Score calculation - prioritize exact matches for user's format
             score = 0
-            if has_description: score += 3
-            if has_numeric: score += 2  
-            if has_enough_columns: score += 1
-            if looks_like_header: score += 1
+            if has_sl_no: score += 2
+            if has_description_of_item: score += 3  # Most important
+            if has_qty: score += 2
+            if has_unit: score += 2
+            if has_rate: score += 2
+            if has_amount: score += 1
             
-            logger.info(f"Row {row} score: {score} | Desc: {has_description} | Numeric: {has_numeric} | Columns: {non_empty_count}")
+            # Boost score if we have enough columns
+            if non_empty_count >= 4: score += 1
             
-            if score >= 4 or (has_description and has_numeric):
+            logger.info(f"Row {row} score: {score} | SlNo: {has_sl_no} | Desc: {has_description_of_item} | Qty: {has_qty} | Unit: {has_unit} | Rate: {has_rate} | Amount: {has_amount}")
+            
+            # Accept row if it has essential BOQ indicators
+            if score >= 6 or (has_description_of_item and has_qty and (has_unit or has_rate)):
                 logger.info(f"✅ FOUND HEADER ROW at {row}: '{row_combined[:100]}...'")
                 return row
         
-        # Fallback: Look for any row with multiple text headers
-        logger.warning("⚠️ Standard header detection failed, trying fallback...")
+        # Fallback: Look for any row with "Description Of Item" specifically
+        logger.warning("⚠️ Enhanced header detection failed, trying specific pattern fallback...")
         for row in range(1, min(50, worksheet.max_row + 1)):
-            non_empty = 0
             for col in range(1, min(30, worksheet.max_column + 1)):
                 cell_value = worksheet.cell(row=row, column=col).value
-                if cell_value and isinstance(cell_value, str) and len(str(cell_value).strip()) > 2:
-                    non_empty += 1
-            
-            if non_empty >= 4:  # Row with at least 4 text headers
-                logger.info(f"✅ FALLBACK HEADER ROW found at {row} with {non_empty} columns")
-                return row
+                if cell_value and 'description' in str(cell_value).lower():
+                    # Check if this row has multiple headers
+                    headers_in_row = 0
+                    for c in range(1, min(10, worksheet.max_column + 1)):
+                        cv = worksheet.cell(row=row, column=c).value
+                        if cv and isinstance(cv, str) and len(str(cv).strip()) > 2:
+                            headers_in_row += 1
+                    
+                    if headers_in_row >= 3:
+                        logger.info(f"✅ FALLBACK HEADER ROW found at {row} with 'description' and {headers_in_row} headers")
+                        return row
         
         logger.error("❌ Could not find any header row!")
         return None
