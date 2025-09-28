@@ -235,6 +235,107 @@ class ActivusAPITester:
             self.log_test("BOQ upload", False, f"- {result}")
             return None
 
+    def test_user_specific_boq_upload(self):
+        """Test BOQ upload with user's specific Excel file - CRITICAL FIX VERIFICATION"""
+        print("\n🎯 Testing User's Specific BOQ Upload (Activus sample check.xlsx)...")
+        
+        # Check if the user's Excel file exists
+        excel_file_path = "/app/activus_sample_check.xlsx"
+        try:
+            with open(excel_file_path, 'rb') as f:
+                excel_data = f.read()
+            
+            self.log_test("User's Excel file found", True, f"- File size: {len(excel_data)} bytes")
+            
+            # Upload the user's specific Excel file
+            files = {'file': ('activus_sample_check.xlsx', excel_data, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
+            
+            success, result = self.make_request('POST', 'upload-boq', files=files)
+            
+            if success:
+                # Verify response structure
+                required_fields = ['parsed_data', 'filename', 'status']
+                has_all_fields = all(field in result for field in required_fields)
+                self.log_test("User's BOQ upload structure", has_all_fields, f"- Fields: {list(result.keys())}")
+                
+                if 'parsed_data' in result and 'boq_items' in result['parsed_data']:
+                    items = result['parsed_data']['boq_items']
+                    project_info = result['parsed_data'].get('project_info', {})
+                    total_amount = project_info.get('total_amount', 0)
+                    
+                    # Expected 6 items with total ₹4,250
+                    expected_items = 6
+                    expected_total = 4250.0
+                    
+                    items_count_correct = len(items) == expected_items
+                    total_amount_correct = abs(total_amount - expected_total) < 1.0  # Allow small floating point differences
+                    
+                    self.log_test("User's BOQ items count", items_count_correct, 
+                                f"- Found {len(items)} items (expected {expected_items})")
+                    
+                    self.log_test("User's BOQ total amount", total_amount_correct, 
+                                f"- Total: ₹{total_amount} (expected ₹{expected_total})")
+                    
+                    # Verify specific items
+                    expected_items_data = [
+                        {"description": "TOP", "quantity": 10, "unit": "Ltr", "rate": 100, "amount": 1000},
+                        {"description": "Left", "quantity": 5, "unit": "Meter", "rate": 150, "amount": 750},
+                        {"description": "Right", "quantity": 4, "unit": "MM", "rate": 200, "amount": 800},
+                        {"description": "Buttom", "quantity": 3, "unit": "Cum", "rate": 250, "amount": 750},
+                        {"description": "Side", "quantity": 2, "unit": "Pack", "rate": 300, "amount": 600},
+                        {"description": "FUN", "quantity": 1, "unit": "Nos", "rate": 350, "amount": 350}
+                    ]
+                    
+                    items_verified = 0
+                    for expected_item in expected_items_data:
+                        found_item = None
+                        for item in items:
+                            if expected_item["description"].lower() in item.get("description", "").lower():
+                                found_item = item
+                                break
+                        
+                        if found_item:
+                            qty_match = abs(found_item.get("quantity", 0) - expected_item["quantity"]) < 0.1
+                            rate_match = abs(found_item.get("rate", 0) - expected_item["rate"]) < 0.1
+                            amount_match = abs(found_item.get("amount", 0) - expected_item["amount"]) < 1.0
+                            unit_match = expected_item["unit"].lower() in found_item.get("unit", "").lower()
+                            
+                            if qty_match and rate_match and amount_match and unit_match:
+                                items_verified += 1
+                                self.log_test(f"Item '{expected_item['description']}' verification", True,
+                                            f"- {found_item.get('quantity')} {found_item.get('unit')} @ ₹{found_item.get('rate')} = ₹{found_item.get('amount')}")
+                            else:
+                                self.log_test(f"Item '{expected_item['description']}' verification", False,
+                                            f"- Expected: {expected_item['quantity']} {expected_item['unit']} @ ₹{expected_item['rate']} = ₹{expected_item['amount']}")
+                                self.log_test(f"Item '{expected_item['description']}' actual", False,
+                                            f"- Found: {found_item.get('quantity')} {found_item.get('unit')} @ ₹{found_item.get('rate')} = ₹{found_item.get('amount')}")
+                        else:
+                            self.log_test(f"Item '{expected_item['description']}' found", False, "- Item not found in parsed results")
+                    
+                    all_items_verified = items_verified == len(expected_items_data)
+                    self.log_test("All expected items verified", all_items_verified, 
+                                f"- {items_verified}/{len(expected_items_data)} items correctly parsed")
+                    
+                    # Overall success check
+                    parsing_success = items_count_correct and total_amount_correct and all_items_verified
+                    self.log_test("🎉 USER'S CRITICAL BOQ PARSING FIX", parsing_success,
+                                f"- COMPLETE SUCCESS: All 6 items extracted correctly, total ₹{total_amount}")
+                    
+                    return result['parsed_data']
+                else:
+                    self.log_test("User's BOQ parsing", False, "- No BOQ items found in parsed data")
+                    return None
+            else:
+                self.log_test("User's BOQ upload", False, f"- {result}")
+                return None
+                
+        except FileNotFoundError:
+            self.log_test("User's Excel file found", False, f"- File not found at {excel_file_path}")
+            return None
+        except Exception as e:
+            self.log_test("User's BOQ upload", False, f"- Error: {str(e)}")
+            return None
+
     def test_project_management(self, boq_data=None):
         """Test project creation and management"""
         print("\n🏗️ Testing Project Management...")
