@@ -8,7 +8,14 @@ const InvoiceSuccessModal = ({ invoice, project, onClose, onDownloadPDF, onCreat
     const handleDownloadPDF = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`${backendUrl}/api/invoices/${invoice.id}/pdf`, {
+            const invoiceId = invoice.id || invoice.invoice_id;
+            
+            if (!invoiceId) {
+                console.error('No invoice ID found for PDF download');
+                return;
+            }
+
+            const response = await fetch(`${backendUrl}/api/invoices/${invoiceId}/pdf`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
@@ -17,11 +24,14 @@ const InvoiceSuccessModal = ({ invoice, project, onClose, onDownloadPDF, onCreat
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `invoice-${invoice.invoice_number}.pdf`;
+                a.download = `invoice-${invoice.invoice_number || invoiceId}.pdf`;
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
                 document.body.removeChild(a);
+                console.log('✅ PDF downloaded successfully');
+            } else {
+                console.error('Failed to download PDF:', response.status);
             }
         } catch (error) {
             console.error('Error downloading PDF:', error);
