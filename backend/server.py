@@ -2120,6 +2120,91 @@ async def upload_company_logo(
         raise HTTPException(status_code=500, detail=f"Failed to upload logo: {str(e)}")
 
 # Dashboard stats endpoint
+# Item Master System
+@api_router.get("/item-master")
+async def get_item_master(current_user: dict = Depends(get_current_user)):
+    try:
+        # Get all unique items from BOQ data across projects
+        projects = await db.projects.find().to_list(1000)
+        items = []
+        
+        for project in projects:
+            for boq_item in project.get('boq_items', []):
+                items.append({
+                    "id": boq_item.get('id', ''),
+                    "description": boq_item.get('description', ''),
+                    "unit": boq_item.get('unit', 'Nos'),
+                    "rate": boq_item.get('rate', 0),
+                    "gst_rate": boq_item.get('gst_rate', 18.0),
+                    "project_name": project.get('project_name', '')
+                })
+        
+        return {"items": items, "total_count": len(items)}
+        
+    except Exception as e:
+        logger.error(f"Item master error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get item master: {str(e)}")
+
+@api_router.post("/item-master")
+async def create_item_master(item_data: dict, current_user: dict = Depends(get_current_user)):
+    try:
+        # For now, return success - full implementation would store custom items
+        return {"message": "Item master creation not fully implemented yet", "status": "pending"}
+        
+    except Exception as e:
+        logger.error(f"Create item master error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create item: {str(e)}")
+
+@api_router.get("/item-master/search")
+async def search_item_master(q: str = "", current_user: dict = Depends(get_current_user)):
+    try:
+        # Search items by description
+        projects = await db.projects.find().to_list(1000)
+        matching_items = []
+        
+        for project in projects:
+            for boq_item in project.get('boq_items', []):
+                if q.lower() in boq_item.get('description', '').lower():
+                    matching_items.append({
+                        "id": boq_item.get('id', ''),
+                        "description": boq_item.get('description', ''),
+                        "unit": boq_item.get('unit', 'Nos'),
+                        "rate": boq_item.get('rate', 0),
+                        "gst_rate": boq_item.get('gst_rate', 18.0)
+                    })
+        
+        return {"items": matching_items, "query": q}
+        
+    except Exception as e:
+        logger.error(f"Search item master error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to search items: {str(e)}")
+
+@api_router.post("/item-master/auto-populate")
+async def auto_populate_item(search_data: dict, current_user: dict = Depends(get_current_user)):
+    try:
+        description = search_data.get('description', '')
+        
+        # Find similar items from existing BOQ data
+        projects = await db.projects.find().to_list(1000)
+        suggestions = []
+        
+        for project in projects:
+            for boq_item in project.get('boq_items', []):
+                item_desc = boq_item.get('description', '').lower()
+                if description.lower() in item_desc or item_desc in description.lower():
+                    suggestions.append({
+                        "description": boq_item.get('description', ''),
+                        "unit": boq_item.get('unit', 'Nos'),
+                        "rate": boq_item.get('rate', 0),
+                        "gst_rate": boq_item.get('gst_rate', 18.0)
+                    })
+        
+        return {"suggestions": suggestions[:10]}  # Limit to top 10
+        
+    except Exception as e:
+        logger.error(f"Auto populate error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to auto populate: {str(e)}")
+
 @api_router.get("/dashboard/stats")
 async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
     try:
