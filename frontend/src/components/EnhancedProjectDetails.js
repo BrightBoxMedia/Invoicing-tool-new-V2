@@ -233,10 +233,10 @@ const EnhancedProjectDetails = ({ project, onClose, onCreateInvoice }) => {
               <div className="bg-yellow-100 p-3 rounded border border-yellow-300 group relative">
                 <div className="text-yellow-600 font-medium">Erection %</div>
                 <div className="text-2xl font-bold text-yellow-800">{project.erection_percentage || 0}%</div>
-                <div className="text-xs text-yellow-600">Erection Work</div>
-                <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                  Total Erection Value = {((project.erection_percentage || 0) * totalProjectValue / 100).toLocaleString('en-IN')}
+                <div className="text-sm font-bold text-yellow-700 mt-1">
+                  ₹{((project.erection_percentage || 0) * totalProjectValue / 100).toLocaleString('en-IN')}
                 </div>
+                <div className="text-xs text-yellow-600">Erection Work</div>
               </div>
               <div className="bg-purple-100 p-3 rounded border border-purple-300 group relative">
                 <div className="text-purple-600 font-medium">PBG %</div>
