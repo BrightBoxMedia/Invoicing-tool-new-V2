@@ -77,7 +77,7 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
             
             // Auto-advance to validation step if BOQ items exist
             if (parsedBoqData.boq_items?.length > 0) {
-                setStep(5); // Go directly to validation step
+                setStep(4); // Go directly to validation step
                 setValidationResult({
                     success: true,
                     message: `Successfully loaded ${parsedBoqData.boq_items.length} BOQ items`,
