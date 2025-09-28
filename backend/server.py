@@ -333,14 +333,26 @@ class Project(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-    @validator('abg_percentage', 'ra_percentage', 'erection_percentage', 'pbg_percentage')
+    @validator('abg_percentage', 'ra_bill_percentage', 'erection_percentage', 'pbg_percentage')
     def validate_percentage(cls, v):
         if v < 0 or v > 100:
             raise ValueError('Percentage must be between 0 and 100')
         return v
 
+    @validator('gst_type')
+    def validate_gst_type(cls, v):
+        if v not in ['CGST_SGST', 'IGST']:
+            raise ValueError('GST type must be either CGST_SGST or IGST')
+        return v
+
+    @validator('gst_approval_status')
+    def validate_gst_approval_status(cls, v):
+        if v not in ['pending', 'approved', 'rejected']:
+            raise ValueError('GST approval status must be pending, approved, or rejected')
+        return v
+
     def validate_total_percentage(self):
-        total = self.abg_percentage + self.ra_percentage + self.erection_percentage + self.pbg_percentage
+        total = self.abg_percentage + self.ra_bill_percentage + self.erection_percentage + self.pbg_percentage
         if abs(total - 100.0) > 0.01:  # Allow small floating point differences
             raise ValueError(f'Percentages must total 100%, current total: {total}%')
 
