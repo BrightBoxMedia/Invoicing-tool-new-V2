@@ -1009,7 +1009,7 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
                                 <div><strong>Client:</strong> {projectData.client_name}</div>
                                 <div><strong>Company:</strong> {selectedProfile?.company_name}</div>
                                 <div><strong>ABG %:</strong> {projectData.abg_percentage}%</div>
-                                <div><strong>RA Bill %:</strong> {projectData.ra_percentage}%</div>
+                                <div><strong>RA Bill %:</strong> {projectData.ra_bill_percentage}%</div>
                                 <div><strong>Erection %:</strong> {projectData.erection_percentage}%</div>
                                 <div><strong>PBG %:</strong> {projectData.pbg_percentage}%</div>
                             </div>
