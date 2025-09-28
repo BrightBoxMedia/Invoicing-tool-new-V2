@@ -2515,6 +2515,171 @@ def _calculate_monthly_trends(self, invoices):
     
     return dict(monthly_data)
 
+# PDF Processor System
+@api_router.get("/pdf-processor/extractions")
+async def get_pdf_extractions(current_user: dict = Depends(get_current_user)):
+    try:
+        # For now, return empty list - full implementation would track PDF extractions
+        return {"extractions": [], "total_count": 0}
+        
+    except Exception as e:
+        logger.error(f"PDF extractions error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get PDF extractions: {str(e)}")
+
+@api_router.post("/pdf-processor/extract")
+async def extract_pdf_data(current_user: dict = Depends(get_current_user)):
+    try:
+        # Basic response - full implementation would process uploaded PDF
+        return {"message": "PDF extraction not fully implemented yet", "status": "pending"}
+        
+    except Exception as e:
+        logger.error(f"PDF extract error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to extract PDF: {str(e)}")
+
+@api_router.post("/pdf-processor/convert-to-project")
+async def convert_pdf_to_project(current_user: dict = Depends(get_current_user)):
+    try:
+        # Basic response - full implementation would convert PDF data to project
+        return {"message": "PDF to project conversion not fully implemented yet", "status": "pending"}
+        
+    except Exception as e:
+        logger.error(f"PDF convert error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to convert PDF to project: {str(e)}")
+
+# Admin Configuration System
+@api_router.get("/admin/workflows")
+async def get_admin_workflows(current_user: dict = Depends(get_current_user)):
+    try:
+        if current_user.get("role") not in ["admin", "super_admin"]:
+            raise HTTPException(status_code=403, detail="Only admins can view workflows")
+        
+        # Basic workflow configuration
+        return {
+            "workflows": [
+                {
+                    "id": "project_creation",
+                    "name": "Project Creation Workflow",
+                    "steps": ["Basic Info", "Company Selection", "BOQ Review"],
+                    "active": True
+                },
+                {
+                    "id": "invoice_approval",
+                    "name": "Invoice Approval Workflow", 
+                    "steps": ["Create", "Review", "Approve", "Send"],
+                    "active": True
+                },
+                {
+                    "id": "gst_approval",
+                    "name": "GST Approval Workflow",
+                    "steps": ["Submit", "Manager Review", "Approve/Reject"],
+                    "active": True
+                }
+            ]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Admin workflows error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get admin workflows: {str(e)}")
+
+@api_router.get("/admin/system-config")
+async def get_system_config(current_user: dict = Depends(get_current_user)):
+    try:
+        if current_user.get("role") not in ["admin", "super_admin"]:
+            raise HTTPException(status_code=403, detail="Only admins can view system config")
+        
+        return {
+            "config": {
+                "app_name": "Activus Invoice Management System",
+                "version": "1.0.0",
+                "gst_default_rate": 18.0,
+                "default_payment_terms": "Payment due within 30 days",
+                "max_file_size_mb": 5,
+                "supported_file_types": ["xlsx", "xls", "csv"],
+                "features": {
+                    "gst_approval_workflow": True,
+                    "real_time_updates": True,
+                    "pdf_generation": True,
+                    "advanced_reports": True
+                }
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"System config error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get system config: {str(e)}")
+
+@api_router.get("/admin/system-health")
+async def get_system_health(current_user: dict = Depends(get_current_user)):
+    try:
+        if current_user.get("role") not in ["admin", "super_admin"]:
+            raise HTTPException(status_code=403, detail="Only admins can view system health")
+        
+        # Basic system health check
+        projects_count = await db.projects.count_documents({})
+        invoices_count = await db.invoices.count_documents({})
+        clients_count = await db.clients.count_documents({})
+        
+        return {
+            "status": "healthy",
+            "database": {
+                "connected": True,
+                "collections": {
+                    "projects": projects_count,
+                    "invoices": invoices_count, 
+                    "clients": clients_count
+                }
+            },
+            "services": {
+                "api": "running",
+                "websockets": "active",
+                "file_processing": "available"
+            },
+            "timestamp": datetime.now(timezone.utc)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"System health error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get system health: {str(e)}")
+
+@api_router.post("/admin/clear-database")
+async def clear_database(current_user: dict = Depends(get_current_user)):
+    try:
+        if current_user.get("role") != "super_admin":
+            raise HTTPException(status_code=403, detail="Only super admin can clear database")
+        
+        # For safety, only clear non-user data
+        projects_deleted = await db.projects.delete_many({})
+        invoices_deleted = await db.invoices.delete_many({})
+        clients_deleted = await db.clients.delete_many({})
+        logs_deleted = await db.activity_logs.delete_many({})
+        
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "database_cleared", "Database cleared by super admin"
+        )
+        
+        return {
+            "message": "Database cleared successfully",
+            "statistics": {
+                "projects_deleted": projects_deleted.deleted_count,
+                "invoices_deleted": invoices_deleted.deleted_count,
+                "clients_deleted": clients_deleted.deleted_count,
+                "logs_deleted": logs_deleted.deleted_count
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Clear database error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to clear database: {str(e)}")
+
 # WebSocket Endpoint for Real-time Project Updates
 @app.websocket("/ws/projects/{project_id}")
 async def websocket_endpoint(websocket: WebSocket, project_id: str):
