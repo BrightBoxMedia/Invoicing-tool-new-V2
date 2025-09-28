@@ -46,15 +46,32 @@ const EnhancedProjectDetails = ({ project, onClose, onCreateInvoice }) => {
       const allInvoices = await invoicesResponse.json();
       const projectInvoices = allInvoices.filter(inv => inv.project_id === project.id);
       
-      // Calculate analysis metrics
+      // Calculate analysis metrics - IMPROVED OVER-VALUE CALCULATION
+      const taxInvoices = projectInvoices.filter(inv => inv.invoice_type === 'tax_invoice');
+      const proformaInvoices = projectInvoices.filter(inv => inv.invoice_type === 'proforma');
+      
       const totalGstInvoiced = projectInvoices.reduce((sum, inv) => sum + (inv.total_gst_amount || 0), 0);
       const totalSpent = projectInvoices.reduce((sum, inv) => sum + (inv.subtotal || 0), 0);
-      const totalBilled = projectInvoices.reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
-      const overValue = Math.max(0, totalBilled - (project.total_project_value || 0));
-      const currentRAAmount = ((project.ra_percentage || 0) * (project.total_project_value || 0)) / 100;
-      const erectionInvoices = projectInvoices.filter(inv => inv.invoice_type === 'tax_invoice' && inv.ra_number?.includes('Erection'));
+      
+      // CRITICAL FIX: Only count tax invoices for billing, not proforma
+      const totalBilled = taxInvoices.reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
+      const projectValue = project.total_project_value || 0;
+      
+      // ENHANCED OVER-VALUE CALCULATION
+      const overValue = totalBilled > projectValue ? (totalBilled - projectValue) : 0;
+      
+      console.log('📊 Over-value Calculation Debug:', {
+        totalBilled,
+        projectValue,
+        overValue,
+        taxInvoicesCount: taxInvoices.length,
+        proformaInvoicesCount: proformaInvoices.length
+      });
+      
+      const currentRAAmount = ((project.ra_percentage || 0) * projectValue) / 100;
+      const erectionInvoices = taxInvoices.filter(inv => inv.ra_number?.includes('Erection'));
       const totalErectionValue = erectionInvoices.reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
-      const pbgReserved = ((project.pbg_percentage || 0) * (project.total_project_value || 0)) / 100;
+      const pbgReserved = ((project.pbg_percentage || 0) * projectValue) / 100;
 
       setProjectAnalysis({
         overValue,
