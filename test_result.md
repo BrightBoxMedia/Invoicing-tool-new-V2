@@ -444,20 +444,14 @@
 
 ## test_plan:
   current_focus:
-    - "COMPLETED: Enhanced Invoice Creation UX Flow Testing"
-    - "COMPLETED: InvoiceSuccessModal Implementation Verification"
-    - "COMPLETED: User's Critical BOQ Parsing Issue Testing"
-    - "COMPLETED: WebSocket Infrastructure Testing"
-    - "COMPLETED: Server-Sent Events (SSE) Fallback Testing"
-    - "COMPLETED: Project Snapshot API Testing"
-    - "COMPLETED: WebSocket Connection Manager Testing"
-    - "NEEDS ATTENTION: Real-time Event Emission Testing"
-  stuck_tasks:
-    - "Real-time Event Emission - requires valid BOQ item IDs for testing"
-    - "PDF Download functionality - invoice ID undefined issue"
-    - "Create Another button - modal state management issue"
+    - "COMPLETED: Enhanced Project Creation with GST Configuration Testing"
+    - "COMPLETED: GST Approval Workflow Endpoints Testing"
+    - "COMPLETED: Enhanced Invoice Creation with GST Types Testing"
+    - "COMPLETED: GST Migration and Backward Compatibility Testing"
+    - "COMPLETED: Complete GST Workflow Integration Testing"
+  stuck_tasks: []
   test_all: false
-  test_priority: "enhanced_invoice_ux_verification"
+  test_priority: "gst_workflow_comprehensive_testing"
 
   - task: "Proforma Invoice Tax Options"
     implemented: true
