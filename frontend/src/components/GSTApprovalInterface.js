@@ -135,7 +135,7 @@ const GSTApprovalInterface = ({ currentUser, onClose }) => {
                         <p className="text-gray-600 mt-1">Review and approve GST configurations for projects</p>
                     </div>
                     <button
-                        onClick={onClose}
+                        onClick={handleClose}
                         className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
                     >
                         ×
