@@ -259,7 +259,11 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
             });
 
             if (response.ok) {
-                onSuccess();
+                const createdInvoice = await response.json();
+                console.log('✅ Invoice created:', createdInvoice);
+                
+                // Pass invoice data to success callback
+                onSuccess(createdInvoice);
             } else {
                 const errorData = await response.json();
                 setError(errorData.detail || 'Failed to create invoice');
