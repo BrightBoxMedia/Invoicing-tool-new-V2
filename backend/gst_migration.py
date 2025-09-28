@@ -13,11 +13,11 @@ from datetime import datetime, timezone
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from motor.motor_asyncio import AsyncIOMotorClient
-from config import MONGO_URL
 
 async def migrate_projects_gst():
     """Add GST configuration to existing projects"""
-    client = AsyncIOMotorClient(MONGO_URL)
+    mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+    client = AsyncIOMotorClient(mongo_url)
     db = client.invoicing_tool
     
     try:
