@@ -2680,6 +2680,126 @@ async def clear_database(current_user: dict = Depends(get_current_user)):
         logger.error(f"Clear database error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to clear database: {str(e)}")
 
+# Company Profiles System  
+@api_router.get("/company-profiles")
+async def get_company_profiles(current_user: dict = Depends(get_current_user)):
+    try:
+        # For now, return default company profile - full implementation would store multiple profiles
+        default_profile = {
+            "id": "default-profile",
+            "company_name": "Activus Design & Build",
+            "gst_number": "27ABCDE1234F1Z5",
+            "pan_number": "ABCDE1234F",
+            "email": "info@activusdesign.com",
+            "address": "Mumbai, Maharashtra, India",
+            "bank_details": {
+                "account_number": "123456789012",
+                "ifsc_code": "ABCD0123456", 
+                "branch": "Mumbai Main Branch"
+            }
+        }
+        
+        return {"profiles": [default_profile], "total_count": 1}
+        
+    except Exception as e:
+        logger.error(f"Company profiles error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get company profiles: {str(e)}")
+
+# Enhanced Endpoints
+@api_router.get("/projects/enhanced")
+async def get_enhanced_projects(current_user: dict = Depends(get_current_user)):
+    try:
+        # Get projects with enhanced data including GST status and approval info
+        projects = await db.projects.find().to_list(1000)
+        
+        enhanced_projects = []
+        for project in projects:
+            enhanced_project = dict(project)
+            enhanced_project['gst_status'] = project.get('gst_approval_status', 'pending')
+            enhanced_project['requires_approval'] = project.get('gst_approval_status') != 'approved'
+            enhanced_projects.append(enhanced_project)
+        
+        return {"projects": enhanced_projects, "total_count": len(enhanced_projects)}
+        
+    except Exception as e:
+        logger.error(f"Enhanced projects error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get enhanced projects: {str(e)}")
+
+@api_router.get("/invoices/enhanced")
+async def get_enhanced_invoices(current_user: dict = Depends(get_current_user)):
+    try:
+        # Get invoices with enhanced data including GST breakdown
+        invoices = await db.invoices.find().to_list(1000)
+        
+        enhanced_invoices = []
+        for invoice in invoices:
+            enhanced_invoice = dict(invoice)
+            enhanced_invoice['gst_breakdown'] = {
+                "cgst": invoice.get('cgst_amount', 0),
+                "sgst": invoice.get('sgst_amount', 0),
+                "igst": invoice.get('igst_amount', 0),
+                "total": invoice.get('total_gst_amount', 0)
+            }
+            enhanced_invoices.append(enhanced_invoice)
+        
+        return {"invoices": enhanced_invoices, "total_count": len(enhanced_invoices)}
+        
+    except Exception as e:
+        logger.error(f"Enhanced invoices error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get enhanced invoices: {str(e)}")
+
+@api_router.post("/invoices/validate-quantities")
+async def validate_invoice_quantities(validation_data: dict, current_user: dict = Depends(get_current_user)):
+    try:
+        project_id = validation_data.get('project_id')
+        items = validation_data.get('items', [])
+        
+        if not project_id:
+            raise HTTPException(status_code=400, detail="Project ID is required")
+        
+        # Get project and validate quantities
+        project = await db.projects.find_one({"id": project_id})
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+        
+        validation_results = []
+        
+        for item in items:
+            boq_item_id = item.get('boq_item_id')
+            requested_qty = item.get('quantity', 0)
+            
+            # Find BOQ item
+            boq_item = next((bi for bi in project.get('boq_items', []) if bi['id'] == boq_item_id), None)
+            if not boq_item:
+                validation_results.append({
+                    "item_id": boq_item_id,
+                    "valid": False,
+                    "error": "BOQ item not found"
+                })
+                continue
+            
+            # Calculate available quantity
+            billed_qty = boq_item.get('billed_quantity', 0)
+            total_qty = boq_item.get('quantity', 0)
+            available_qty = total_qty - billed_qty
+            
+            validation_results.append({
+                "item_id": boq_item_id,
+                "valid": requested_qty <= available_qty,
+                "requested_quantity": requested_qty,
+                "available_quantity": available_qty,
+                "total_quantity": total_qty,
+                "billed_quantity": billed_qty
+            })
+        
+        return {"validation_results": validation_results}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Validate quantities error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to validate quantities: {str(e)}")
+
 # WebSocket Endpoint for Real-time Project Updates
 @app.websocket("/ws/projects/{project_id}")
 async def websocket_endpoint(websocket: WebSocket, project_id: str):
