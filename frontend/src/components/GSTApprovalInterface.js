@@ -14,6 +14,20 @@ const GSTApprovalInterface = ({ currentUser, onClose }) => {
         fetchPendingProjects();
     }, []);
 
+    // Add ESC key handler
+    useEffect(() => {
+        const handleEscKey = (event) => {
+            if (event.key === 'Escape') {
+                onClose();
+            }
+        };
+
+        document.addEventListener('keydown', handleEscKey);
+        return () => {
+            document.removeEventListener('keydown', handleEscKey);
+        };
+    }, [onClose]);
+
     const fetchPendingProjects = async () => {
         try {
             setLoading(true);
