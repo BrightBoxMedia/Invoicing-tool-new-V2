@@ -1806,9 +1806,22 @@ async def create_invoice(invoice_data: dict, current_user: dict = Depends(get_cu
             invoice_items.append(invoice_item)
             subtotal += amount
         
-        # Calculate totals
-        total_gst = sum(item.amount * item.gst_rate / 100 for item in invoice_items)
-        total_amount = subtotal + total_gst
+        # Calculate GST based on project GST type
+        project_gst_type = project.get('gst_type', 'IGST')
+        cgst_amount = 0.0
+        sgst_amount = 0.0
+        igst_amount = 0.0
+        
+        if project_gst_type == 'CGST_SGST':
+            # Split GST into CGST and SGST (50-50 split)
+            total_gst = sum(item.amount * item.gst_rate / 100 for item in invoice_items)
+            cgst_amount = total_gst / 2
+            sgst_amount = total_gst / 2
+        else:  # IGST
+            igst_amount = sum(item.amount * item.gst_rate / 100 for item in invoice_items)
+        
+        total_gst_amount = cgst_amount + sgst_amount + igst_amount
+        total_amount = subtotal + total_gst_amount
         
         # Generate invoice number and RA number
         invoice_count = await db.invoices.count_documents({}) + 1
