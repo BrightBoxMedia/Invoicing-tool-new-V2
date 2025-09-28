@@ -1439,7 +1439,7 @@ async def update_gst_approval(
     """Update GST approval status and BOQ item GST percentages"""
     try:
         # Check if user has permission (Manager or SuperAdmin)
-        if current_user.get('role') not in ['Manager', 'SuperAdmin']:
+        if current_user.get('role') not in ['Manager', 'SuperAdmin', 'super_admin']:
             raise HTTPException(
                 status_code=403, 
                 detail="Only Managers or SuperAdmins can approve GST configurations"
