@@ -2137,12 +2137,18 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
         total_invoiced = sum(inv.get('total_amount', 0) for inv in invoices)
         pending_collections = sum(inv.get('net_amount_due', inv.get('total_amount', 0)) for inv in invoices)
         
+        # Calculate advance received and pending payments
+        advance_received = sum(inv.get('advance_received', 0) for inv in invoices)
+        pending_payment = sum(inv.get('net_amount_due', 0) for inv in invoices if inv.get('status', '') == 'created')
+        
         return {
             "total_projects": total_projects,
             "total_project_value": total_project_value,
             "total_invoices": total_invoices,
             "total_invoiced_value": total_invoiced,
             "pending_collections": pending_collections,
+            "advance_received": advance_received,
+            "pending_payment": pending_payment,
             "collection_efficiency": ((total_invoiced - pending_collections) / total_invoiced * 100) if total_invoiced > 0 else 0
         }
         
