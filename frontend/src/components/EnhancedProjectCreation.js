@@ -525,11 +525,12 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
                     </div>
                 )}
 
-                {/* Step 2: Company Selection */}
+                {/* Step 2: Company Selection - ENHANCED WITH DETAILED INFO */}
                 {step === 2 && (
                     <div className="space-y-6">
-                        <h3 className="text-lg font-semibold text-gray-900">Company Profile Selection</h3>
+                        <h3 className="text-lg font-semibold text-gray-900">🏢 Company Details & Configuration</h3>
                         
+                        {/* Company Selection */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Company Profile *</label>
                             <select
@@ -547,8 +548,90 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
 
                         {selectedProfile && (
                             <>
+                                {/* Company Information Display */}
+                                <div className="bg-gray-50 p-4 rounded-lg border">
+                                    <h4 className="font-semibold text-gray-900 mb-3">📋 Company Information</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        
+                                        {/* Company Name - Editable */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+                                            <input
+                                                type="text"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                value={selectedProfile.company_name || ''}
+                                                onChange={(e) => {
+                                                    const updatedProfile = {...selectedProfile, company_name: e.target.value};
+                                                    setSelectedProfile(updatedProfile);
+                                                }}
+                                            />
+                                        </div>
+
+                                        {/* GST Number - Editable */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">GST Number</label>
+                                            <input
+                                                type="text"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                value={selectedProfile.gst_number || ''}
+                                                onChange={(e) => {
+                                                    const updatedProfile = {...selectedProfile, gst_number: e.target.value};
+                                                    setSelectedProfile(updatedProfile);
+                                                }}
+                                                placeholder="Enter GST number"
+                                            />
+                                        </div>
+
+                                        {/* PAN Number - Editable */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">PAN Number</label>
+                                            <input
+                                                type="text"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                value={selectedProfile.pan_number || ''}
+                                                onChange={(e) => {
+                                                    const updatedProfile = {...selectedProfile, pan_number: e.target.value};
+                                                    setSelectedProfile(updatedProfile);
+                                                }}
+                                                placeholder="Enter PAN number"
+                                            />
+                                        </div>
+
+                                        {/* Email - Editable */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                            <input
+                                                type="email"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                value={selectedProfile.email || ''}
+                                                onChange={(e) => {
+                                                    const updatedProfile = {...selectedProfile, email: e.target.value};
+                                                    setSelectedProfile(updatedProfile);
+                                                }}
+                                                placeholder="Enter email address"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Company Address - Full Width & Editable */}
+                                    <div className="mt-4">
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Company Address</label>
+                                        <textarea
+                                            rows="2"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            value={selectedProfile.address || ''}
+                                            onChange={(e) => {
+                                                const updatedProfile = {...selectedProfile, address: e.target.value};
+                                                setSelectedProfile(updatedProfile);
+                                            }}
+                                            placeholder="Enter company address"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Location Selection */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">📍 Location</label>
                                     <select
                                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         value={projectData.selected_location_id}
@@ -564,21 +647,45 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
                                     </select>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Bank Account</label>
-                                    <select
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        value={projectData.selected_bank_id}
-                                        onChange={(e) => setProjectData({...projectData, selected_bank_id: e.target.value})}
-                                    >
-                                        <option value="">Select Bank Account</option>
-                                        {selectedProfile.bank_details?.map(bank => (
-                                            <option key={bank.id} value={bank.id}>
-                                                {bank.bank_name} - ****{bank.account_number?.slice(-4)}
-                                                {bank.is_default ? ' (Default)' : ''}
-                                            </option>
-                                        ))}
-                                    </select>
+                                {/* Bank Account Details */}
+                                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                                    <h4 className="font-semibold text-gray-900 mb-3">🏦 Bank Account Details</h4>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Bank Account *</label>
+                                        <select
+                                            required
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            value={projectData.selected_bank_id}
+                                            onChange={(e) => setProjectData({...projectData, selected_bank_id: e.target.value})}
+                                        >
+                                            <option value="">Select Bank Account</option>
+                                            {selectedProfile.bank_details?.map(bank => (
+                                                <option key={bank.id} value={bank.id}>
+                                                    {bank.bank_name} - ****{bank.account_number?.slice(-4)}
+                                                    {bank.is_default ? ' (Default)' : ''}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {/* Show selected bank details */}
+                                    {projectData.selected_bank_id && selectedProfile.bank_details && (
+                                        <div className="mt-4 p-3 bg-white rounded border">
+                                            {(() => {
+                                                const selectedBank = selectedProfile.bank_details.find(b => b.id === projectData.selected_bank_id);
+                                                return selectedBank ? (
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                                                        <div><strong>Bank:</strong> {selectedBank.bank_name}</div>
+                                                        <div><strong>Account No:</strong> {selectedBank.account_number}</div>
+                                                        <div><strong>IFSC:</strong> {selectedBank.ifsc_code}</div>
+                                                        <div><strong>Branch:</strong> {selectedBank.branch}</div>
+                                                        {selectedBank.swift_code && <div><strong>SWIFT:</strong> {selectedBank.swift_code}</div>}
+                                                    </div>
+                                                ) : null;
+                                            })()}
+                                        </div>
+                                    )}
                                 </div>
                             </>
                         )}
@@ -592,10 +699,10 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
                             </button>
                             <button
                                 onClick={() => setStep(3)}
-                                disabled={!projectData.company_profile_id}
+                                disabled={!projectData.company_profile_id || !projectData.selected_bank_id}
                                 className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
                             >
-                                Next: Project Metadata
+                                Next: BOQ Upload
                             </button>
                         </div>
                     </div>
