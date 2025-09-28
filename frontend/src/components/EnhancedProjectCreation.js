@@ -346,14 +346,64 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
     const createProject = async () => {
         try {
             setLoading(true);
+            setError('');
             const token = localStorage.getItem('token');
             
+            // Step 1: Create or get client_id
+            let clientId = null;
+            
+            // Check if client with this name already exists
+            const existingClient = clients.find(client => 
+                client.name.toLowerCase() === projectData.client_name.toLowerCase()
+            );
+            
+            if (existingClient) {
+                clientId = existingClient.id;
+                console.log('Using existing client:', clientId);
+            } else {
+                // Create new client
+                const clientPayload = {
+                    name: projectData.client_name,
+                    email: projectData.client_name.toLowerCase().replace(/\s+/g, '') + '@client.com',
+                    phone: '0000000000',
+                    address: projectData.client_address,
+                    city: 'Mumbai',
+                    state: 'Maharashtra', 
+                    gst_no: '',
+                    bill_to_address: projectData.client_address
+                };
+
+                const clientResponse = await fetch(`${backendUrl}/api/clients`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(clientPayload)
+                });
+
+                if (clientResponse.ok) {
+                    const clientResult = await clientResponse.json();
+                    clientId = clientResult.client_id;
+                    console.log('Created new client:', clientId);
+                } else {
+                    const clientError = await clientResponse.json();
+                    setError(`Failed to create client: ${clientError.detail || 'Unknown error'}`);
+                    return;
+                }
+            }
+
+            // Step 2: Create project with client_id
             const projectPayload = {
                 ...projectData,
-                metadata: metadataRows,
+                client_id: clientId, // Add the required client_id
+                architect: projectData.architect_name, // Map architect_name to architect
+                location: projectData.architect_address, // Use architect address as location 
                 boq_items: boqItems,
-                total_project_value: boqItems.reduce((sum, item) => sum + (item.total_with_gst || 0), 0)
+                total_project_value: boqItems.reduce((sum, item) => sum + (item.amount || 0), 0)
             };
+
+            console.log('Creating project with payload:', projectPayload);
 
             const response = await fetch(`${backendUrl}/api/projects`, {
                 method: 'POST',
@@ -365,15 +415,17 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
             });
 
             if (response.ok) {
+                console.log('✅ Project created successfully!');
                 onSuccess?.();
                 onClose?.();
             } else {
                 const errorData = await response.json();
+                console.error('Project creation failed:', errorData);
                 setError(errorData.detail || 'Failed to create project');
             }
         } catch (err) {
-            setError('Network error creating project');
             console.error('Error creating project:', err);
+            setError('Network error creating project');
         } finally {
             setLoading(false);
         }
