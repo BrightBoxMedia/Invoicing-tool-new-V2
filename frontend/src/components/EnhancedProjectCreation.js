@@ -952,7 +952,7 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
                                     onClick={() => setStep(3)}
                                     className="px-6 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
                                 >
-                                    Fix Metadata Issues
+                                    Fix BOQ Issues
                                 </button>
                             )}
                         </div>
