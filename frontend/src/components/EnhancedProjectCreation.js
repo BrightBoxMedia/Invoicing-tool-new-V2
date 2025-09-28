@@ -42,7 +42,7 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
         pbg_amount: 0
     }]);
 
-    const [boqFile, setBOQFile] = useState(null);
+    const [boqFile, setBoqFile] = useState(null);
     const [boqItems, setBoqItems] = useState([]);
     const [validationResult, setValidationResult] = useState(null);
     const [loading, setLoading] = useState(false);
