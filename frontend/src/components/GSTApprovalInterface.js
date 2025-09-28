@@ -9,7 +9,17 @@ const GSTApprovalInterface = ({ currentUser, onClose }) => {
     const [selectedProject, setSelectedProject] = useState(null);
     const [gstUpdates, setGstUpdates] = useState({});
 
+    const navigate = useNavigate();
     const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+
+    // Handle close - use either provided onClose prop or navigate back
+    const handleClose = () => {
+        if (onClose) {
+            onClose();
+        } else {
+            navigate(-1); // Go back to previous page
+        }
+    };
 
     useEffect(() => {
         fetchPendingProjects();
