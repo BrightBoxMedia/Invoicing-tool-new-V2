@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-## user_problem_statement: "Complete all pending features for the invoice and project management application including Dashboard Metrics, Activity Logs, Item Master, Smart Filters & Search, Reports & Insights, Admin Features, and verification of Projects page error fix."
+## user_problem_statement: "Test the comprehensive GST configuration and approval workflow that was just implemented."
 
 ## backend:
   - task: "Dashboard Stats API"
