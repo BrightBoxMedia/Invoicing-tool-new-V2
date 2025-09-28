@@ -50,6 +50,38 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
         fetchClients();
     }, []);
 
+    // Handle parsed BOQ data from file upload
+    useEffect(() => {
+        if (parsedBoqData) {
+            console.log('📋 Received parsed BOQ data:', parsedBoqData);
+            
+            // Set BOQ items if available
+            if (parsedBoqData.boq_items) {
+                setBOQItems(parsedBoqData.boq_items);
+                console.log(`✅ Loaded ${parsedBoqData.boq_items.length} BOQ items`);
+            }
+            
+            // Set project name from filename or project info
+            if (parsedBoqData.project_info?.project_name) {
+                setProjectData(prev => ({
+                    ...prev,
+                    project_name: parsedBoqData.project_info.project_name
+                }));
+            }
+            
+            // Auto-advance to validation step if BOQ items exist
+            if (parsedBoqData.boq_items?.length > 0) {
+                setStep(5); // Go directly to validation step
+                setValidationResult({
+                    success: true,
+                    message: `Successfully loaded ${parsedBoqData.boq_items.length} BOQ items`,
+                    items_count: parsedBoqData.boq_items.length,
+                    total_amount: parsedBoqData.project_info?.total_amount || 0
+                });
+            }
+        }
+    }, [parsedBoqData]);
+
     const fetchCompanyProfiles = async () => {
         try {
             const token = localStorage.getItem('token');
