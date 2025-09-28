@@ -2394,7 +2394,7 @@ async def get_gst_summary(current_user: dict = Depends(get_current_user)):
                 "total_gst": total_gst,
                 "total_amount": total_taxable + total_gst
             },
-            "by_gst_rate": self._calculate_gst_by_rate(invoices)
+            "by_gst_rate": _calculate_gst_by_rate(invoices)
         }
         
     except Exception as e:
