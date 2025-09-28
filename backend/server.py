@@ -2241,6 +2241,115 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
         logger.error(f"Dashboard stats error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get dashboard stats: {str(e)}")
 
+# Search System
+@api_router.get("/search")
+async def global_search(q: str = "", current_user: dict = Depends(get_current_user)):
+    try:
+        if not q:
+            return {"projects": [], "clients": [], "invoices": [], "query": q}
+        
+        query_lower = q.lower()
+        
+        # Search projects
+        projects = await db.projects.find().to_list(1000)
+        matching_projects = [
+            {
+                "id": p.get('id'),
+                "project_name": p.get('project_name'),
+                "client_name": p.get('client_name'),
+                "total_project_value": p.get('total_project_value', 0)
+            }
+            for p in projects 
+            if query_lower in p.get('project_name', '').lower() or 
+               query_lower in p.get('client_name', '').lower()
+        ]
+        
+        # Search clients
+        clients = await db.clients.find().to_list(1000)
+        matching_clients = [
+            {
+                "id": c.get('id'),
+                "name": c.get('name'),
+                "email": c.get('email'),
+                "phone": c.get('phone')
+            }
+            for c in clients 
+            if query_lower in c.get('name', '').lower() or 
+               query_lower in c.get('email', '').lower()
+        ]
+        
+        # Search invoices
+        invoices = await db.invoices.find().to_list(1000)
+        matching_invoices = [
+            {
+                "id": i.get('id'),
+                "invoice_number": i.get('invoice_number'),
+                "project_id": i.get('project_id'),
+                "total_amount": i.get('total_amount', 0)
+            }
+            for i in invoices 
+            if query_lower in i.get('invoice_number', '').lower()
+        ]
+        
+        return {
+            "projects": matching_projects,
+            "clients": matching_clients,
+            "invoices": matching_invoices,
+            "query": q
+        }
+        
+    except Exception as e:
+        logger.error(f"Global search error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to search: {str(e)}")
+
+@api_router.get("/filters/projects")
+async def get_project_filters(current_user: dict = Depends(get_current_user)):
+    try:
+        projects = await db.projects.find().to_list(1000)
+        
+        # Extract unique values for filtering
+        clients = list(set(p.get('client_name') for p in projects if p.get('client_name')))
+        statuses = list(set(p.get('status', 'active') for p in projects))
+        
+        return {
+            "clients": sorted(clients),
+            "statuses": sorted(statuses),
+            "value_ranges": [
+                {"label": "< ₹10L", "min": 0, "max": 1000000},
+                {"label": "₹10L - ₹50L", "min": 1000000, "max": 5000000},
+                {"label": "₹50L - ₹1Cr", "min": 5000000, "max": 10000000},
+                {"label": "> ₹1Cr", "min": 10000000, "max": 999999999}
+            ]
+        }
+        
+    except Exception as e:
+        logger.error(f"Project filters error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get project filters: {str(e)}")
+
+@api_router.get("/filters/invoices")
+async def get_invoice_filters(current_user: dict = Depends(get_current_user)):
+    try:
+        invoices = await db.invoices.find().to_list(1000)
+        
+        # Extract unique values for filtering
+        statuses = list(set(i.get('status', 'created') for i in invoices))
+        invoice_types = list(set(i.get('invoice_type', 'tax_invoice') for i in invoices))
+        
+        return {
+            "statuses": sorted(statuses),
+            "types": sorted(invoice_types),
+            "amount_ranges": [
+                {"label": "< ₹1L", "min": 0, "max": 100000},
+                {"label": "₹1L - ₹5L", "min": 100000, "max": 500000},
+                {"label": "₹5L - ₹10L", "min": 500000, "max": 1000000},
+                {"label": "> ₹10L", "min": 1000000, "max": 999999999}
+            ]
+        }
+        
+    except Exception as e:
+        logger.error(f"Invoice filters error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get invoice filters: {str(e)}")
+
 # Activity logs endpoint
 @api_router.get("/activity-logs")
 async def get_activity_logs(current_user: dict = Depends(get_current_user)):
