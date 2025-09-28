@@ -29,7 +29,7 @@ const GSTApprovalInterface = ({ currentUser, onClose }) => {
     useEffect(() => {
         const handleEscKey = (event) => {
             if (event.key === 'Escape') {
-                onClose();
+                handleClose();
             }
         };
 
@@ -37,7 +37,7 @@ const GSTApprovalInterface = ({ currentUser, onClose }) => {
         return () => {
             document.removeEventListener('keydown', handleEscKey);
         };
-    }, [onClose]);
+    }, [handleClose]);
 
     const fetchPendingProjects = async () => {
         try {
