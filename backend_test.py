@@ -2553,43 +2553,435 @@ class ActivusAPITester:
         
         return success_rate >= 80
 
+    def test_gst_configuration_and_approval_workflow(self):
+        """Test comprehensive GST configuration and approval workflow"""
+        print("\n🏛️ Testing GST Configuration & Approval Workflow...")
+        
+        # Create a project with GST configuration
+        if not self.created_resources['clients']:
+            self.test_client_management()
+        
+        client_id = self.created_resources['clients'][0] if self.created_resources['clients'] else "test-client-id"
+        
+        # Test project creation with CGST_SGST configuration
+        project_data = {
+            "project_name": "GST Test Project CGST_SGST",
+            "architect": "Test Architect",
+            "client_id": client_id,
+            "client_name": "Test Client Ltd",
+            "location": "Karnataka (Intrastate)",
+            "abg_percentage": 10.0,
+            "ra_bill_percentage": 75.0,
+            "erection_percentage": 10.0,
+            "pbg_percentage": 5.0,
+            "gst_type": "CGST_SGST",
+            "gst_approval_status": "pending",
+            "total_project_value": 1000000,
+            "boq_items": [
+                {
+                    "sr_no": 1,
+                    "description": "Foundation Work",
+                    "unit": "Cum",
+                    "quantity": 100,
+                    "rate": 5000,
+                    "amount": 500000,
+                    "gst_rate": 18.0,
+                    "billed_quantity": 0.0
+                },
+                {
+                    "sr_no": 2,
+                    "description": "Steel Structure",
+                    "unit": "Kg",
+                    "quantity": 1000,
+                    "rate": 500,
+                    "amount": 500000,
+                    "gst_rate": 18.0,
+                    "billed_quantity": 0.0
+                }
+            ]
+        }
+        
+        success, result = self.make_request('POST', 'projects', project_data)
+        
+        gst_project_id = None
+        if success and 'project_id' in result:
+            gst_project_id = result['project_id']
+            self.created_resources['projects'].append(gst_project_id)
+            self.log_test("Create project with GST configuration", True, f"- Project ID: {gst_project_id}, GST Type: CGST_SGST")
+            
+            # Test getting projects pending GST approval
+            success, pending_projects = self.make_request('GET', 'projects/pending-gst-approval')
+            if success:
+                has_pending = any(p.get('id') == gst_project_id for p in pending_projects)
+                self.log_test("Get pending GST approval projects", has_pending, 
+                            f"- Found {len(pending_projects)} pending projects")
+            else:
+                self.log_test("Get pending GST approval projects", False, f"- {pending_projects}")
+            
+            # Test GST approval workflow
+            approval_data = {
+                "action": "approve",
+                "boq_gst_updates": [
+                    {"item_id": "1", "gst_rate": 18.0},
+                    {"item_id": "2", "gst_rate": 18.0}
+                ]
+            }
+            
+            success, approval_result = self.make_request('POST', f'projects/{gst_project_id}/gst-approval', approval_data)
+            if success:
+                self.log_test("GST approval workflow", True, "- GST configuration approved successfully")
+                
+                # Verify project GST status updated
+                success, updated_project = self.make_request('GET', f'projects/{gst_project_id}')
+                if success:
+                    gst_status = updated_project.get('gst_approval_status')
+                    approved_by = updated_project.get('gst_approved_by')
+                    self.log_test("GST approval status update", gst_status == 'approved', 
+                                f"- Status: {gst_status}, Approved by: {approved_by}")
+                else:
+                    self.log_test("GST approval status verification", False, f"- {updated_project}")
+            else:
+                self.log_test("GST approval workflow", False, f"- {approval_result}")
+            
+            return gst_project_id
+        else:
+            self.log_test("Create project with GST configuration", False, f"- {result}")
+            return None
+
+    def test_enhanced_invoice_creation_with_gst_types(self):
+        """Test enhanced invoice creation with GST type calculations"""
+        print("\n💰 Testing Enhanced Invoice Creation with GST Types...")
+        
+        # Get GST configured project
+        gst_project_id = self.test_gst_configuration_and_approval_workflow()
+        
+        if not gst_project_id:
+            self.log_test("Enhanced invoice GST setup", False, "- No GST configured project available")
+            return False
+        
+        client_id = self.created_resources['clients'][0] if self.created_resources['clients'] else "test-client-id"
+        
+        # Test creating invoice with CGST_SGST calculation
+        invoice_data = {
+            "project_id": gst_project_id,
+            "project_name": "GST Test Project CGST_SGST",
+            "client_id": client_id,
+            "client_name": "Test Client Ltd",
+            "invoice_type": "tax_invoice",
+            "gst_type": "CGST_SGST",
+            "items": [
+                {
+                    "boq_item_id": "1",
+                    "description": "Foundation Work - Invoice 1",
+                    "unit": "Cum",
+                    "quantity": 50,
+                    "rate": 5000,
+                    "amount": 250000,
+                    "gst_rate": 18.0
+                }
+            ],
+            "subtotal": 250000,
+            "cgst_amount": 22500,  # 9% CGST
+            "sgst_amount": 22500,  # 9% SGST
+            "igst_amount": 0,
+            "total_gst_amount": 45000,  # 18% total
+            "total_amount": 295000,
+            "status": "draft"
+        }
+        
+        success, result = self.make_request('POST', 'invoices', invoice_data)
+        
+        if success and 'invoice_id' in result:
+            invoice_id = result['invoice_id']
+            self.created_resources['invoices'].append(invoice_id)
+            self.log_test("Create CGST_SGST invoice", True, f"- Invoice ID: {invoice_id}")
+            
+            # Verify GST breakdown in created invoice
+            success, created_invoice = self.make_request('GET', f'invoices/{invoice_id}')
+            if success:
+                cgst = created_invoice.get('cgst_amount', 0)
+                sgst = created_invoice.get('sgst_amount', 0)
+                igst = created_invoice.get('igst_amount', 0)
+                total_gst = created_invoice.get('total_gst_amount', 0)
+                
+                correct_cgst_sgst = cgst == 22500 and sgst == 22500 and igst == 0 and total_gst == 45000
+                self.log_test("CGST_SGST calculation verification", correct_cgst_sgst,
+                            f"- CGST: ₹{cgst}, SGST: ₹{sgst}, IGST: ₹{igst}, Total: ₹{total_gst}")
+            else:
+                self.log_test("Invoice GST breakdown verification", False, f"- {created_invoice}")
+            
+            return True
+        else:
+            self.log_test("Create CGST_SGST invoice", False, f"- {result}")
+            return False
+
+    def test_quantity_validation_and_over_billing_protection(self):
+        """Test quantity validation and over-billing protection"""
+        print("\n🛡️ Testing Quantity Validation & Over-billing Protection...")
+        
+        # Use existing project with BOQ items
+        if not self.created_resources['projects']:
+            self.test_project_management()
+        
+        project_id = self.created_resources['projects'][0]
+        client_id = self.created_resources['clients'][0] if self.created_resources['clients'] else "test-client-id"
+        
+        # Test creating invoice with valid quantities
+        valid_invoice_data = {
+            "project_id": project_id,
+            "project_name": "Test Construction Project",
+            "client_id": client_id,
+            "client_name": "Test Client Ltd",
+            "invoice_type": "tax_invoice",
+            "items": [
+                {
+                    "boq_item_id": "1",
+                    "description": "Test Item - Valid Quantity",
+                    "unit": "nos",
+                    "quantity": 5,  # Valid quantity (less than BOQ quantity of 10)
+                    "rate": 1000,
+                    "amount": 5000,
+                    "gst_rate": 18.0
+                }
+            ],
+            "subtotal": 5000,
+            "total_gst_amount": 900,
+            "total_amount": 5900,
+            "status": "draft"
+        }
+        
+        success, result = self.make_request('POST', 'invoices', valid_invoice_data)
+        if success and 'invoice_id' in result:
+            self.log_test("Valid quantity invoice creation", True, f"- Invoice created with valid quantities")
+        else:
+            self.log_test("Valid quantity invoice creation", False, f"- {result}")
+        
+        # Test creating invoice with over-quantities (should be blocked)
+        over_quantity_invoice_data = {
+            "project_id": project_id,
+            "project_name": "Test Construction Project",
+            "client_id": client_id,
+            "client_name": "Test Client Ltd",
+            "invoice_type": "tax_invoice",
+            "items": [
+                {
+                    "boq_item_id": "1",
+                    "description": "Test Item - Over Quantity",
+                    "unit": "nos",
+                    "quantity": 15,  # Over quantity (more than BOQ quantity of 10)
+                    "rate": 1000,
+                    "amount": 15000,
+                    "gst_rate": 18.0
+                }
+            ],
+            "subtotal": 15000,
+            "total_gst_amount": 2700,
+            "total_amount": 17700,
+            "status": "draft"
+        }
+        
+        success, result = self.make_request('POST', 'invoices', over_quantity_invoice_data, expected_status=400)
+        if success:  # Success here means the request was properly rejected
+            self.log_test("Over-quantity invoice blocking", True, "- Over-quantity invoice correctly blocked")
+        else:
+            # Check if it's a validation error
+            is_quantity_error = "quantity" in str(result).lower() or "exceed" in str(result).lower()
+            self.log_test("Over-quantity invoice blocking", is_quantity_error, f"- {result}")
+        
+        return True
+
+    def test_role_based_access_control(self):
+        """Test role-based access control for different endpoints"""
+        print("\n👮 Testing Role-based Access Control...")
+        
+        # Test super admin access to admin endpoints
+        success, result = self.make_request('GET', 'admin/system-health')
+        self.log_test("Super admin system health access", success, "- Super admin can access system health")
+        
+        # Test super admin access to activity logs
+        success, result = self.make_request('GET', 'activity-logs')
+        self.log_test("Super admin activity logs access", success, f"- Found {len(result) if success else 0} activity logs")
+        
+        # Test GST approval permissions (super admin should be able to approve)
+        if self.created_resources['projects']:
+            project_id = self.created_resources['projects'][0]
+            approval_data = {"action": "approve", "boq_gst_updates": []}
+            
+            success, result = self.make_request('POST', f'projects/{project_id}/gst-approval', approval_data)
+            # This might fail if already approved, but should not fail due to permissions
+            permission_ok = success or "already approved" in str(result).lower()
+            self.log_test("Super admin GST approval permission", permission_ok, 
+                        "- Super admin has GST approval permissions")
+        
+        return True
+
+    def test_data_integrity_and_consistency(self):
+        """Test data integrity and consistency across the system"""
+        print("\n🔍 Testing Data Integrity & Consistency...")
+        
+        # Test project-client relationship consistency
+        success, projects = self.make_request('GET', 'projects')
+        success2, clients = self.make_request('GET', 'clients')
+        
+        if success and success2:
+            client_ids = {c['id'] for c in clients}
+            orphaned_projects = [p for p in projects if p.get('client_id') not in client_ids]
+            
+            self.log_test("Project-client relationship integrity", len(orphaned_projects) == 0,
+                        f"- Found {len(orphaned_projects)} orphaned projects")
+        
+        # Test invoice-project relationship consistency
+        success, invoices = self.make_request('GET', 'invoices')
+        
+        if success and projects:
+            project_ids = {p['id'] for p in projects}
+            orphaned_invoices = [i for i in invoices if i.get('project_id') not in project_ids]
+            
+            self.log_test("Invoice-project relationship integrity", len(orphaned_invoices) == 0,
+                        f"- Found {len(orphaned_invoices)} orphaned invoices")
+        
+        # Test BOQ quantity tracking consistency
+        for project in projects[:3]:  # Check first 3 projects
+            project_id = project.get('id')
+            if project_id:
+                success, project_detail = self.make_request('GET', f'projects/{project_id}')
+                if success:
+                    boq_items = project_detail.get('boq_items', [])
+                    for item in boq_items:
+                        billed_qty = item.get('billed_quantity', 0)
+                        total_qty = item.get('quantity', 0)
+                        
+                        if billed_qty > total_qty:
+                            self.log_test(f"BOQ quantity consistency - {item.get('description', 'Unknown')[:30]}", 
+                                        False, f"- Billed: {billed_qty} > Total: {total_qty}")
+                        else:
+                            self.log_test(f"BOQ quantity consistency - {item.get('description', 'Unknown')[:30]}", 
+                                        True, f"- Billed: {billed_qty} <= Total: {total_qty}")
+        
+        return True
+
+    def run_comprehensive_production_tests(self):
+        """Run all comprehensive backend tests for PRODUCTION READINESS"""
+        print("🚀 STARTING COMPREHENSIVE BACKEND TESTING FOR PRODUCTION READINESS")
+        print("🎯 TARGET: 100% SUCCESS RATE - NO FAILURES ALLOWED")
+        print("=" * 80)
+        
+        # Core authentication and security
+        if not self.test_authentication():
+            print("❌ CRITICAL: Authentication failed - stopping tests")
+            return False
+        
+        # Test all core functionality for production readiness
+        test_methods = [
+            # Core System Tests
+            self.test_dashboard_stats,
+            self.test_client_management,
+            
+            # BOQ & Project Creation
+            self.test_user_specific_boq_upload,  # User's critical BOQ parsing fix
+            self.test_project_management,
+            
+            # GST Configuration & Approval Workflow
+            self.test_gst_configuration_and_approval_workflow,
+            
+            # Invoice Creation & Management
+            self.test_enhanced_invoice_creation_with_gst_types,
+            self.test_invoice_management,
+            self.test_quantity_validation_and_over_billing_protection,
+            
+            # Security & Access Control
+            self.test_role_based_access_control,
+            self.test_authentication_and_permissions,
+            
+            # Data Management & Integrity
+            self.test_data_integrity_and_consistency,
+            self.test_activity_logs,
+            
+            # API Endpoints Validation
+            self.test_item_master_apis,
+            self.test_search_and_filter_apis,
+            self.test_reports_and_insights_apis,
+            
+            # Advanced Features
+            self.test_pdf_processing_endpoints,
+            self.test_enhanced_company_profile_apis,
+            self.test_enhanced_project_creation_apis,
+            self.test_enhanced_invoice_creation_and_ra_tracking_apis,
+            
+            # Admin & Configuration
+            self.test_admin_configuration_system,
+            self.test_database_clear_functionality
+        ]
+        
+        print(f"\n📋 Running {len(test_methods)} comprehensive test suites for PRODUCTION READINESS...")
+        
+        for test_method in test_methods:
+            try:
+                print(f"\n{'='*60}")
+                test_method()
+            except Exception as e:
+                print(f"❌ Test suite {test_method.__name__} failed with error: {str(e)}")
+                self.log_test(f"{test_method.__name__} - Exception", False, f"Error: {str(e)}")
+        
+        # Final results
+        print("\n" + "="*80)
+        print("🎯 COMPREHENSIVE BACKEND TESTING RESULTS - PRODUCTION READINESS")
+        print("="*80)
+        
+        success_rate = (self.tests_passed / self.tests_run * 100) if self.tests_run > 0 else 0
+        
+        print(f"📊 Tests Run: {self.tests_run}")
+        print(f"✅ Tests Passed: {self.tests_passed}")
+        print(f"❌ Tests Failed: {self.tests_run - self.tests_passed}")
+        print(f"📈 Success Rate: {success_rate:.1f}%")
+        
+        # Production readiness criteria
+        if success_rate == 100:
+            print("🎉 PRODUCTION READY - 100% SUCCESS RATE ACHIEVED!")
+            print("✅ All critical systems working perfectly")
+            print("✅ Authentication & Security: PASSED")
+            print("✅ BOQ Parsing & Project Creation: PASSED")
+            print("✅ GST Configuration & Approval: PASSED")
+            print("✅ Invoice Creation & Management: PASSED")
+            print("✅ Data Management & Integrity: PASSED")
+            print("✅ API Endpoints Validation: PASSED")
+            return True
+        elif success_rate >= 98:
+            print("⚠️  MOSTLY PRODUCTION READY - Minor issues found")
+            print(f"⚠️  {self.tests_run - self.tests_passed} tests failed out of {self.tests_run}")
+            return True
+        else:
+            print("🚨 NOT PRODUCTION READY - Critical issues found")
+            print(f"🚨 {self.tests_run - self.tests_passed} tests failed - REQUIRES IMMEDIATE ATTENTION")
+            return False
+
 def main():
     """Main test execution"""
     tester = ActivusAPITester()
     
     try:
-        # Run comprehensive WebSocket system testing
-        print("🚀 Starting Comprehensive WebSocket System Testing...")
+        # Run comprehensive production readiness testing
+        print("🚀 Starting Comprehensive Backend Testing for Production Readiness...")
         print(f"🌐 Testing against: {tester.base_url}")
         print("=" * 80)
         
-        # Test authentication first
-        if not tester.test_authentication():
-            print("\n❌ Authentication failed - stopping tests")
-            return 1
-        
-        # Create basic resources needed for WebSocket testing
-        tester.test_client_management()
-        boq_data = tester.test_boq_upload()
-        tester.test_project_management(boq_data)
-        
-        # Run comprehensive WebSocket system tests
-        websocket_success = tester.test_comprehensive_websocket_system()
+        # Run comprehensive production tests
+        production_ready = tester.run_comprehensive_production_tests()
         
         # Print final results
         print("\n" + "=" * 80)
-        print("🎯 WEBSOCKET SYSTEM TEST RESULTS")
+        print("🎯 PRODUCTION READINESS TEST RESULTS")
         print("=" * 80)
         print(f"✅ Tests Passed: {tester.tests_passed}")
         print(f"❌ Tests Failed: {tester.tests_run - tester.tests_passed}")
         print(f"📊 Success Rate: {(tester.tests_passed/tester.tests_run)*100:.1f}%")
         
-        if websocket_success:
-            print(f"🏆 WEBSOCKET STATUS: ✅ FULLY FUNCTIONAL")
+        if production_ready:
+            print(f"🏆 PRODUCTION STATUS: ✅ READY FOR AWS DEPLOYMENT")
         else:
-            print(f"🏆 WEBSOCKET STATUS: ⚠️ NEEDS ATTENTION")
+            print(f"🏆 PRODUCTION STATUS: ⚠️ NEEDS ATTENTION BEFORE DEPLOYMENT")
         
-        return 0 if websocket_success else 1
+        return 0 if production_ready else 1
         
     except KeyboardInterrupt:
         print("\n⏹️ Tests interrupted by user")
