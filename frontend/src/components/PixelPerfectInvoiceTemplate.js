@@ -232,7 +232,7 @@ const PixelPerfectInvoiceTemplate = ({ invoiceData, projectData, clientData, com
                                 maxHeight: '100%', 
                                 objectFit: 'contain'
                             }}
-                            crossOrigin="anonymous"
+                            // Local logo - no CORS needed
                         />
                     </div>
                 </div>
