@@ -346,6 +346,18 @@
         - agent: "testing"
         - comment: "🎉 COMPLETE GST WORKFLOW INTEGRATION TESTING COMPLETED: Performed end-to-end testing of the complete GST workflow from project creation to invoice generation. OUTSTANDING RESULTS: ✅ 100% success rate (7/7 tests passed), ✅ END-TO-END WORKFLOW: Successfully completed full workflow: Project Creation → Pending Approval → Manager Approval → Invoice Creation with proper GST calculation, ✅ CGST_SGST WORKFLOW: Complete workflow for CGST_SGST projects with 50-50 GST split (₹67,500 CGST + ₹67,500 SGST on ₹750,000 subtotal), ✅ PROJECT CREATION: Successfully created projects with GST type configuration, ✅ PENDING APPROVAL TRACKING: Projects correctly appear in pending GST approval list, ✅ MANAGER APPROVAL: GST configurations successfully approved by Manager/SuperAdmin, ✅ INVOICE GENERATION: Invoices created with accurate GST breakdown based on project GST type, ✅ GST CALCULATIONS: Perfect accuracy in GST calculations for both CGST_SGST and IGST scenarios. The complete GST workflow integration is production-ready and fully functional."
 
+  - task: "Dynamic GST Breakdown in PDF Generation"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+        - working: true
+        - agent: "main"
+        - comment: "Updated invoice creation endpoint to properly calculate and store cgst_amount, sgst_amount, igst_amount fields based on project GST type. Enhanced PDF generation to show dynamic GST breakdown instead of hardcoded 'GST (18%)' text."
+
 ## frontend:
   - task: "Projects Page Error Fix"
     implemented: true
