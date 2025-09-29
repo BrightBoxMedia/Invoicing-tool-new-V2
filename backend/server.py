@@ -3014,6 +3014,292 @@ async def get_invoice_by_id(invoice_id: str, current_user: dict = Depends(get_cu
         logger.error(f"Get invoice error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get invoice: {str(e)}")
 
+# Enhanced Amendment Workflow with Manager Approval
+@api_router.post("/invoices/{invoice_id}/amendment-request")
+async def submit_amendment_request(invoice_id: str, amendment_data: dict, current_user: dict = Depends(get_current_user)):
+    try:
+        # Get original invoice
+        original_invoice = await db.invoices.find_one({"id": invoice_id})
+        if not original_invoice:
+            raise HTTPException(status_code=404, detail="Invoice not found")
+        
+        amendment_reason = amendment_data.get('amendment_reason', '')
+        if not amendment_reason.strip():
+            raise HTTPException(status_code=400, detail="Amendment reason is required")
+        
+        # Create amendment request
+        amendment_request = {
+            "id": str(uuid.uuid4()),
+            "original_invoice_id": invoice_id,
+            "amendment_type": amendment_data.get('amendment_type', 'quantities'),
+            "amendment_reason": amendment_reason,
+            "amended_items": amendment_data.get('amended_items', []),
+            "requested_by": current_user['id'],
+            "requested_by_email": current_user['email'],
+            "status": "pending_approval",
+            "created_at": datetime.now(timezone.utc)
+        }
+        
+        # Store amendment request
+        result = await db.amendment_requests.insert_one(amendment_request)
+        
+        # Update original invoice status
+        await db.invoices.update_one(
+            {"id": invoice_id},
+            {"$set": {
+                "status": "amendment_requested",
+                "amendment_request_id": amendment_request['id'],
+                "updated_at": datetime.now(timezone.utc)
+            }}
+        )
+        
+        # Log activity
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "amendment_requested", f"Amendment request submitted for invoice {original_invoice['invoice_number']}. Reason: {amendment_reason}"
+        )
+        
+        # Clean up ObjectId for JSON response
+        if '_id' in amendment_request:
+            del amendment_request['_id']
+        
+        return {
+            "message": "Amendment request submitted successfully",
+            "amendment_request": amendment_request
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Amendment request error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to submit amendment request: {str(e)}")
+
+@api_router.get("/amendment-requests/pending")
+async def get_pending_amendment_requests(current_user: dict = Depends(get_current_user)):
+    try:
+        # Check if user has permission (Manager or SuperAdmin)
+        user_role = current_user.get('role', '').lower()
+        if user_role not in ['manager', 'superadmin', 'super_admin', 'admin']:
+            raise HTTPException(
+                status_code=403, 
+                detail="Only Managers or SuperAdmins can view pending amendment requests"
+            )
+        
+        # Get pending amendment requests
+        requests = await db.amendment_requests.find({
+            "status": "pending_approval"
+        }).to_list(1000)
+        
+        # Get invoice and project details for each request
+        enhanced_requests = []
+        for request in requests:
+            # Get original invoice
+            invoice = await db.invoices.find_one({"id": request['original_invoice_id']})
+            project = None
+            if invoice:
+                project = await db.projects.find_one({"id": invoice['project_id']})
+            
+            enhanced_request = dict(request)
+            enhanced_request['invoice'] = invoice
+            enhanced_request['project'] = project
+            
+            # Clean up ObjectId
+            if '_id' in enhanced_request:
+                del enhanced_request['_id']
+            
+            enhanced_requests.append(enhanced_request)
+        
+        return {"amendment_requests": enhanced_requests, "total_count": len(enhanced_requests)}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Get pending amendments error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get pending amendment requests: {str(e)}")
+
+@api_router.post("/amendment-requests/{request_id}/approve")
+async def approve_amendment_request(request_id: str, approval_data: dict, current_user: dict = Depends(get_current_user)):
+    try:
+        # Check permissions
+        user_role = current_user.get('role', '').lower()
+        if user_role not in ['manager', 'superadmin', 'super_admin', 'admin']:
+            raise HTTPException(
+                status_code=403, 
+                detail="Only Managers or SuperAdmins can approve amendment requests"
+            )
+        
+        # Get amendment request
+        amendment_request = await db.amendment_requests.find_one({"id": request_id})
+        if not amendment_request:
+            raise HTTPException(status_code=404, detail="Amendment request not found")
+        
+        if amendment_request['status'] != 'pending_approval':
+            raise HTTPException(status_code=400, detail="Amendment request is not pending approval")
+        
+        action = approval_data.get('action')  # 'approve' or 'reject'
+        if action not in ['approve', 'reject']:
+            raise HTTPException(status_code=400, detail="Action must be 'approve' or 'reject'")
+        
+        if action == 'approve':
+            # Create the amended invoice using the original amendment logic
+            original_invoice = await db.invoices.find_one({"id": amendment_request['original_invoice_id']})
+            if not original_invoice:
+                raise HTTPException(status_code=404, detail="Original invoice not found")
+            
+            # Process amendment (similar to original amend_invoice logic)
+            amended_items = amendment_request.get('amended_items', [])
+            new_invoice_items = []
+            total_subtotal = 0
+            
+            # Get project for GST type
+            project = await db.projects.find_one({"id": original_invoice['project_id']})
+            project_gst_type = project.get('gst_type', 'IGST') if project else 'IGST'
+            
+            for amended_item in amended_items:
+                new_quantity = amended_item.get('new_quantity', 0)
+                new_gst_rate = amended_item.get('new_gst_rate', amended_item.get('original_gst_rate', 18))
+                rate = amended_item.get('rate', 0)
+                
+                basic_amount = new_quantity * rate
+                gst_amount = basic_amount * (new_gst_rate / 100)
+                
+                invoice_item = {
+                    "boq_item_id": amended_item.get('boq_item_id'),
+                    "description": amended_item.get('description'),
+                    "unit": amended_item.get('unit'),
+                    "quantity": new_quantity,
+                    "rate": rate,
+                    "amount": basic_amount,
+                    "gst_rate": new_gst_rate,
+                    "gst_amount": gst_amount,
+                    "total_amount": basic_amount + gst_amount
+                }
+                
+                new_invoice_items.append(invoice_item)
+                total_subtotal += basic_amount
+            
+            # Calculate GST
+            total_cgst = 0
+            total_sgst = 0
+            total_igst = 0
+            
+            if project_gst_type == 'CGST_SGST':
+                total_gst = sum(item['gst_amount'] for item in new_invoice_items)
+                total_cgst = total_gst / 2
+                total_sgst = total_gst / 2
+            else:
+                total_igst = sum(item['gst_amount'] for item in new_invoice_items)
+            
+            total_gst_amount = total_cgst + total_sgst + total_igst
+            total_amount = total_subtotal + total_gst_amount
+            
+            # Generate amended invoice number
+            invoice_count = await db.invoices.count_documents({}) + 1
+            amended_invoice_number = f"AME-{original_invoice['invoice_number']}-{invoice_count:05d}"
+            
+            # Create amended invoice
+            amended_invoice = {
+                "id": str(uuid.uuid4()),
+                "invoice_number": amended_invoice_number,
+                "original_invoice_id": amendment_request['original_invoice_id'],
+                "amendment_request_id": request_id,
+                "amendment_reason": amendment_request['amendment_reason'],
+                "amendment_type": amendment_request['amendment_type'],
+                "project_id": original_invoice['project_id'],
+                "client_id": original_invoice['client_id'],
+                "invoice_type": original_invoice.get('invoice_type', 'tax_invoice'),
+                "invoice_date": datetime.now(timezone.utc),
+                "due_date": datetime.now(timezone.utc) + timedelta(days=30),
+                "items": new_invoice_items,
+                "subtotal": total_subtotal,
+                "gst_type": project_gst_type,
+                "cgst_amount": total_cgst,
+                "sgst_amount": total_sgst,
+                "igst_amount": total_igst,
+                "total_gst_amount": total_gst_amount,
+                "total_amount": total_amount,
+                "payment_terms": original_invoice.get('payment_terms', 'Payment due within 30 days'),
+                "advance_received": 0.0,
+                "net_amount_due": total_amount,
+                "ra_number": original_invoice.get('ra_number'),
+                "status": "approved",
+                "created_at": datetime.now(timezone.utc),
+                "amended_by": amendment_request['requested_by'],
+                "approved_by": current_user['id'],
+                "approved_at": datetime.now(timezone.utc)
+            }
+            
+            # Insert amended invoice
+            await db.invoices.insert_one(amended_invoice)
+            
+            # Update original invoice status
+            await db.invoices.update_one(
+                {"id": amendment_request['original_invoice_id']},
+                {"$set": {
+                    "status": "superseded",
+                    "superseded_by": amended_invoice['id'],
+                    "superseded_at": datetime.now(timezone.utc)
+                }}
+            )
+            
+            # Update amendment request status
+            await db.amendment_requests.update_one(
+                {"id": request_id},
+                {"$set": {
+                    "status": "approved",
+                    "approved_by": current_user['id'],
+                    "approved_at": datetime.now(timezone.utc),
+                    "amended_invoice_id": amended_invoice['id']
+                }}
+            )
+            
+            await log_activity(
+                current_user["id"], current_user["email"], current_user["role"],
+                "amendment_approved", f"Approved amendment request for invoice {original_invoice['invoice_number']} -> {amended_invoice_number}"
+            )
+            
+            return {
+                "message": "Amendment request approved and invoice created",
+                "amended_invoice": amended_invoice
+            }
+            
+        else:  # reject
+            # Update amendment request status
+            await db.amendment_requests.update_one(
+                {"id": request_id},
+                {"$set": {
+                    "status": "rejected",
+                    "rejected_by": current_user['id'],
+                    "rejected_at": datetime.now(timezone.utc),
+                    "rejection_reason": approval_data.get('rejection_reason', '')
+                }}
+            )
+            
+            # Update original invoice status back to its previous state
+            await db.invoices.update_one(
+                {"id": amendment_request['original_invoice_id']},
+                {"$set": {
+                    "status": "created",  # Reset to created status
+                    "updated_at": datetime.now(timezone.utc)
+                }}
+            )
+            
+            await log_activity(
+                current_user["id"], current_user["email"], current_user["role"],
+                "amendment_rejected", f"Rejected amendment request for invoice {amendment_request['original_invoice_id']}"
+            )
+            
+            return {
+                "message": "Amendment request rejected",
+                "request_id": request_id
+            }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Amendment approval error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to process amendment approval: {str(e)}")
+
 # WebSocket Endpoint for Real-time Project Updates
 @app.websocket("/ws/projects/{project_id}")
 async def websocket_endpoint(websocket: WebSocket, project_id: str):
