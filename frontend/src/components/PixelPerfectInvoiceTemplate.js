@@ -9,7 +9,7 @@ const PixelPerfectInvoiceTemplate = ({ invoiceData, projectData, clientData, com
         email: companyData?.email || 'info@activusdesignbuild.in'
     });
 
-    // Company logo URL (the new pixel-perfect logo)
+    // Company logo - convert to base64 for reliable PDF generation and cross-origin loading
     const logoUrl = 'https://customer-assets.emergentagent.com/job_activus-manager/artifacts/8scn4iq7_horizontal-with-tagline-bg-fff-1500x1500.pdf.png';
 
     // Calculate GST breakdown based on project GST type
