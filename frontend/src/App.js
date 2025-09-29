@@ -725,7 +725,7 @@ const Projects = ({ currentUser }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
           <div className="bg-white rounded-lg max-w-6xl w-full max-h-screen overflow-y-auto">
             <EnhancedProjectCreation
-              currentUser={user}
+              currentUser={currentUser}
               parsedBoqData={parsedData}
               onClose={() => {
                 setShowEnhancedProjectCreation(false);
