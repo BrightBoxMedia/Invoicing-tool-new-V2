@@ -1,5 +1,7 @@
 import React from 'react';
 
+const InvoiceSuccessModal = ({ invoice, project, onClose, onDownloadPDF, onCreateAnother, onAmendInvoice }) => {
+
 const InvoiceSuccessModal = ({ invoice, project, onClose, onDownloadPDF, onCreateAnother }) => {
     if (!invoice) return null;
 
