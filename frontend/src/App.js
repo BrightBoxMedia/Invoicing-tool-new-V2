@@ -692,6 +692,29 @@ const Projects = ({ currentUser }) => {
             // Keep selectedProject and reopen invoice creation
             setShowEnhancedInvoice(true);
           }}
+          onAmendInvoice={(invoice, project) => {
+            setAmendmentInvoiceData({ invoice, project });
+            setShowInvoiceAmendment(true);
+          }}
+        />
+      )}
+
+      {/* Invoice Amendment Modal */}
+      {showInvoiceAmendment && amendmentInvoiceData && (
+        <InvoiceAmendment
+          invoice={amendmentInvoiceData.invoice}
+          project={amendmentInvoiceData.project}
+          currentUser={user}
+          onClose={() => {
+            setShowInvoiceAmendment(false);
+            setAmendmentInvoiceData(null);
+          }}
+          onAmendSuccess={(amendedInvoice) => {
+            setShowInvoiceAmendment(false);
+            setAmendmentInvoiceData(null);
+            fetchProjects(); // Refresh data
+            alert(`Invoice amended successfully! New invoice: ${amendedInvoice.amended_invoice.invoice_number}`);
+          }}
         />
       )}
 
