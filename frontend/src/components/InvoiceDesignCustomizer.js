@@ -324,6 +324,68 @@ const InvoiceDesignCustomizer = ({ currentUser }) => {
                 </div>
 
                 <div className="p-6">
+                    {/* PREVIEW TAB */}
+                    {activeTab === 'preview' && (
+                        <div className="space-y-6">
+                            <div>
+                                <h3 className="text-lg font-semibold text-gray-900 mb-4">👁️ Live Invoice Template Preview</h3>
+                                <p className="text-sm text-gray-600 mb-6">
+                                    This is the pixel-perfect invoice template that will be used for all generated invoices. 
+                                    Only the company address, phone number, and email can be customized.
+                                </p>
+                                
+                                {/* Pixel Perfect Invoice Template Preview */}
+                                <div className="border-2 border-gray-200 rounded-lg overflow-hidden">
+                                    <PixelPerfectInvoiceTemplate 
+                                        invoiceData={{
+                                            invoice_number: 'INV-000001',
+                                            invoice_date: new Date().toISOString(),
+                                            ra_number: 'RA1',
+                                            items: [
+                                                {
+                                                    description: 'Foundation Work - Amendment Test',
+                                                    unit: 'Cum',
+                                                    quantity: 20.00,
+                                                    rate: 5000.00,
+                                                    amount: 100000.00,
+                                                    gst_rate: 18
+                                                }
+                                            ],
+                                            subtotal: 100000.00,
+                                            total_gst_amount: 18000.00,
+                                            total_amount: 118000.00
+                                        }}
+                                        projectData={{
+                                            project_name: 'GST Amendment Test Project',
+                                            gst_type: 'IGST'
+                                        }}
+                                        clientData={{
+                                            name: 'GST Amendment Test Client',
+                                            gst_no: '27ABCDE1234F1Z5'
+                                        }}
+                                        companyData={{
+                                            address: designConfig.company_address || 'AIDB Building, Industrial Area, Bangalore, Karnataka, India - 560001',
+                                            phone: designConfig.company_phone || '+91 87785 07177',
+                                            email: designConfig.company_email || 'info@activusdesignbuild.in'
+                                        }}
+                                    />
+                                </div>
+                                
+                                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <h4 className="font-medium text-blue-900 mb-2">📋 Template Features</h4>
+                                    <ul className="text-sm text-blue-800 space-y-1">
+                                        <li>• Pixel-perfect design matching provided specifications</li>
+                                        <li>• Dynamic GST breakdown (CGST+SGST vs IGST) based on project configuration</li>
+                                        <li>• Montserrat font family for professional appearance</li>
+                                        <li>• Responsive layout optimized for A4 PDF export</li>
+                                        <li>• Company logo integration with proper positioning</li>
+                                        <li>• Locked design elements for consistency</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* BRANDING TAB */}
                     {activeTab === 'branding' && (
                         <div className="space-y-6">
