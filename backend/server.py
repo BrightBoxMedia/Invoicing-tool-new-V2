@@ -1109,20 +1109,31 @@ class PDFGenerator:
         elements = []
         styles = getSampleStyleSheet()
         
-        # Company branding
+        # Company branding with pixel-perfect styling
         title_style = ParagraphStyle(
             'CustomTitle',
             parent=styles['Heading1'],
-            fontSize=20,
-            textColor=colors.HexColor('#127285'),
+            fontSize=28,
+            textColor=colors.HexColor('#00ACC1'),  # Updated to match pixel-perfect design
             alignment=TA_CENTER,
-            spaceAfter=12,
-            fontName='Helvetica-Bold'
+            spaceAfter=8,
+            fontName='Helvetica-Bold',
+            letterSpacing=2
         )
         
-        # Company Header
+        tagline_style = ParagraphStyle(
+            'TaglineStyle',
+            parent=styles['Normal'],
+            fontSize=14,
+            textColor=colors.HexColor('#666666'),
+            alignment=TA_CENTER,
+            spaceAfter=20,
+            fontName='Helvetica'
+        )
+        
+        # Company Header - Pixel Perfect Design
         elements.append(Paragraph("ACTIVUS INDUSTRIAL DESIGN & BUILD LLP", title_style))
-        elements.append(Paragraph("Professional Industrial Solutions", styles['Normal']))
+        elements.append(Paragraph("Professional Industrial Solutions", tagline_style))
         elements.append(Spacer(1, 20))
         
         # Invoice type
