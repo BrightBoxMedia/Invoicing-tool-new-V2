@@ -11,6 +11,7 @@ import jwt
 import asyncio
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Optional, Union
+import io
 from io import BytesIO
 import base64
 
