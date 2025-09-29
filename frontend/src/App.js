@@ -706,7 +706,7 @@ const Projects = ({ currentUser }) => {
         <InvoiceAmendment
           invoice={amendmentInvoiceData.invoice}
           project={amendmentInvoiceData.project}
-          currentUser={user}
+          currentUser={currentUser}
           onClose={() => {
             setShowInvoiceAmendment(false);
             setAmendmentInvoiceData(null);
