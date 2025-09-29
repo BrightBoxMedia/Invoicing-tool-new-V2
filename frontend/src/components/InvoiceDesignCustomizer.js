@@ -262,6 +262,7 @@ const InvoiceDesignCustomizer = ({ currentUser }) => {
     };
 
     const tabs = [
+        { id: 'preview', label: '👁️ Live Preview', icon: '👁️' },
         { id: 'branding', label: '🏢 Branding', icon: '🏢' },
         { id: 'colors', label: '🎨 Colors', icon: '🎨' },
         { id: 'typography', label: '📝 Typography', icon: '📝' },
