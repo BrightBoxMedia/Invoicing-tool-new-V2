@@ -307,6 +307,7 @@ class ClientInfo(BaseModel):
     state: str
     gst_no: str
     bill_to_address: str
+    shipping_address: str = ""
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 # BOQ Item Models
