@@ -9,6 +9,9 @@ const EnhancedProjectDetails = ({ project, onClose, onCreateInvoice }) => {
   const [localLoading, setLocalLoading] = useState(true);
   const [projectAnalysis, setProjectAnalysis] = useState({});
   const [invoiceHistory, setInvoiceHistory] = useState([]);
+  const [showInvoiceViewer, setShowInvoiceViewer] = useState(false);
+  const [showInvoiceAmendment, setShowInvoiceAmendment] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Connect to real-time updates when component mounts
