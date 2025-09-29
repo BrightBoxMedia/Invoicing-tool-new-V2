@@ -397,18 +397,19 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
                                             ₹{(item.rate || 0).toLocaleString('en-IN')}
                                         </td>
                                         <td className="px-4 py-4 text-center">
-                                            <select
-                                                value={item.gst_percentage || 18}
-                                                onChange={(e) => updateItemGSTPercentage(index, e.target.value)}
-                                                className="w-20 px-2 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                                            >
-                                                <option value="0">0%</option>
-                                                <option value="5">5%</option>
-                                                <option value="12">12%</option>
-                                                <option value="18">18%</option>
-                                                <option value="28">28%</option>
-                                                <option value="40">40%</option>
-                                            </select>
+                                            <div className="flex items-center justify-center">
+                                                <span className="px-3 py-2 bg-gray-100 text-gray-800 text-sm font-medium rounded border">
+                                                    {item.gst_percentage || 18}%
+                                                </span>
+                                                <div className="ml-2">
+                                                    <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15l2-2m0 0l2-2m-2 2l-2-2m2 2v6" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                            <div className="text-xs text-gray-500 mt-1">
+                                                Locked
+                                            </div>
                                         </td>
                                         <td className="px-4 py-4 text-right">
                                             <div className="text-sm font-medium text-gray-900">
