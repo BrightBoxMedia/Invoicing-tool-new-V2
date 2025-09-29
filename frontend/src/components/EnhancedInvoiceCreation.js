@@ -204,11 +204,7 @@ const EnhancedInvoiceCreation = ({ currentUser, projectId, onClose, onSuccess })
         setError(''); // Clear error if quantity is valid
     };
 
-    const updateItemGSTPercentage = (itemIndex, gstPercent) => {
-        const updatedItems = [...invoiceItems];
-        updatedItems[itemIndex].gst_percentage = parseFloat(gstPercent);
-        setInvoiceItems(updatedItems);
-    };
+    // GST percentages are now locked after project approval - no editing during invoice creation
 
     const calculateTotals = () => {
         const selectedItems = invoiceItems.filter(item => (item.requested_qty || 0) > 0);
