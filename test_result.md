@@ -115,9 +115,7 @@
     status_history:
         - working: true
         - agent: "main"
-        - comment: "Dashboard stats API implemented at /dashboard/stats endpoint"
-        - working: true
-        - agent: "testing"
+        - comment: "Updated PDF generation to support dynamic GST breakdown (CGST+SGST vs IGST) and pixel-perfect styling with colors #00ACC1 for headers, proper table styling, and Montserrat font support. Added GST type passing from project to invoice for proper breakdown calculation."
         - comment: "✅ TESTED: Dashboard stats endpoint working correctly. Returns total_projects: 7, total_invoices: 3, financial metrics properly calculated. All required fields present."
         - working: true
         - agent: "testing"
