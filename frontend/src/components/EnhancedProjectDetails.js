@@ -389,12 +389,52 @@ const EnhancedProjectDetails = ({ project, onClose, onCreateInvoice }) => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`px-2 py-1 text-xs font-medium rounded ${
+                              invoice.status === 'amended' ? 'bg-orange-100 text-orange-800' :
+                              invoice.status === 'approval_pending' ? 'bg-yellow-100 text-yellow-800' :
+                              invoice.status === 'superseded' ? 'bg-red-100 text-red-800' :
                               invoice.status === 'paid' ? 'bg-green-100 text-green-800' :
                               invoice.status === 'sent' ? 'bg-blue-100 text-blue-800' :
                               'bg-gray-100 text-gray-800'
                             }`}>
-                              {invoice.status || 'Created'}
+                              {invoice.status === 'amended' ? 'Amended' :
+                               invoice.status === 'approval_pending' ? 'Approval Pending' :
+                               invoice.status === 'superseded' ? 'Superseded' :
+                               invoice.status || 'Created'}
                             </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <div className="flex justify-center space-x-2">
+                              {/* View Button */}
+                              <button
+                                onClick={() => handleViewInvoice(invoice)}
+                                className="px-3 py-1 text-xs font-medium text-blue-600 bg-blue-100 hover:bg-blue-200 rounded-md transition-colors"
+                                title="View Invoice"
+                              >
+                                👁️ View
+                              </button>
+                              
+                              {/* Amend Button - Only for created/sent invoices */}
+                              {(invoice.status === 'created' || invoice.status === 'sent' || !invoice.status) && (
+                                <button
+                                  onClick={() => handleAmendInvoice(invoice)}
+                                  className="px-3 py-1 text-xs font-medium text-orange-600 bg-orange-100 hover:bg-orange-200 rounded-md transition-colors"
+                                  title="Amend Invoice"
+                                >
+                                  ✏️ Amend
+                                </button>
+                              )}
+                              
+                              {/* Download Button - Only for approved invoices */}
+                              {(invoice.status === 'created' || invoice.status === 'sent' || invoice.status === 'paid') && (
+                                <button
+                                  onClick={() => handleDownloadInvoice(invoice)}
+                                  className="px-3 py-1 text-xs font-medium text-green-600 bg-green-100 hover:bg-green-200 rounded-md transition-colors"
+                                  title="Download PDF"
+                                >
+                                  ⬇️ PDF
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );
