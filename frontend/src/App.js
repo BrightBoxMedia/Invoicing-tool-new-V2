@@ -644,7 +644,7 @@ const Projects = ({ currentUser }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg max-w-6xl w-full max-h-screen overflow-y-auto m-4">
             <EnhancedInvoiceCreation
-              currentUser={currentUser}
+              currentUser={user}
               projectId={selectedProject.id}
               onClose={() => {
                 setShowEnhancedInvoice(false);
@@ -706,7 +706,7 @@ const Projects = ({ currentUser }) => {
         <InvoiceAmendment
           invoice={amendmentInvoiceData.invoice}
           project={amendmentInvoiceData.project}
-          currentUser={currentUser}
+          currentUser={user}
           onClose={() => {
             setShowInvoiceAmendment(false);
             setAmendmentInvoiceData(null);
@@ -725,7 +725,7 @@ const Projects = ({ currentUser }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
           <div className="bg-white rounded-lg max-w-6xl w-full max-h-screen overflow-y-auto">
             <EnhancedProjectCreation
-              currentUser={currentUser}
+              currentUser={user}
               parsedBoqData={parsedData}
               onClose={() => {
                 setShowEnhancedProjectCreation(false);
@@ -785,7 +785,7 @@ function App() {
         <AuthContext.Provider value={{ user, logout: handleLogout }}>
           <Router>
             <div className="flex h-screen bg-gray-50">
-              <Sidebar currentUser={currentUser} />
+              <Sidebar currentUser={user} />
               <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
                 <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
@@ -806,20 +806,20 @@ function App() {
                 {/* Main Content */}
                 <main className="flex-1 overflow-auto">
                   <Routes>
-                    <Route path="/dashboard" element={<Dashboard currentUser={currentUser} />} />
-                    <Route path="/projects" element={<Projects currentUser={currentUser} />} />
-                    <Route path="/invoices" element={<Invoices currentUser={currentUser} />} />
-                    <Route path="/clients" element={<Clients currentUser={currentUser} />} />
-                    <Route path="/bank-guarantees" element={<BankGuarantees currentUser={currentUser} />} />
-                    <Route path="/smart-search" element={<SmartSearch currentUser={currentUser} />} />
-                    <Route path="/reports" element={<Reports currentUser={currentUser} />} />
-                    <Route path="/company-profiles" element={<CompanyProfileManagement currentUser={currentUser} />} />
-                    <Route path="/activity-logs" element={<ActivityLogs currentUser={currentUser} />} />
-                    <Route path="/user-management" element={<UserManagement currentUser={currentUser} />} />
-                    <Route path="/admin-interface" element={<AdminInterface currentUser={currentUser} />} />
-                    <Route path="/gst-approval" element={<GSTApprovalInterface currentUser={currentUser} />} />
-                    <Route path="/gst-approval" element={<GSTApprovalInterface currentUser={currentUser} />} />
-                    <Route path="/invoice-design" element={<InvoiceDesignCustomizer currentUser={currentUser} />} />
+                    <Route path="/dashboard" element={<Dashboard currentUser={user} />} />
+                    <Route path="/projects" element={<Projects currentUser={user} />} />
+                    <Route path="/invoices" element={<Invoices currentUser={user} />} />
+                    <Route path="/clients" element={<Clients currentUser={user} />} />
+                    <Route path="/bank-guarantees" element={<BankGuarantees currentUser={user} />} />
+                    <Route path="/smart-search" element={<SmartSearch currentUser={user} />} />
+                    <Route path="/reports" element={<Reports currentUser={user} />} />
+                    <Route path="/company-profiles" element={<CompanyProfileManagement currentUser={user} />} />
+                    <Route path="/activity-logs" element={<ActivityLogs currentUser={user} />} />
+                    <Route path="/user-management" element={<UserManagement currentUser={user} />} />
+                    <Route path="/admin-interface" element={<AdminInterface currentUser={user} />} />
+                    <Route path="/gst-approval" element={<GSTApprovalInterface currentUser={user} />} />
+                    <Route path="/gst-approval" element={<GSTApprovalInterface currentUser={user} />} />
+                    <Route path="/invoice-design" element={<InvoiceDesignCustomizer currentUser={user} />} />
                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
                   </Routes>
                 </main>
