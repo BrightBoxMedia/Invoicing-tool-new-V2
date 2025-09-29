@@ -644,7 +644,7 @@ const Projects = ({ currentUser }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg max-w-6xl w-full max-h-screen overflow-y-auto m-4">
             <EnhancedInvoiceCreation
-              currentUser={user}
+              currentUser={currentUser}
               projectId={selectedProject.id}
               onClose={() => {
                 setShowEnhancedInvoice(false);
