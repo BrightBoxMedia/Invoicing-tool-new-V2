@@ -2968,6 +2968,14 @@ async def get_invoice_amendment_history(invoice_id: str, current_user: dict = De
             root_invoice = original_invoice
             all_amendments = amendments
         
+        # Clean up ObjectId fields for JSON serialization
+        if root_invoice and '_id' in root_invoice:
+            del root_invoice['_id']
+        
+        for amendment in all_amendments:
+            if '_id' in amendment:
+                del amendment['_id']
+        
         return {
             "root_invoice": root_invoice,
             "amendments": all_amendments,
