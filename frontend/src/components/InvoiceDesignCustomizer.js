@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PixelPerfectInvoiceTemplate from './PixelPerfectInvoiceTemplate';
 
 const InvoiceDesignCustomizer = ({ currentUser }) => {
     const [loading, setLoading] = useState(false);
