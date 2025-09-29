@@ -105,13 +105,13 @@
 ## user_problem_statement: "Implement pixel-perfect invoice design that exactly matches the provided screenshot with dynamic GST breakdown and locked design elements."
 
 ## backend:
-  - task: "Dashboard Stats API"
+  - task: "Pixel Perfect Invoice PDF Generation"
     implemented: true
     working: true
     file: "/app/backend/server.py"
     stuck_count: 0
-    priority: "high"
-    needs_retesting: false
+    priority: "critical"
+    needs_retesting: true
     status_history:
         - working: true
         - agent: "main"
