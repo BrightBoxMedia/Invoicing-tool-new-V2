@@ -378,17 +378,22 @@ const Reports = ({ currentUser }) => {
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Clients by Value</h3>
                         <div className="space-y-3">
-                            {insights.trends.top_clients.map((client, index) => (
+                            {(insights.top_clients || []).map((client, index) => (
                                 <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                                     <div className="flex items-center space-x-3">
                                         <span className="text-sm font-medium text-gray-900">#{index + 1}</span>
                                         <span className="text-gray-900">{client.name}</span>
                                     </div>
                                     <span className="text-green-600 font-semibold">
-                                        {formatCurrency(client.total_value)}
+                                        {formatCurrency(client.value || 0)}
                                     </span>
                                 </div>
                             ))}
+                            {(!insights.top_clients || insights.top_clients.length === 0) && (
+                                <div className="text-center text-gray-500 py-4">
+                                    No client data available
+                                </div>
+                            )}
                         </div>
                     </div>
 
