@@ -742,7 +742,7 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
                                 onChange={(e) => handleCompanyProfileChange(e.target.value)}
                             >
                                 <option value="">Select Company Profile</option>
-                                {companyProfiles.map(profile => (
+                                {(companyProfiles || []).map(profile => (
                                     <option key={profile.id} value={profile.id}>{profile.company_name}</option>
                                 ))}
                             </select>
