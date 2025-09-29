@@ -351,7 +351,7 @@ const InvoiceAmendment = ({ invoice, project, currentUser, onClose, onAmendSucce
                             disabled={loading || !amendmentReason.trim()}
                             className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 transition-colors font-medium"
                         >
-                            {loading ? 'Processing...' : 'Submit Amendment'}
+                            {loading ? 'Submitting...' : 'Submit Amendment Request'}
                         </button>
                     </div>
                 </div>
