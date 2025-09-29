@@ -1142,37 +1142,66 @@ class PDFGenerator:
         elements.append(Paragraph(invoice_details_text, invoice_details_style))
         elements.append(Spacer(1, 20))
         
-        # Invoice details
-        details_data = [
-            ['Invoice Number:', invoice.invoice_number, 'Date:', invoice.invoice_date.strftime('%d/%m/%Y')],
-            ['Project:', project.project_name, 'Client:', client.name]
-        ]
+        # Billed By and Billed To sections - side by side layout
+        billed_by_style = ParagraphStyle(
+            'BilledByStyle',
+            parent=styles['Normal'],
+            fontSize=12,
+            lineHeight=15,
+            fontName='Helvetica',
+            backgroundColor=colors.HexColor('#E0F2F1'),
+            borderPadding=10
+        )
         
-        if invoice.ra_number and invoice.invoice_type == "tax_invoice":
-            details_data.append(['RA Number:', invoice.ra_number, '', ''])
+        billed_to_style = ParagraphStyle(
+            'BilledToStyle',
+            parent=styles['Normal'],
+            fontSize=12,
+            lineHeight=15,
+            fontName='Helvetica',
+            backgroundColor=colors.HexColor('#E3F2FD'),
+            borderPadding=10
+        )
         
-        details_table = Table(details_data, colWidths=[80, 200, 60, 120])
-        details_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f8f9fa')),
-            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#dddddd')),
+        # Create Billed By and Billed To data as a side-by-side table
+        billing_data = [[
+            Paragraph(f"""
+            <b><font color="#00695C">Billed By</font></b><br/><br/>
+            <b>Activus Industrial Design And Build LLP</b><br/>
+            Flat No.125 7th Cross Rd, Opp Bannerghatta Road, Dollar Layout, BTM Layout Stage 2, Bilekahlli, Bengaluru, Karnataka, India - 560076<br/><br/>
+            <b>GSTIN:</b> 29ACGFA5744D1ZF<br/>
+            <b>PAN:</b> ACGFA5744D<br/>
+            <b>Email:</b> finance@activusdesignbuild.in<br/>
+            <b>Phone:</b> +91 87785 07177
+            """, billed_by_style),
+            
+            Paragraph(f"""
+            <b><font color="#1976D2">Billed To</font></b><br/><br/>
+            <b>UNITED BREWERIES LIMITED</b><br/>
+            PLOT NO M-1 & M-1 /2,TALOJA DIST. RAIGAD,Maharashtra-410208.,<br/>
+            Taloja,<br/>
+            Maharashtra, India - 410206<br/><br/>
+            <b>GSTIN:</b> 27AAACU6053C1ZL<br/>
+            <b>PAN:</b> AAACU6053C<br/>
+            <b>Email:</b> ubltaloja@ubmail.com<br/>
+            <b>Phone:</b> +91 82706 64250
+            """, billed_to_style)
+        ]]
+        
+        billing_table = Table(billing_data, colWidths=[240, 240])
+        billing_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, 0), colors.HexColor('#E0F2F1')),
+            ('BACKGROUND', (1, 0), (1, 0), colors.HexColor('#E3F2FD')),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 15),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 15),
+            ('TOPPADDING', (0, 0), (-1, -1), 15),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 15),
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#BBDEFB')),
         ]))
         
-        elements.append(details_table)
-        elements.append(Spacer(1, 20))
-        
-        # Client information
-        elements.append(Paragraph("Bill To:", styles['Heading3']))
-        bill_to_text = f"""
-        <b>{client.name}</b><br/>
-        {client.bill_to_address}<br/>
-        <b>GST No:</b> {client.gst_no or 'Not Available'}
-        """
-        elements.append(Paragraph(bill_to_text, styles['Normal']))
-        elements.append(Spacer(1, 20))
+        elements.append(billing_table)
+        elements.append(Spacer(1, 30))
         
         # Items table
         table_data = [
