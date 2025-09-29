@@ -1181,7 +1181,7 @@ class PDFGenerator:
         
         # Exact content matching reference screenshot
         billing_data = [[
-            Paragraph(f"""
+            Paragraph("""
             <b>Billed By</b><br/><br/>
             <b>Activus Industrial Design And Build LLP</b><br/>
             Flat No.125 7th Cross Rd, Opp Bannerghatta Road, Dollar Layout, BTM Layout Stage 2, Bilekahlli, Bengaluru, Karnataka, India - 560076<br/><br/>
