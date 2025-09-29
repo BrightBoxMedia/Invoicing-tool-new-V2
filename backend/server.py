@@ -1203,10 +1203,14 @@ class PDFGenerator:
         elements.append(billing_table)
         elements.append(Spacer(1, 30))
         
-        # Items table
-        table_data = [
-            ['S.No', 'Description', 'Unit', 'Qty', 'Rate (₹)', 'Amount (₹)']
-        ]
+        # Items table - Pixel Perfect Layout matching reference
+        # Dynamic header based on GST type
+        if hasattr(invoice, 'gst_type') and invoice.gst_type == 'CGST_SGST':
+            table_headers = ['Item', 'GST Rate', 'Quantity', 'Rate', 'Amount', 'CGST', 'SGST', 'Total']
+        else:
+            table_headers = ['Item', 'GST Rate', 'Quantity', 'Rate', 'Amount', 'IGST', 'Total']
+        
+        table_data = [table_headers]
         
         for idx, item in enumerate(invoice.items, 1):
             table_data.append([
