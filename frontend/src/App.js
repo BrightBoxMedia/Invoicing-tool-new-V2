@@ -131,6 +131,7 @@ const Sidebar = ({ currentUser }) => {
     { path: '/gst-approval', icon: '🧾', label: 'GST Approval', roles: ['Manager', 'SuperAdmin'] },
     { path: '/amendment-requests', icon: '📝', label: 'Amendment Requests', roles: ['Manager', 'SuperAdmin'] },
     { path: '/invoice-design', icon: '🎨', label: 'Invoice Design' },
+    { path: '/invoice-template', icon: '📋', label: 'Invoice Template Preview' },
   ];
 
   const isActive = (path) => location.pathname === path;
