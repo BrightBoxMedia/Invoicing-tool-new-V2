@@ -1109,36 +1109,37 @@ class PDFGenerator:
         elements = []
         styles = getSampleStyleSheet()
         
-        # Company branding with pixel-perfect styling
-        title_style = ParagraphStyle(
-            'CustomTitle',
+        # Pixel Perfect Header Layout - TAX Invoice on left, Logo space on right
+        tax_invoice_style = ParagraphStyle(
+            'TAXInvoiceStyle',
             parent=styles['Heading1'],
             fontSize=28,
-            textColor=colors.HexColor('#00ACC1'),  # Updated to match pixel-perfect design
-            alignment=TA_CENTER,
-            spaceAfter=8,
+            textColor=colors.HexColor('#4A90A4'),  # Matching reference color
+            alignment=TA_LEFT,
+            spaceAfter=20,
             fontName='Helvetica-Bold',
-            letterSpacing=2
+            letterSpacing=1
         )
         
-        tagline_style = ParagraphStyle(
-            'TaglineStyle',
+        # Header with TAX Invoice title (logo would be on right in actual implementation)
+        elements.append(Paragraph("TAX Invoice", tax_invoice_style))
+        
+        # Invoice details in same style as pixel perfect template
+        invoice_details_style = ParagraphStyle(
+            'InvoiceDetailsStyle',
             parent=styles['Normal'],
             fontSize=14,
-            textColor=colors.HexColor('#666666'),
-            alignment=TA_CENTER,
-            spaceAfter=20,
-            fontName='Helvetica'
+            lineHeight=20,
+            fontName='Helvetica',
+            spaceAfter=20
         )
         
-        # Company Header - Pixel Perfect Design
-        elements.append(Paragraph("ACTIVUS INDUSTRIAL DESIGN & BUILD LLP", title_style))
-        elements.append(Paragraph("Professional Industrial Solutions", tagline_style))
-        elements.append(Spacer(1, 20))
-        
-        # Invoice type
-        invoice_type_display = "TAX INVOICE" if invoice.invoice_type == "tax_invoice" else "PROFORMA INVOICE"
-        elements.append(Paragraph(invoice_type_display, styles['Heading2']))
+        invoice_details_text = f"""
+        <b>Invoice No #</b> {invoice.invoice_number}<br/>
+        <b>Invoice Date</b> {invoice.invoice_date.strftime('%b %d, %Y')}<br/>
+        <b>Created By</b> Sathiya Narayanan Kannan
+        """
+        elements.append(Paragraph(invoice_details_text, invoice_details_style))
         elements.append(Spacer(1, 20))
         
         # Invoice details
