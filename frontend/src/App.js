@@ -15,6 +15,7 @@ import EnhancedInvoiceCreation from './components/EnhancedInvoiceCreation';
 import InvoiceSuccessModal from './components/InvoiceSuccessModal';
 import GSTApprovalInterface from './components/GSTApprovalInterface';
 import InvoiceAmendment from './components/InvoiceAmendment';
+import InvoiceViewer from './components/InvoiceViewer';
 import EnhancedProjectCreation from './components/EnhancedProjectCreation';
 import Invoices from './components/Invoices';
 import Clients from './components/Clients';
