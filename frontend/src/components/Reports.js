@@ -194,7 +194,7 @@ const Reports = ({ currentUser }) => {
                         </div>
                         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                             <h3 className="text-sm font-medium text-gray-500">Total with GST</h3>
-                            <p className="text-2xl font-bold text-blue-600 mt-2">{formatCurrency(gstSummary.total_amount_with_gst)}</p>
+                            <p className="text-2xl font-bold text-blue-600 mt-2">{formatCurrency(gstSummary.total_amount_with_gst || 0)}</p>
                         </div>
                     </div>
 
