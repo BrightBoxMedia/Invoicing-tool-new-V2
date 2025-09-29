@@ -359,6 +359,30 @@
         - comment: "Updated invoice creation endpoint to properly calculate and store cgst_amount, sgst_amount, igst_amount fields based on project GST type. Enhanced PDF generation to show dynamic GST breakdown instead of hardcoded 'GST (18%)' text."
 
 ## frontend:
+  - task: "Pixel Perfect Invoice Template Implementation"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/PixelPerfectInvoiceTemplate.js"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+        - working: true
+        - agent: "main"
+        - comment: "Created new PixelPerfectInvoiceTemplate.js component that exactly matches the provided screenshot. Features: Montserrat font family, #00ACC1 color scheme, dynamic GST breakdown (CGST+SGST vs IGST), locked design elements with only company address/phone/email editable, proper A4 PDF export capability, integrated company logo positioning, pixel-perfect table styling and layout."
+
+  - task: "Invoice Design Customizer Integration"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/InvoiceDesignCustomizer.js"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+        - working: true
+        - agent: "main"
+        - comment: "Enhanced InvoiceDesignCustomizer with live preview tab showing the pixel-perfect template. Added preview as default tab with sample invoice data, integrated PixelPerfectInvoiceTemplate component, updated navigation to 'Invoice Template' for better clarity."
+
   - task: "Projects Page Error Fix"
     implemented: true
     working: true
