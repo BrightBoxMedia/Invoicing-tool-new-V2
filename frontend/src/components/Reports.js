@@ -182,7 +182,7 @@ const Reports = ({ currentUser }) => {
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                             <h3 className="text-sm font-medium text-gray-500">Total Invoices</h3>
-                            <p className="text-2xl font-bold text-gray-900 mt-2">{gstSummary.total_invoices}</p>
+                            <p className="text-2xl font-bold text-gray-900 mt-2">{gstSummary.total_invoices || 0}</p>
                         </div>
                         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                             <h3 className="text-sm font-medium text-gray-500">Taxable Amount</h3>
