@@ -240,42 +240,34 @@ const Reports = ({ currentUser }) => {
                         </div>
                     </div>
 
-                    {/* Monthly Breakdown */}
+                    {/* GST Summary Statistics */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Monthly Breakdown</h3>
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Month</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoices</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Taxable Amount</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">GST Amount</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Amount</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {gstSummary.monthly_breakdown.map((month, index) => (
-                                        <tr key={index}>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                {month.month}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {month.total_invoices}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {formatCurrency(month.taxable_amount)}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {formatCurrency(month.gst_amount)}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {formatCurrency(month.total_amount)}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">GST Summary Statistics</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="text-center p-4 bg-blue-50 rounded-lg">
+                                <div className="text-2xl font-bold text-blue-600">
+                                    {formatCurrency(gstSummary.summary?.total_cgst || 0)}
+                                </div>
+                                <div className="text-sm text-blue-800 font-medium">Total CGST</div>
+                            </div>
+                            <div className="text-center p-4 bg-green-50 rounded-lg">
+                                <div className="text-2xl font-bold text-green-600">
+                                    {formatCurrency(gstSummary.summary?.total_sgst || 0)}
+                                </div>
+                                <div className="text-sm text-green-800 font-medium">Total SGST</div>
+                            </div>
+                            <div className="text-center p-4 bg-purple-50 rounded-lg">
+                                <div className="text-2xl font-bold text-purple-600">
+                                    {formatCurrency(gstSummary.summary?.total_igst || 0)}
+                                </div>
+                                <div className="text-sm text-purple-800 font-medium">Total IGST</div>
+                            </div>
+                            <div className="text-center p-4 bg-gray-50 rounded-lg">
+                                <div className="text-2xl font-bold text-gray-600">
+                                    {gstSummary.summary?.total_invoices || 0}
+                                </div>
+                                <div className="text-sm text-gray-800 font-medium">Total Invoices</div>
+                            </div>
                         </div>
                     </div>
 
