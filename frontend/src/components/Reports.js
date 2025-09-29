@@ -452,7 +452,7 @@ const Reports = ({ currentUser }) => {
                             onChange={(e) => setSelectedClient(e.target.value)}
                         >
                             <option value="">Choose a client...</option>
-                            {clients.map((client) => (
+                            {(clients || []).map((client) => (
                                 <option key={client.id} value={client.id}>
                                     {client.name}
                                 </option>
