@@ -212,22 +212,29 @@ const Reports = ({ currentUser }) => {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {gstSummary.gst_breakdown.map((breakdown, index) => (
+                                    {gstSummary.by_gst_rate && Object.entries(gstSummary.by_gst_rate).map(([rate, data], index) => (
                                         <tr key={index}>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                {breakdown.rate}%
+                                                {rate}%
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {formatCurrency(breakdown.taxable_amount)}
+                                                {formatCurrency(data.taxable_amount || 0)}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {formatCurrency(breakdown.gst_amount)}
+                                                {formatCurrency(data.gst_amount || 0)}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {formatCurrency(breakdown.total_amount)}
+                                                {formatCurrency((data.taxable_amount || 0) + (data.gst_amount || 0))}
                                             </td>
                                         </tr>
                                     ))}
+                                    {(!gstSummary.by_gst_rate || Object.keys(gstSummary.by_gst_rate).length === 0) && (
+                                        <tr>
+                                            <td colSpan="4" className="px-6 py-4 text-center text-sm text-gray-500">
+                                                No GST data available
+                                            </td>
+                                        </tr>
+                                    )}
                                 </tbody>
                             </table>
                         </div>
