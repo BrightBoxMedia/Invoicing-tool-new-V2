@@ -5,7 +5,7 @@ const InvoiceDesignCustomizer = ({ currentUser }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
-    const [activeTab, setActiveTab] = useState('branding');
+    const [activeTab, setActiveTab] = useState('preview');
     const [logoFile, setLogoFile] = useState(null);
     const [logoPreview, setLogoPreview] = useState('');
     
