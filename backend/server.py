@@ -2933,6 +2933,10 @@ async def amend_invoice(invoice_id: str, amendment_data: dict, current_user: dic
         #         'project_id': original_invoice['project_id']
         #     })
         
+        # Clean up ObjectId fields for JSON serialization
+        if '_id' in amended_invoice:
+            del amended_invoice['_id']
+        
         return {
             "message": "Invoice amended successfully",
             "amended_invoice": amended_invoice,
