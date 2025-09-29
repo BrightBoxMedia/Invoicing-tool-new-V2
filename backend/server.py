@@ -2044,6 +2044,10 @@ async def download_invoice_pdf(invoice_id: str, current_user: dict = Depends(get
         project = Project(**project_data)
         client = ClientInfo(**client_data)
         
+        # Add GST type to invoice for proper breakdown in PDF
+        if hasattr(project, 'gst_type') and project.gst_type:
+            invoice.gst_type = project.gst_type
+        
         # Generate PDF
         pdf_generator = PDFGenerator()
         pdf_buffer = await pdf_generator.generate_invoice_pdf(invoice, project, client)
