@@ -374,8 +374,9 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
                     address: projectData.client_address,
                     city: 'Mumbai',
                     state: 'Maharashtra', 
-                    gst_no: '',
-                    bill_to_address: projectData.client_address
+                    gst_no: projectData.client_gst_number,
+                    bill_to_address: projectData.client_address,
+                    shipping_address: projectData.shipping_address
                 };
 
                 const clientResponse = await fetch(`${backendUrl}/api/clients`, {
