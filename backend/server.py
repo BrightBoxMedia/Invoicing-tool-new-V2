@@ -2811,7 +2811,10 @@ async def amend_invoice(invoice_id: str, amendment_data: dict, current_user: dic
         
         # Check permissions for GST amendment
         amendment_type = amendment_data.get('amendment_type', 'quantities')
-        if amendment_type == 'gst' and current_user.get('role') not in ['Manager', 'SuperAdmin']:
+        user_role = current_user.get('role', '').lower()
+        allowed_roles = ['manager', 'superadmin', 'super_admin', 'admin']  # Include variations
+        
+        if amendment_type == 'gst' and user_role not in allowed_roles:
             raise HTTPException(
                 status_code=403, 
                 detail="Only Managers and SuperAdmins can amend GST percentages"
