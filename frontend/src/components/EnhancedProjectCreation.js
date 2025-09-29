@@ -559,15 +559,68 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
                             
                             {/* Client Address */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Client Address *</label>
-                                <input
-                                    type="text"
-                                    required
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Client Address <span className="text-red-500">*</span>
+                                </label>
+                                <textarea
                                     value={projectData.client_address}
                                     onChange={(e) => setProjectData({...projectData, client_address: e.target.value})}
-                                    placeholder="Enter client address"
+                                    rows="3"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="Enter client's complete billing address"
+                                    required
                                 />
+                            </div>
+
+                            {/* Client GST Number */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Client GST Number <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={projectData.client_gst_number}
+                                    onChange={(e) => setProjectData({...projectData, client_gst_number: e.target.value.toUpperCase()})}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="27ABCDE1234F1Z5"
+                                    pattern="[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}"
+                                    title="Enter valid GST number (15 characters)"
+                                    required
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Format: 27ABCDE1234F1Z5 (15 characters)</p>
+                            </div>
+
+                            {/* Shipping Address */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Shipping Address <span className="text-red-500">*</span>
+                                </label>
+                                <textarea
+                                    value={projectData.shipping_address}
+                                    onChange={(e) => setProjectData({...projectData, shipping_address: e.target.value})}
+                                    rows="3"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="Enter shipping/delivery address (can be same as client address)"
+                                    required
+                                />
+                                <div className="mt-2">
+                                    <label className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            checked={projectData.same_as_billing}
+                                            onChange={(e) => {
+                                                const sameAsBilling = e.target.checked;
+                                                setProjectData({
+                                                    ...projectData, 
+                                                    same_as_billing: sameAsBilling,
+                                                    shipping_address: sameAsBilling ? projectData.client_address : projectData.shipping_address
+                                                });
+                                            }}
+                                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                        />
+                                        <span className="ml-2 text-sm text-gray-600">Same as billing address</span>
+                                    </label>
+                                </div>
                             </div>
                         </div>
 
