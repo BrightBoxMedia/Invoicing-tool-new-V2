@@ -139,8 +139,7 @@ const InvoiceSuccessModal = ({ invoice, project, onClose, onDownloadPDF, onCreat
                     <button
                         onClick={() => {
                             onClose();
-                            // TODO: Open invoice amendment modal
-                            console.log('Amend invoice:', invoice.id);
+                            onAmendInvoice?.(invoice, project);
                         }}
                         className="flex-1 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium flex items-center justify-center space-x-2"
                     >
