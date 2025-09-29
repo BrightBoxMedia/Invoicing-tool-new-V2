@@ -2924,13 +2924,14 @@ async def amend_invoice(invoice_id: str, amendment_data: dict, current_user: dic
             "invoice_amended", f"Amended invoice {original_invoice['invoice_number']} -> {amended_invoice_number}. Reason: {amendment_reason}"
         )
         
-        # Emit WebSocket event for real-time updates
-        if hasattr(sio, 'emit'):
-            await sio.emit('invoice_amended', {
-                'original_invoice_id': invoice_id,
-                'amended_invoice_id': amended_invoice['id'],
-                'project_id': original_invoice['project_id']
-            })
+        # Emit WebSocket event for real-time updates (disabled for now)
+        # TODO: Implement proper WebSocket integration
+        # if hasattr(sio, 'emit'):
+        #     await sio.emit('invoice_amended', {
+        #         'original_invoice_id': invoice_id,
+        #         'amended_invoice_id': amended_invoice['id'],
+        #         'project_id': original_invoice['project_id']
+        #     })
         
         return {
             "message": "Invoice amended successfully",
