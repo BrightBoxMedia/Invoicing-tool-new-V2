@@ -2995,6 +2995,25 @@ async def get_invoice_amendment_history(invoice_id: str, current_user: dict = De
         logger.error(f"Amendment history error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get amendment history: {str(e)}")
 
+@api_router.get("/invoices/{invoice_id}")
+async def get_invoice_by_id(invoice_id: str, current_user: dict = Depends(get_current_user)):
+    try:
+        invoice = await db.invoices.find_one({"id": invoice_id})
+        if not invoice:
+            raise HTTPException(status_code=404, detail="Invoice not found")
+        
+        # Clean up ObjectId fields for JSON serialization
+        if '_id' in invoice:
+            del invoice['_id']
+        
+        return invoice
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Get invoice error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get invoice: {str(e)}")
+
 # WebSocket Endpoint for Real-time Project Updates
 @app.websocket("/ws/projects/{project_id}")
 async def websocket_endpoint(websocket: WebSocket, project_id: str):
