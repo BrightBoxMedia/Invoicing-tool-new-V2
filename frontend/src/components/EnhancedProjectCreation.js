@@ -116,7 +116,7 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
 
             if (response.ok) {
                 const data = await response.json();
-                setCompanyProfiles(data);
+                setCompanyProfiles(data.profiles || []);
             } else {
                 // If endpoint doesn't exist or no data, provide default company profile
                 console.log('Company profiles endpoint not found, using default profile');
