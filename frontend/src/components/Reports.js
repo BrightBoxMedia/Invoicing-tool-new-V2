@@ -410,19 +410,26 @@ const Reports = ({ currentUser }) => {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {insights.trends.monthly_data.map((month, index) => (
+                                    {insights.monthly_trends && Object.entries(insights.monthly_trends).map(([month, data], index) => (
                                         <tr key={index}>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                {month.month}
+                                                {month}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {month.invoices_count}
+                                                {data.count || 0}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {formatCurrency(month.invoices_value)}
+                                                {formatCurrency(data.amount || 0)}
                                             </td>
                                         </tr>
                                     ))}
+                                    {(!insights.monthly_trends || Object.keys(insights.monthly_trends).length === 0) && (
+                                        <tr>
+                                            <td colSpan="3" className="px-6 py-4 text-center text-sm text-gray-500">
+                                                No monthly data available
+                                            </td>
+                                        </tr>
+                                    )}
                                 </tbody>
                             </table>
                         </div>
