@@ -90,6 +90,43 @@ const EnhancedProjectDetails = ({ project, onClose, onCreateInvoice }) => {
     }
   };
 
+  // Invoice Action Handlers
+  const handleViewInvoice = (invoice) => {
+    setSelectedInvoice(invoice);
+    setShowInvoiceViewer(true);
+  };
+
+  const handleAmendInvoice = (invoice) => {
+    setSelectedInvoice(invoice);
+    setShowInvoiceAmendment(true);
+  };
+
+  const handleDownloadInvoice = async (invoice) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/invoices/${invoice.id}/pdf`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${invoice.invoice_number}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        alert('Error downloading PDF. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      alert('Error downloading PDF. Please try again.');
+    }
+  };
+
   // Fetch invoice history
   const fetchInvoiceHistory = async () => {
     try {
