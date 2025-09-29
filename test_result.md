@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-## user_problem_statement: "Test the comprehensive GST configuration and approval workflow that was just implemented."
+## user_problem_statement: "Implement pixel-perfect invoice design that exactly matches the provided screenshot with dynamic GST breakdown and locked design elements."
 
 ## backend:
   - task: "Dashboard Stats API"
