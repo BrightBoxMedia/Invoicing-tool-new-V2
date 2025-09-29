@@ -535,7 +535,7 @@ const Reports = ({ currentUser }) => {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {clientSummary.recent_invoices.map((invoice, index) => (
+                                    {(clientSummary.recent_invoices || []).map((invoice, index) => (
                                         <tr key={index}>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                                 {invoice.invoice_number}
@@ -556,6 +556,13 @@ const Reports = ({ currentUser }) => {
                                             </td>
                                         </tr>
                                     ))}
+                                    {(!clientSummary.recent_invoices || clientSummary.recent_invoices.length === 0) && (
+                                        <tr>
+                                            <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500">
+                                                No recent invoices available
+                                            </td>
+                                        </tr>
+                                    )}
                                 </tbody>
                             </table>
                         </div>
