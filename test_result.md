@@ -447,6 +447,7 @@
 
 ## test_plan:
   current_focus:
+    - "COMPLETED: Comprehensive GST Workflow and Invoice Amendment Frontend Testing"
     - "COMPLETED: Enhanced Project Creation with GST Configuration Testing"
     - "COMPLETED: GST Approval Workflow Endpoints Testing"
     - "COMPLETED: Enhanced Invoice Creation with GST Types Testing"
@@ -454,7 +455,7 @@
     - "COMPLETED: Complete GST Workflow Integration Testing"
   stuck_tasks: []
   test_all: false
-  test_priority: "gst_workflow_comprehensive_testing"
+  test_priority: "comprehensive_frontend_gst_workflow_testing"
 
   - task: "Proforma Invoice Tax Options"
     implemented: true
