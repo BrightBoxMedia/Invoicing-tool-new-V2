@@ -1065,6 +1065,7 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
                                 <div><strong>Purchase Order:</strong> {projectData.purchase_order_number}</div>
                                 <div><strong>Architect:</strong> {projectData.architect_name}</div>
                                 <div><strong>Client:</strong> {projectData.client_name}</div>
+                                <div><strong>Client GST:</strong> {projectData.client_gst_number}</div>
                                 <div><strong>Company:</strong> {selectedProfile?.company_name}</div>
                                 <div><strong>ABG %:</strong> {projectData.abg_percentage}%</div>
                                 <div><strong>RA Bill %:</strong> {projectData.ra_bill_percentage}%</div>
