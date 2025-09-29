@@ -2800,6 +2800,185 @@ async def validate_invoice_quantities(validation_data: dict, current_user: dict 
         logger.error(f"Validate quantities error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to validate quantities: {str(e)}")
 
+# Invoice Amendment System
+@api_router.post("/invoices/{invoice_id}/amend")
+async def amend_invoice(invoice_id: str, amendment_data: dict, current_user: dict = Depends(get_current_user)):
+    try:
+        # Get original invoice
+        original_invoice = await db.invoices.find_one({"id": invoice_id})
+        if not original_invoice:
+            raise HTTPException(status_code=404, detail="Invoice not found")
+        
+        # Check permissions for GST amendment
+        amendment_type = amendment_data.get('amendment_type', 'quantities')
+        if amendment_type == 'gst' and current_user.get('role') not in ['Manager', 'SuperAdmin']:
+            raise HTTPException(
+                status_code=403, 
+                detail="Only Managers and SuperAdmins can amend GST percentages"
+            )
+        
+        # Get project for validation
+        project = await db.projects.find_one({"id": original_invoice['project_id']})
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+        
+        amended_items = amendment_data.get('amended_items', [])
+        amendment_reason = amendment_data.get('amendment_reason', '')
+        
+        if not amendment_reason.strip():
+            raise HTTPException(status_code=400, detail="Amendment reason is required")
+        
+        # Process amended items
+        new_invoice_items = []
+        total_subtotal = 0
+        total_cgst = 0
+        total_sgst = 0
+        total_igst = 0
+        
+        for amended_item in amended_items:
+            # Calculate amounts based on new quantity and GST rate
+            new_quantity = amended_item.get('new_quantity', 0)
+            new_gst_rate = amended_item.get('new_gst_rate', amended_item.get('original_gst_rate', 18))
+            rate = amended_item.get('rate', 0)
+            
+            basic_amount = new_quantity * rate
+            gst_amount = basic_amount * (new_gst_rate / 100)
+            
+            invoice_item = {
+                "boq_item_id": amended_item.get('boq_item_id'),
+                "description": amended_item.get('description'),
+                "unit": amended_item.get('unit'),
+                "quantity": new_quantity,
+                "rate": rate,
+                "amount": basic_amount,
+                "gst_rate": new_gst_rate,
+                "gst_amount": gst_amount,
+                "total_amount": basic_amount + gst_amount
+            }
+            
+            new_invoice_items.append(invoice_item)
+            total_subtotal += basic_amount
+        
+        # Calculate GST based on project GST type
+        project_gst_type = project.get('gst_type', 'IGST')
+        if project_gst_type == 'CGST_SGST':
+            total_gst = sum(item['gst_amount'] for item in new_invoice_items)
+            total_cgst = total_gst / 2
+            total_sgst = total_gst / 2
+        else:  # IGST
+            total_igst = sum(item['gst_amount'] for item in new_invoice_items)
+        
+        total_gst_amount = total_cgst + total_sgst + total_igst
+        total_amount = total_subtotal + total_gst_amount
+        
+        # Generate new invoice number for amendment
+        invoice_count = await db.invoices.count_documents({}) + 1
+        amended_invoice_number = f"AME-{original_invoice['invoice_number']}-{invoice_count:05d}"
+        
+        # Create amended invoice
+        amended_invoice = {
+            "id": str(uuid.uuid4()),
+            "invoice_number": amended_invoice_number,
+            "original_invoice_id": invoice_id,
+            "amendment_reason": amendment_reason,
+            "amendment_type": amendment_type,
+            "project_id": original_invoice['project_id'],
+            "client_id": original_invoice['client_id'],
+            "invoice_type": original_invoice.get('invoice_type', 'tax_invoice'),
+            "invoice_date": datetime.now(timezone.utc),
+            "due_date": datetime.now(timezone.utc) + timedelta(days=30),
+            "items": new_invoice_items,
+            "subtotal": total_subtotal,
+            "gst_type": project_gst_type,
+            "cgst_amount": total_cgst,
+            "sgst_amount": total_sgst,
+            "igst_amount": total_igst,
+            "total_gst_amount": total_gst_amount,
+            "total_amount": total_amount,
+            "payment_terms": original_invoice.get('payment_terms', 'Payment due within 30 days'),
+            "advance_received": 0.0,
+            "net_amount_due": total_amount,
+            "ra_number": original_invoice.get('ra_number'),
+            "status": "amended",
+            "created_at": datetime.now(timezone.utc),
+            "amended_by": current_user['id'],
+            "amended_at": datetime.now(timezone.utc)
+        }
+        
+        # Insert amended invoice
+        result = await db.invoices.insert_one(amended_invoice)
+        
+        # Mark original invoice as amended
+        await db.invoices.update_one(
+            {"id": invoice_id},
+            {"$set": {
+                "status": "superseded",
+                "superseded_by": amended_invoice['id'],
+                "superseded_at": datetime.now(timezone.utc)
+            }}
+        )
+        
+        # Log activity
+        await log_activity(
+            current_user["id"], current_user["email"], current_user["role"],
+            "invoice_amended", f"Amended invoice {original_invoice['invoice_number']} -> {amended_invoice_number}. Reason: {amendment_reason}"
+        )
+        
+        # Emit WebSocket event for real-time updates
+        if hasattr(sio, 'emit'):
+            await sio.emit('invoice_amended', {
+                'original_invoice_id': invoice_id,
+                'amended_invoice_id': amended_invoice['id'],
+                'project_id': original_invoice['project_id']
+            })
+        
+        return {
+            "message": "Invoice amended successfully",
+            "amended_invoice": amended_invoice,
+            "original_invoice_id": invoice_id
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Invoice amendment error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to amend invoice: {str(e)}")
+
+@api_router.get("/invoices/{invoice_id}/amendment-history")
+async def get_invoice_amendment_history(invoice_id: str, current_user: dict = Depends(get_current_user)):
+    try:
+        # Get original invoice and all amendments
+        original_invoice = await db.invoices.find_one({"id": invoice_id})
+        if not original_invoice:
+            raise HTTPException(status_code=404, detail="Invoice not found")
+        
+        # Find all amendments for this invoice
+        amendments = await db.invoices.find({
+            "original_invoice_id": invoice_id
+        }).to_list(1000)
+        
+        # Find if this invoice is an amendment itself
+        if original_invoice.get('original_invoice_id'):
+            root_invoice = await db.invoices.find_one({"id": original_invoice['original_invoice_id']})
+            all_amendments = await db.invoices.find({
+                "original_invoice_id": original_invoice['original_invoice_id']
+            }).to_list(1000)
+        else:
+            root_invoice = original_invoice
+            all_amendments = amendments
+        
+        return {
+            "root_invoice": root_invoice,
+            "amendments": all_amendments,
+            "total_amendments": len(all_amendments)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Amendment history error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get amendment history: {str(e)}")
+
 # WebSocket Endpoint for Real-time Project Updates
 @app.websocket("/ws/projects/{project_id}")
 async def websocket_endpoint(websocket: WebSocket, project_id: str):
