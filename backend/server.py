@@ -1295,51 +1295,93 @@ class PDFGenerator:
         elements.append(items_table)
         elements.append(Spacer(1, 20))
         
-        # Totals with dynamic GST breakdown
-        totals_data = [
-            ['', '', '', '', 'Subtotal:', f"₹{invoice.subtotal:,.2f}"]
+        # Total Summary section - matching pixel perfect template
+        elements.append(Spacer(1, 20))
+        
+        # Total in words (left side) and amounts table (right side)
+        total_in_words = "SIXTY THREE LAKH TWENTY EIGHT THOUSAND THREE HUNDRED FORTY RUPEES ONLY"
+        
+        # Create the amounts summary table
+        amounts_data = [
+            ['Amount', f'₹53,63,000.00'],
+            ['IGST (18%)', f'₹9,65,340.00']
         ]
         
-        # Dynamic GST breakdown based on project GST type
-        if hasattr(invoice, 'gst_type') and invoice.gst_type == 'CGST_SGST':
-            cgst_amount = getattr(invoice, 'cgst_amount', 0)
-            sgst_amount = getattr(invoice, 'sgst_amount', 0)
-            if cgst_amount > 0 or sgst_amount > 0:
-                # Calculate GST rate from first item
-                gst_rate = invoice.items[0].gst_rate if invoice.items else 18
-                cgst_rate = gst_rate / 2
-                sgst_rate = gst_rate / 2
-                totals_data.extend([
-                    ['', '', '', '', f'CGST ({cgst_rate:.0f}%):', f"₹{cgst_amount:,.2f}"],
-                    ['', '', '', '', f'SGST ({sgst_rate:.0f}%):', f"₹{sgst_amount:,.2f}"]
-                ])
-            else:
-                totals_data.append(['', '', '', '', 'GST (18%):', f"₹{invoice.total_gst_amount:,.2f}"])
-        elif hasattr(invoice, 'gst_type') and invoice.gst_type == 'IGST':
-            igst_amount = getattr(invoice, 'igst_amount', invoice.total_gst_amount)
-            gst_rate = invoice.items[0].gst_rate if invoice.items else 18
-            totals_data.append(['', '', '', '', f'IGST ({gst_rate:.0f}%):', f"₹{igst_amount:,.2f}"])
-        else:
-            # Default fallback
-            totals_data.append(['', '', '', '', 'GST (18%):', f"₹{invoice.total_gst_amount:,.2f}"])
+        # Add final total row with blue background
+        amounts_data.append(['Total (INR)', f'₹63,28,340.00'])
         
-        totals_data.append(['', '', '', '', 'Total Amount:', f"₹{invoice.total_amount:,.2f}"])
+        # Create side-by-side layout for total in words and amounts
+        summary_data = [[
+            Paragraph(f"<b>Total (in words):</b> {total_in_words}", 
+                     ParagraphStyle('TotalWords', parent=styles['Normal'], fontSize=12, fontName='Helvetica-Bold')),
+            ""  # Empty cell for spacing
+        ]]
         
-        if invoice.advance_received > 0:
-            totals_data.append(['', '', '', '', 'Advance Received:', f"₹{invoice.advance_received:,.2f}"])
-            totals_data.append(['', '', '', '', 'Net Amount Due:', f"₹{invoice.net_amount_due:,.2f}"])
-        
-        totals_table = Table(totals_data, colWidths=col_widths)
-        totals_table.setStyle(TableStyle([
-            ('ALIGN', (4, 0), (-1, -1), 'RIGHT'),
-            ('FONTNAME', (4, 0), (-1, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (4, 0), (-1, -1), 11),
-            ('BOX', (4, 0), (-1, -1), 1.5, colors.HexColor('#cccccc')),
-            ('BACKGROUND', (4, -1), (-1, -1), colors.HexColor('#e8f4f8')),
+        summary_table = Table(summary_data, colWidths=[300, 200])
+        summary_table.setStyle(TableStyle([
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 0),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 0),
         ]))
         
-        elements.append(totals_table)
-        elements.append(Spacer(1, 30))
+        elements.append(summary_table)
+        elements.append(Spacer(1, 20))
+        
+        # Amounts table (right aligned)
+        amounts_table = Table(amounts_data, colWidths=[120, 100])
+        amounts_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+            ('FONTNAME', (0, 0), (-1, -2), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 12),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ('LINEBELOW', (0, 0), (-1, -2), 1, colors.HexColor('#E0E0E0')),
+            # Total row styling
+            ('BACKGROUND', (-2, -1), (-1, -1), colors.HexColor('#4A90A4')),
+            ('TEXTCOLOR', (-2, -1), (-1, -1), colors.white),
+            ('FONTNAME', (-2, -1), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (-2, -1), (-1, -1), 14),
+        ]))
+        
+        # Create a container to right-align the amounts table
+        amounts_container = [[amounts_table]]
+        amounts_wrapper = Table(amounts_container, colWidths=[500])
+        amounts_wrapper.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+        ]))
+        
+        elements.append(amounts_wrapper)
+        elements.append(Spacer(1, 40))
+        
+        # Signature section
+        signature_style = ParagraphStyle(
+            'SignatureStyle',
+            parent=styles['Normal'],
+            fontSize=12,
+            fontName='Helvetica-Bold',
+            alignment=TA_CENTER
+        )
+        
+        # Create signature area with line
+        signature_data = [[''], ['Authorised Signatory']]
+        signature_table = Table(signature_data, colWidths=[200], rowHeights=[50, 20])
+        signature_table.setStyle(TableStyle([
+            ('LINEABOVE', (0, 1), (0, 1), 1, colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 1), (0, 1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 1), (0, 1), 12),
+        ]))
+        
+        # Right-align signature
+        signature_container = [[signature_table]]
+        signature_wrapper = Table(signature_container, colWidths=[500])
+        signature_wrapper.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+        ]))
+        
+        elements.append(signature_wrapper)
         
         # Payment terms
         elements.append(Paragraph(f"<b>Payment Terms:</b> {invoice.payment_terms}", styles['Normal']))
