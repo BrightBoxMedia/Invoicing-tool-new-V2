@@ -1198,12 +1198,35 @@ class PDFGenerator:
         elements.append(items_table)
         elements.append(Spacer(1, 20))
         
-        # Totals
+        # Totals with dynamic GST breakdown
         totals_data = [
-            ['', '', '', '', 'Subtotal:', f"₹{invoice.subtotal:,.2f}"],
-            ['', '', '', '', 'GST (18%):', f"₹{invoice.total_gst_amount:,.2f}"],
-            ['', '', '', '', 'Total Amount:', f"₹{invoice.total_amount:,.2f}"]
+            ['', '', '', '', 'Subtotal:', f"₹{invoice.subtotal:,.2f}"]
         ]
+        
+        # Dynamic GST breakdown based on project GST type
+        if hasattr(invoice, 'gst_type') and invoice.gst_type == 'CGST_SGST':
+            cgst_amount = getattr(invoice, 'cgst_amount', 0)
+            sgst_amount = getattr(invoice, 'sgst_amount', 0)
+            if cgst_amount > 0 or sgst_amount > 0:
+                # Calculate GST rate from first item
+                gst_rate = invoice.items[0].gst_rate if invoice.items else 18
+                cgst_rate = gst_rate / 2
+                sgst_rate = gst_rate / 2
+                totals_data.extend([
+                    ['', '', '', '', f'CGST ({cgst_rate:.0f}%):', f"₹{cgst_amount:,.2f}"],
+                    ['', '', '', '', f'SGST ({sgst_rate:.0f}%):', f"₹{sgst_amount:,.2f}"]
+                ])
+            else:
+                totals_data.append(['', '', '', '', 'GST (18%):', f"₹{invoice.total_gst_amount:,.2f}"])
+        elif hasattr(invoice, 'gst_type') and invoice.gst_type == 'IGST':
+            igst_amount = getattr(invoice, 'igst_amount', invoice.total_gst_amount)
+            gst_rate = invoice.items[0].gst_rate if invoice.items else 18
+            totals_data.append(['', '', '', '', f'IGST ({gst_rate:.0f}%):', f"₹{igst_amount:,.2f}"])
+        else:
+            # Default fallback
+            totals_data.append(['', '', '', '', 'GST (18%):', f"₹{invoice.total_gst_amount:,.2f}"])
+        
+        totals_data.append(['', '', '', '', 'Total Amount:', f"₹{invoice.total_amount:,.2f}"])
         
         if invoice.advance_received > 0:
             totals_data.append(['', '', '', '', 'Advance Received:', f"₹{invoice.advance_received:,.2f}"])
