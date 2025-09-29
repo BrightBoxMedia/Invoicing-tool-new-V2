@@ -774,7 +774,7 @@ const EnhancedProjectCreation = ({ currentUser, parsedBoqData, onClose, onSucces
                         <div className="flex justify-end">
                             <button
                                 onClick={() => setStep(2)}
-                                disabled={!projectData.project_name || !projectData.purchase_order_number || !projectData.architect_name || !projectData.architect_address || !projectData.client_name || !projectData.client_address}
+                                disabled={!projectData.project_name || !projectData.purchase_order_number || !projectData.architect_name || !projectData.architect_address || !projectData.client_name || !projectData.client_address || !projectData.client_gst_number || !projectData.shipping_address}
                                 className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
                             >
                                 Next: Company Selection
