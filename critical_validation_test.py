@@ -10,7 +10,7 @@ import json
 
 class CriticalValidationTester:
     def __init__(self):
-        self.base_url = "https://activus-manager.preview.emergentagent.com"
+        self.base_url = "https://projectpulse-42.preview.emergentagent.com"
         self.api_url = f"{self.base_url}/api"
         self.token = None
         self.user_data = None

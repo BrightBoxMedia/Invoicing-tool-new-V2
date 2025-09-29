@@ -1,84 +1,102 @@
 <analysis>
-The AI engineer's work involved an iterative process driven by user feedback and numerous deployment challenges. Initially, the engineer focused on addressing critical user issues: a recurring over-quantity invoicing bug and the request to unify regular and enhanced invoice creation systems. Although the AI engineer claimed early success, the quantity validation issue persisted, leading to user frustration. A new feature for logo upload via file was also implemented.
-
-The trajectory then heavily shifted to resolving persistent deployment failures on Vercel and Firebase. This involved multiple attempts to optimize backend dependencies (to reduce function size), correct Vercel configuration conflicts ( vs. ), fix malformed HTML in the frontend , and address ESLint compilation errors ( function usage). Each deployment attempt led to new configurations, scripts, and temporary workarounds, many of which were later rolled back.
-
-Ultimately, due to continuous deployment problems, the user requested a full rollback to the pre-deployment local working state. The current task is to prepare a guide for AWS deployment, suggesting a new phase of production-readiness efforts. The process highlighted the complexity of deployment and the importance of robust validation and clear configuration in a multi-environment context.
+The AI engineer's work primarily focused on iteratively enhancing an enterprise invoice and project management tool. Key areas included: fixing UI/UX issues, implementing real-time updates via WebSockets, overhauling project creation with a Super Intelligent BOQ Parser for diverse Excel formats, and streamlining multi-step forms. Recurring efforts involved addressing modal layering (Z-index), ensuring data consistency, and refining user experience based on feedback. Significant work was dedicated to developing a comprehensive GST management workflow (selection, approval, locking) and a robust invoice amendment feature. The process involved extensive frontend and backend modifications, debugging BOQ parsing, fixing API routing, and resolving UI rendering errors. The engineer consistently aimed for a 100% success rate and production readiness, addressing issues such as  serialization and missing backend endpoints. The latest task involves a pixel-perfect invoice design.
 </analysis>
 
 <product_requirements>
-The objective is to build an enterprise-grade web-based invoice and project management tool, similar to Refrens.com's UI/UX, incorporating Activus Design & Build's branding. It must facilitate BOQ upload, project tracking, and GST-compliant invoice generation, including complex partial billing. Core features include multi-role user management, intelligent Excel BOQ upload, Performa/Tax invoice creation with RA1/RA2+ GST logic, dynamic PDF generation, advance received tracking, Item Master, Smart Filters/Search, Reports, Bank Guarantee scaffolding, and a PDF Text Extraction Engine.
+The application is an enterprise invoice and project management tool for Activus Design & Build, aiming for Refrens.com-like UI/UX. It supports BOQ upload, GST-compliant invoice generation (including partial billing), multi-role user management, dynamic PDF generation, Item Master, Smart Filters/Search, Reports, Bank Guarantees, and a PDF Text Extraction Engine.
 
-Recent critical enhancements and fixes included:
-1.  **Unified Invoice Creation**: Consolidating normal and enhanced invoice flows into one system.
-2.  **Hard-Blocking Quantity Validation**: Preventing over-quantity invoicing with real-time client-side validation, visual highlighting, and robust backend checks.
-3.  **UI/UX Improvements**: Removing input spinner arrows and ensuring invoices display correctly.
-4.  **Logo Upload**: Implementing a Super Admin interface for direct file upload of company logos for invoice customization, replacing URL input.
-5.  **Deployment**: Enabling seamless deployment to GitHub, Vercel, Firebase, and now AWS.
+Recent implementations include:
+1.  **Project Details View**: Displays comprehensive project summary, cash-flow, and invoice history with real-time updates.
+2.  **Real-time System**: Uses WebSockets/SSE with polling for live updates on various events.
+3.  **Enhanced Project Creation**: A 3-step workflow (Basic Info -> Company Selection -> Review BOQ & Create) with fields for Client/Architect details, PO number, project percentages, and detailed company info. Enhanced to include Client GST and Shipping Address.
+4.  **BOQ Parsing**: Super Intelligent BOQ Parser with multiple strategies to handle diverse Excel formats, refined for header-based detection, flexible wording, and column variations.
+5.  **UI Refinements**: Fixed modal z-index, enhanced project creation button, and refined BOQ table display.
+6.  **Enhanced Invoice Creation UX**: Replaced simple alert with  showing details, PDF download, and Create Another options.
+7.  **GST Management**: Project-level GST type selection (CGST+SGST/IGST), review, and locking after project creation. Manager/SuperAdmin can amend. GST breakdown in invoices.
+8.  **Invoice Amendment Workflow**: Amend and View buttons in invoice history, amendment request workflow with Manager approval, and status management.
 </product_requirements>
 
 <key_technical_concepts>
--   **Full-stack Architecture**: React.js (Frontend), FastAPI (Backend), MongoDB (Database).
--   **Data Processing**: OpenPyXL (Excel), ReportLab (PDF generation).
--   **Authentication**: Bcrypt, JWT.
--   **UI/UX**: Tailwind CSS, Shadcn UI, React Router.
--   **Deployment**: Kubernetes, Supervisor (local), Vercel, Firebase, AWS.
--   **Environment Management**:  files, production configurations.
+-   **Full-stack**: React.js, FastAPI, MongoDB.
+-   **Real-time**: WebSockets (socket.io-client, python-socketio), Polling.
+-   **Data Processing**: OpenPyXL (Excel), ReportLab (PDF), Pydantic (data validation).
+-   **UI/UX**: Tailwind CSS, React Router, Z-index management.
+-   **Database**: MongoDB (using UUIDs instead of ObjectIDs, datetime handling).
+-   **API Design**: FastAPI , environment variables ().
 </key_technical_concepts>
 
 <code_architecture>
-The application uses a React frontend, FastAPI backend, and MongoDB database, designed for enterprise invoice and project management.
+The application uses a React frontend, FastAPI backend, and MongoDB database.
 
 **Directory Structure:**
 
 
 
 -   ****:
-    -   **Importance**: Core API and business logic.
-    -   **Changes Made**: Quantity validation for invoice items was significantly enhanced to prevent over-billing, including improvements to 's description matching. Implemented a  endpoint for base64 image uploads. Integrated health check endpoints (, ) and security middleware.
--   ****:
-    -   **Importance**: Main application component, handling routing and core UI.
-    -   **Changes Made**: Implemented client-side, hard-blocking quantity validation with visual error feedback and button disabling. Reverted  to  for local development. Integrated  and  for centralized settings. Removed 'Enhanced Invoice Creation' routing.
--   ****:
-    -   **Importance**: Python dependencies.
-    -   **Changes Made**: Restored to the full set of dependencies required for local development, including PDF processing libraries, after Vercel optimization attempts.
--   ****:
-    -   **Importance**: Navigation menu.
-    -   **Changes Made**: Removed entry for 'Enhanced Invoice Creation'.
--   ****:
-    -   **Importance**: UI for customizing invoice appearance.
-    -   **Changes Made**: Replaced  input with a file upload mechanism to handle and display base64 encoded logos.
--   ****:
-    -   **Importance**: Main HTML file.
-    -   **Changes Made**: Removed Emergent branding. Fixed malformed HTML previously causing build issues. Updated title and description for professional branding.
--   ****:
-    -   **Importance**: Frontend dependencies and scripts.
-    -   **Changes Made**: Dependencies adjusted and ESLint was temporarily disabled for deployment, then restored to a state suitable for local development.
+    -   **Importance**: Core API, business logic, database interaction, WebSocket server, BOQ parsing.
+    -   **Changes Made**: Enhanced BOQ parsing logic (header-based, flexible column mapping, fixed summary row logic). Updated  model with GST fields (, , , , ). Updated  endpoint. Added  and  endpoints. Updated  model with GST breakdown (, , ). Modified invoice creation to use project's approved GST and to calculate CGST/SGST/IGST. Fixed  serialization. Implemented placeholder endpoints for Item Master, Search, Reports, PDF Processor, Admin, Enhanced, and Company Profile features to prevent 404s. Added backend endpoints for invoice amendment requests and approval. Updated  model with .
 -   ** (New)**:
-    -   **Importance**: Provides instructions for local setup.
-    -   **Changes Made**: Created as part of the rollback to guide local development.
+    -   **Importance**: Script for migrating existing projects to a default GST configuration.
+    -   **Changes Made**: Created to set  to 'IGST' for projects without a defined GST type.
+-   ****:
+    -   **Importance**: Main application component, handles routing, layout, and real-time components.
+    -   **Changes Made**: Integrated . Integrated  for improved invoice creation UX. Integrated  route and state. Added role-based filtering for GST Approval menu item. Added  state and  function. Fixed ESLint error ().
+-   ****:
+    -   **Importance**: Displays detailed project information.
+    -   **Changes Made**: Added GST status indicator. Enhanced invoice history table with an Actions column, including View, Amend, and Download PDF buttons with corresponding handlers. Integrated  and  modals.
+-   ****:
+    -   **Importance**: Core component for creating invoices.
+    -   **Changes Made**: Removed Total Qty header, renamed to Original Qty, increased font size and made it bold. Removed GST % dropdown and editing functionality; GST % is now display-only, inherited from the project.
+-   ****:
+    -   **Importance**: Manages WebSocket connection.
+    -   **Changes Made**: Implemented  with robust connection management and polling fallback.
+-   ****:
+    -   **Importance**: Handles multi-step project creation.
+    -   **Changes Made**: Refactored to a 3-step workflow. Added input fields for Architect Name/Address, Client Name/Address (replacing dropdown), Purchase Order Number, and project percentages. Added GST type selection (CGST+SGST/IGST). Fixed  error by extracting  array from backend response and adding null safety. Added Client GST Number (with validation) and Shipping Address fields, including Same as billing address checkbox.
+-   ****:
+    -   **Importance**: Reusable component to display invoice history.
+    -   **Changes Made**: Created to display invoice details with professional formatting and color-coded values. (Note: The trajectory states New but then describes changes, implying it existed and was modified).
+-   ** (New)**:
+    -   **Importance**: Provides enhanced user feedback after invoice creation.
+    -   **Changes Made**: Created to display comprehensive invoice details, PDF download option, and Create Another and Amend Invoice buttons.
+-   ** (New)**:
+    -   **Importance**: Interface for Manager/SuperAdmin to approve/reject project GST configurations.
+    -   **Changes Made**: Created to manage pending GST approvals. Fixed Close button functionality and added ESC key support using .
+-   ** (New)**:
+    -   **Importance**: Interface for amending invoices and submitting amendment requests.
+    -   **Changes Made**: Created to provide amendment options, capture amendment reasons, and submit requests for approval.
+-   ** (New)**:
+    -   **Importance**: Component to display invoice details.
+    -   **Changes Made**: Created to view individual invoices.
+-   ****:
+    -   **Importance**: Displays various reports (GST Summary, Business Insights, Client Summary).
+    -   **Changes Made**: Fixed  errors by aligning frontend data structure expectations with backend API responses (e.g.,  instead of ,  instead of ). Added null safety checks and improved error handling/loading states.
 </code_architecture>
 
 <pending_tasks>
--   Provide a comprehensive step-by-step guide for hosting the application live on AWS.
+-   **Implement Invoice Design**: Create a pixel-perfect invoice template exactly matching the provided screenshot.
+-   **Invoice Design Customization**: Ensure only company address, contact number, and email ID are customizable in the invoice editor.
+-   **Automate Invoice Calculations**: Implement logic for Rate × Amount, IGST, CGST, SGST, and Total calculations.
+-   **PDF Export**: Ensure the new invoice design is exportable as PDF without layout issues.
+-   **GST Breakdown in Design**: Incorporate GST breakdown examples (CGST/SGST/IGST) into the invoice design.
 </pending_tasks>
 
 <current_work>
-Immediately prior to this summary, the AI engineer successfully performed a complete rollback of the application. This action reversed all changes made during the numerous, unsuccessful attempts to deploy the application to Vercel and Firebase.
+Immediately prior to this summary, the AI engineer was tasked with implementing a pixel-perfect invoice design. This involves taking a provided screenshot of the desired invoice layout and a company logo, and creating a production-ready template.
 
-The current state of the product is now configured for local development:
-1.  **Backend Configuration**: The  file has been restored to its local working configuration, including the direct execution of the FastAPI application using  when run as a script. This removes any Vercel-specific serverless function exports or Firebase function configurations.
-2.  **Frontend URL**: The  file and the  component now correctly point  to , ensuring the frontend can communicate with the locally running backend.
-3.  **Core Functionality**: The quantity validation for invoice items (both client-side in  and server-side in ), and the logo upload functionality ( and ), are implemented and presumed to be working correctly in this local environment.
-4.  **Cleanup**: All deployment-specific files (e.g., , , various deployment scripts, environment templates, and documentation) created during the Vercel and Firebase efforts have been removed, cleaning the codebase for local development.
-5.  **Service Status**: The , , and  services are confirmed to be running locally via backend                          RUNNING   pid 27, uptime 0:00:07
-code-server                      RUNNING   pid 29, uptime 0:00:07
-frontend                         STOPPED   Sep 17 01:36 PM
-mongodb                          RUNNING   pid 35, uptime 0:00:07
-supervisor> .
-The product is back to a stable, locally runnable state, ready for further development or a new deployment strategy.
+The explicit requirements for this task are:
+-   The invoice must render **exactly** as shown in the screenshot, maintaining layout, fonts, colors, alignments, spacing, and table styles.
+-   The new company logo () must be placed in the specified position.
+-   Only specific fields will be customizable in the invoice editor: **Company address, Company contact number, Company email ID**.
+-   All other design elements (header, table formatting, item rows, signature area, totals section, terms & conditions section) must be **locked and non-editable**.
+-   The table must properly support multiple rows of items while maintaining alignment.
+-   Calculations (Rate × Amount, IGST, Total) must be automated.
+-   The output must be exportable as PDF without layout breaking.
+-   The design must accurately reflect GST breakdown examples, showing CGST, SGST, and IGST percentages.
+
+The AI engineer has acknowledged this task and retrieved the provided screenshot and logo. The current work is at the very beginning of implementing this new invoice design and ensuring all its intricate details are captured and locked as requested.
 </current_work>
 
 <optional_next_step>
-Create a comprehensive step-by-step guide for hosting the Activus Invoice Management System live on AWS.
+Start implementing the pixel-perfect invoice design for the frontend and integrate it with backend calculation logic.
 </optional_next_step>
