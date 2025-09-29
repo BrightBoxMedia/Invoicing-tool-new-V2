@@ -284,7 +284,7 @@ const Reports = ({ currentUser }) => {
                             <div className="text-center p-4 bg-purple-50 rounded-lg">
                                 <h4 className="text-sm font-medium text-purple-800">Tax Invoices</h4>
                                 <p className="text-2xl font-bold text-purple-600 mt-2">
-                                    {formatCurrency(gstSummary.invoice_type_breakdown.tax_invoice)}
+                                    {formatCurrency(gstSummary.invoice_type_breakdown?.tax_invoice || 0)}
                                 </p>
                             </div>
                         </div>
