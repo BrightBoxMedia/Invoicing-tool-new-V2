@@ -822,7 +822,6 @@ function App() {
                     <Route path="/gst-approval" element={<GSTApprovalInterface currentUser={user} />} />
                     <Route path="/gst-approval" element={<GSTApprovalInterface currentUser={user} />} />
                     <Route path="/invoice-design" element={<InvoiceDesignCustomizer currentUser={user} />} />
-                    <Route path="/invoice-template" element={<PixelPerfectInvoiceTemplate />} />
                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
                   </Routes>
                 </main>
