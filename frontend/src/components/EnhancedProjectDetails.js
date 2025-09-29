@@ -534,6 +534,36 @@ const EnhancedProjectDetails = ({ project, onClose, onCreateInvoice }) => {
 
         </div>
       </div>
+
+      {/* Invoice Viewer Modal */}
+      {showInvoiceViewer && selectedInvoice && (
+        <InvoiceViewer
+          invoice={selectedInvoice}
+          project={project}
+          onClose={() => {
+            setShowInvoiceViewer(false);
+            setSelectedInvoice(null);
+          }}
+        />
+      )}
+
+      {/* Invoice Amendment Modal */}
+      {showInvoiceAmendment && selectedInvoice && (
+        <InvoiceAmendment
+          invoice={selectedInvoice}
+          project={project}
+          currentUser={{ role: 'user' }} // Pass current user from props if available
+          onClose={() => {
+            setShowInvoiceAmendment(false);
+            setSelectedInvoice(null);
+          }}
+          onAmendSuccess={(amendmentRequest) => {
+            setShowInvoiceAmendment(false);
+            setSelectedInvoice(null);
+            fetchInvoiceHistory(); // Refresh invoice history
+          }}
+        />
+      )}
     </div>
   );
 };
