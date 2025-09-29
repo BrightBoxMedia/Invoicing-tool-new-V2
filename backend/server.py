@@ -1263,20 +1263,34 @@ class PDFGenerator:
             
         items_table = Table(table_data, colWidths=col_widths)
         
-        items_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#00ACC1')),  # Updated to match pixel-perfect design
+        # Apply pixel-perfect styling matching the reference screenshot
+        table_style = [
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4A90A4')),  # Header background matching reference
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
             ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
-            ('ALIGN', (0, 1), (0, -1), 'CENTER'),
-            ('ALIGN', (4, 1), (-1, -1), 'RIGHT'),
             ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 1), (-1, -1), 11),
-            ('GRID', (0, 0), (-1, -1), 2, colors.HexColor('#E0E0E0')),  # Updated border styling
-        ]))
+            ('ALIGN', (2, 1), (-1, -1), 'RIGHT'),  # Right align numeric columns
+            ('ALIGN', (0, 1), (1, -1), 'LEFT'),   # Left align item and GST rate columns
+            ('GRID', (0, 0), (-1, -1), 2, colors.HexColor('#4A90A4')),
+        ]
+        
+        # Add alternating row colors for better readability
+        for i in range(1, len(table_data)):
+            if i % 2 == 0:  # Even rows (alternate)
+                table_style.append(('BACKGROUND', (0, i), (-1, i), colors.HexColor('#F0F8FF')))
+            else:  # Odd rows
+                table_style.append(('BACKGROUND', (0, i), (-1, i), colors.white))
+                
+        items_table.setStyle(TableStyle(table_style))
         
         elements.append(items_table)
         elements.append(Spacer(1, 20))
