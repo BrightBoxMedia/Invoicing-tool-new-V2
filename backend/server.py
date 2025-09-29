@@ -1212,17 +1212,55 @@ class PDFGenerator:
         
         table_data = [table_headers]
         
+        # Generate table data with GST calculations matching pixel perfect template
         for idx, item in enumerate(invoice.items, 1):
-            table_data.append([
-                str(idx),
-                Paragraph(item.description, styles['Normal']),
-                item.unit,
-                f"{item.quantity:,.2f}",
-                f"₹{item.rate:,.2f}",
-                f"₹{item.amount:,.2f}"
-            ])
+            item_amount = item.quantity * item.rate
+            gst_rate = item.gst_rate or 18
+            
+            # Calculate GST breakdown based on invoice GST type
+            if hasattr(invoice, 'gst_type') and invoice.gst_type == 'CGST_SGST':
+                cgst_amount = item_amount * (gst_rate / 2 / 100)
+                sgst_amount = item_amount * (gst_rate / 2 / 100)
+                total_amount = item_amount + cgst_amount + sgst_amount
+                
+                # Create item description with number
+                item_desc = f"{idx}.\n{item.description}"
+                
+                row_data = [
+                    Paragraph(item_desc, ParagraphStyle('ItemDesc', parent=styles['Normal'], fontSize=11, leading=13)),
+                    f"{gst_rate}%",
+                    f"{item.quantity:,.0f}",
+                    f"₹{item.rate:,.0f}",
+                    f"₹{item_amount:,.2f}",
+                    f"₹{cgst_amount:,.2f}",
+                    f"₹{sgst_amount:,.2f}",
+                    f"₹{total_amount:,.2f}"
+                ]
+            else:
+                igst_amount = item_amount * (gst_rate / 100)
+                total_amount = item_amount + igst_amount
+                
+                # Create item description with number
+                item_desc = f"{idx}.\n{item.description}"
+                
+                row_data = [
+                    Paragraph(item_desc, ParagraphStyle('ItemDesc', parent=styles['Normal'], fontSize=11, leading=13)),
+                    f"{gst_rate}%",
+                    f"{item.quantity:,.0f}",
+                    f"₹{item.rate:,.0f}",
+                    f"₹{item_amount:,.2f}",
+                    f"₹{igst_amount:,.2f}",
+                    f"₹{total_amount:,.2f}"
+                ]
+            
+            table_data.append(row_data)
         
-        col_widths = [30, 240, 50, 50, 80, 90]
+        # Dynamic column widths based on GST type
+        if hasattr(invoice, 'gst_type') and invoice.gst_type == 'CGST_SGST':
+            col_widths = [120, 60, 60, 60, 70, 60, 60, 70]  # 8 columns for CGST+SGST
+        else:
+            col_widths = [120, 60, 60, 60, 70, 60, 70]  # 7 columns for IGST
+            
         items_table = Table(table_data, colWidths=col_widths)
         
         items_table.setStyle(TableStyle([
