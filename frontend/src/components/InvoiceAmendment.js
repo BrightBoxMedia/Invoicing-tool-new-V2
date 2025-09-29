@@ -114,7 +114,8 @@ const InvoiceAmendment = ({ invoice, project, currentUser, onClose, onAmendSucce
             };
 
             const token = localStorage.getItem('token');
-            const response = await fetch(`${backendUrl}/api/invoices/${invoice.id}/amend`, {
+            // Submit amendment request (not direct amendment)
+            const response = await fetch(`${backendUrl}/api/invoices/${invoice.id}/amendment-request`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -124,12 +125,13 @@ const InvoiceAmendment = ({ invoice, project, currentUser, onClose, onAmendSucce
             });
 
             if (response.ok) {
-                const amendedInvoice = await response.json();
-                onAmendSuccess?.(amendedInvoice);
+                const amendmentRequest = await response.json();
+                alert('Amendment request submitted successfully! It will be reviewed by a Manager.');
+                onAmendSuccess?.(amendmentRequest);
                 onClose();
             } else {
                 const errorData = await response.json();
-                setError(errorData.detail || 'Failed to amend invoice');
+                setError(errorData.detail || 'Failed to submit amendment request');
             }
 
         } catch (err) {
