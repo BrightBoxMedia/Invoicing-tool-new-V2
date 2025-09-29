@@ -1,8 +1,6 @@
 import React from 'react';
 
 const InvoiceSuccessModal = ({ invoice, project, onClose, onDownloadPDF, onCreateAnother, onAmendInvoice }) => {
-
-const InvoiceSuccessModal = ({ invoice, project, onClose, onDownloadPDF, onCreateAnother }) => {
     if (!invoice) return null;
 
     const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
