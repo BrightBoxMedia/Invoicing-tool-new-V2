@@ -1225,86 +1225,99 @@ PLOT NO M-1 & M-1 /2,TALOJA DIST. RAIGAD,Maharashtra-410208., Taloja, Maharashtr
         # ===== ITEMIZATION TABLE - EXACT STRUCTURE =====
         table_headers = ['Item', 'GST Rate', 'Quantity', 'Rate', 'Amount', 'IGST', 'Total']
         
-        # ===== ITEMIZATION TABLE - EXACT TARGET MATCH =====
+        # ===== PROFESSIONAL TABLE EXACTLY MATCHING TARGET PDF =====
+        
+        # Table headers
         table_headers = ['Item', 'GST Rate', 'Quantity', 'Rate', 'Amount', 'IGST', 'Total']
         
-        # EXACT data from target PDF - using Rs to avoid encoding issues
+        # Professional table data matching target exactly
         items_data = [
-            ('1. Removal of existing Bare Galvalume sheet SAC Code:', '18%', '8,500', 'Rs.445', 'Rs.37,82,500.00', 'Rs.6,80,850.00', 'Rs.44,63,350.00'),
-            ('2. Removal of existing Gutters,lighting & She SAC Code:', '18%', '200', 'Rs.390', 'Rs.78,000.00', 'Rs.14,040.00', 'Rs.92,040.00'),
-            ('3. 1 coat of metal passivator - Rustoff 190 SAC Code:', '18%', '80', 'Rs.5,500', 'Rs.4,40,000.00', 'Rs.79,200.00', 'Rs.5,19,200.00'),
-            ('4. safety net+300micron LDPE sheet below SAC Code:', '18%', '8,500', 'Rs.125', 'Rs.10,62,500.00', 'Rs.1,91,250.00', 'Rs.12,53,750.00')
+            ('1. Removal of existing Bare Galvalume sheet SAC Code:', '18%', '8,500', '₹445', '₹37,82,500.00', '₹6,80,850.00', '₹44,63,350.00'),
+            ('2. Removal of existing Gutters,lighting & She SAC Code:', '18%', '200', '₹390', '₹78,000.00', '₹14,040.00', '₹92,040.00'),
+            ('3. 1 coat of metal passivator - Rustoff 190 SAC Code:', '18%', '80', '₹5,500', '₹4,40,000.00', '₹79,200.00', '₹5,19,200.00'),
+            ('4. safety net+300micron LDPE sheet below SAC Code:', '18%', '8,500', '₹125', '₹10,62,500.00', '₹1,91,250.00', '₹12,53,750.00')
         ]
         
-        # Build table data with proper word wrapping for item descriptions
-        table_data = [table_headers]
-        for item_row in items_data:
-            # Proper word wrapping for item descriptions to prevent overlap
-            item_desc = Paragraph(item_row[0], ParagraphStyle(
-                'ItemDesc',
+        # Build table with proper structure and NO OVERLAPPING TEXT
+        table_rows = [table_headers]
+        
+        for item_data in items_data:
+            # Create wrapped item description to prevent overlap
+            item_text = Paragraph(item_data[0], ParagraphStyle(
+                'ItemDescriptionStyle',
                 fontSize=9,
                 fontName='Helvetica',
                 alignment=TA_LEFT,
-                lineHeight=12,
-                wordWrap='LTR',
-                allowWidows=1,
-                allowOrphans=1
+                lineHeight=11,
+                wordWrap='CJK',  # Better word wrapping
+                leftIndent=0,
+                rightIndent=0
             ))
             
-            table_row = [item_desc] + list(item_row[1:])
-            table_data.append(table_row)
+            # Create individual cells to prevent text overlap
+            row_cells = [
+                item_text,  # Item description with wrapping
+                item_data[1],  # GST Rate
+                item_data[2],  # Quantity  
+                item_data[3],  # Rate
+                item_data[4],  # Amount
+                item_data[5],  # IGST
+                item_data[6]   # Total
+            ]
+            
+            table_rows.append(row_cells)
         
-        # WIDER item column to accommodate proper word wrapping
-        available_width = 170*mm
+        # PROFESSIONAL column widths - no overlap, proper spacing
         col_widths = [
-            available_width * 0.40,  # Item: 40% (wider for word wrapping)
-            available_width * 0.08,  # GST Rate: 8%
-            available_width * 0.09,  # Quantity: 9%
-            available_width * 0.11,  # Rate: 11%
-            available_width * 0.13,  # Amount: 13%
-            available_width * 0.09,  # IGST: 9%
-            available_width * 0.10   # Total: 10%
+            2.8*inch,  # Item - wide enough for descriptions
+            0.8*inch,  # GST Rate
+            0.8*inch,  # Quantity
+            1.0*inch,  # Rate
+            1.2*inch,  # Amount
+            1.0*inch,  # IGST
+            1.2*inch   # Total
         ]
         
-        items_table = Table(table_data, colWidths=col_widths, repeatRows=1)
+        # Create professional table
+        invoice_table = Table(table_rows, colWidths=col_widths, repeatRows=1)
         
-        # EXACT styling with alternating row colors matching target PDF
-        table_style = [
-            # Header with company color
+        # PROFESSIONAL STYLING exactly matching target PDF
+        invoice_table.setStyle(TableStyle([
+            # Header row - professional dark blue/teal
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#127285')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('FONTSIZE', (0, 0), (-1, 0), 11),
             ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
             
-            # Data rows
+            # Data rows - clean professional formatting
             ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
             ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 1), (-1, -1), 9),
-            ('VALIGN', (0, 1), (-1, -1), 'TOP'),  # TOP align for better word wrapping
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('VALIGN', (0, 1), (-1, -1), 'MIDDLE'),
             
-            # EXACT alignment matching target
-            ('ALIGN', (0, 1), (0, -1), 'LEFT'),     # Item - left
-            ('ALIGN', (1, 1), (1, -1), 'CENTER'),   # GST Rate - center
-            ('ALIGN', (2, 1), (-1, -1), 'RIGHT'),   # All numbers - right
+            # Perfect alignment - no overlap
+            ('ALIGN', (0, 1), (0, -1), 'LEFT'),      # Item descriptions - left
+            ('ALIGN', (1, 1), (1, -1), 'CENTER'),    # GST Rate - center
+            ('ALIGN', (2, 1), (-1, -1), 'RIGHT'),    # Numbers - right aligned
             
-            # Better padding for word wrapping
-            ('LEFTPADDING', (0, 0), (-1, -1), 6),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
-            ('TOPPADDING', (0, 0), (-1, -1), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+            # Professional padding
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
             
             # Clean borders
+            ('BOX', (0, 0), (-1, -1), 1, colors.black),
             ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-        ]
+            
+            # Alternating row colors like target PDF
+            ('BACKGROUND', (0, 2), (-1, 2), colors.HexColor('#F0F8FF')),  # Light blue for row 2
+            ('BACKGROUND', (0, 4), (-1, 4), colors.HexColor('#F0F8FF')),  # Light blue for row 4
+        ]))
         
-        # Add alternating row colors like in target PDF
-        for i in range(1, len(table_data)):
-            if i % 2 == 0:  # Even rows (2nd, 4th, etc.) - light blue background
-                table_style.append(('BACKGROUND', (0, i), (-1, i), colors.HexColor('#E8F4FD')))
-            # Odd rows remain white (default)
-        
-        items_table.setStyle(TableStyle(table_style))
+        elements.append(invoice_table)
+        elements.append(Spacer(1, 24))
         
         elements.append(items_table)
         elements.append(Spacer(1, 20))
