@@ -1150,7 +1150,7 @@ class PDFGenerator:
         ]))
         
         elements.append(header_table)
-        elements.append(Spacer(1, 20))
+        elements.append(Spacer(1, 10))  # Reduced spacing to match target
         
         # ===== INVOICE IDENTIFICATION BLOCK =====
         invoice_id_style = ParagraphStyle(
