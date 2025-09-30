@@ -1101,59 +1101,60 @@ class PDFGenerator:
         
         doc = SimpleDocTemplate(
             buffer,
-            pagesize=self.page_size,
-            rightMargin=20*mm,
-            leftMargin=20*mm, 
-            topMargin=20*mm,
-            bottomMargin=20*mm
+            pagesize=letter,
+            rightMargin=0.75*inch,
+            leftMargin=0.75*inch, 
+            topMargin=0.75*inch,
+            bottomMargin=0.75*inch
         )
         
         elements = []
         styles = getSampleStyleSheet()
         
-        # ===== EXACT MATCH TO TARGET PDF LAYOUT =====
+        # ===== PROFESSIONAL HEADER EXACTLY MATCHING TARGET PDF =====
         
-        # Header section with TAX Invoice title on left, logo on right
-        tax_invoice_style = ParagraphStyle(
+        # TAX Invoice title - LARGE and PROMINENT like target
+        tax_invoice_title = ParagraphStyle(
             'TAXInvoiceTitle',
             parent=styles['Normal'],
-            fontSize=20,
+            fontSize=24,
             textColor=colors.black,
             alignment=TA_LEFT,
             spaceAfter=0,
-            fontName='Helvetica-Bold'
+            fontName='Helvetica-Bold',
+            leftIndent=0
         )
         
-        # Professional logo - using the new high-quality version
+        # LARGE PROFESSIONAL LOGO - matching target prominence
         try:
             logo_path = '/app/frontend/public/activus-new-logo.png'
             if os.path.exists(logo_path):
-                # Professional logo sizing - should be prominently visible
-                logo_img = RLImage(logo_path, width=160, height=80)  # Larger for better visibility
+                # LARGE logo like in target PDF - should be clearly visible
+                logo_element = RLImage(logo_path, width=200, height=100)  # Much larger professional size
             else:
-                # Fallback if logo not found
-                logo_img = Paragraph("ACTIVUS INDUSTRIAL<br/>DESIGN & BUILD PRIVATE LIMITED<br/><i>One Stop Solution is What We Do</i>", 
-                                   ParagraphStyle('LogoText', fontSize=11, alignment=TA_RIGHT, fontName='Helvetica-Bold', textColor=colors.HexColor('#127285')))
-        except Exception as e:
-            # Fallback text version
-            logo_img = Paragraph("ACTIVUS INDUSTRIAL<br/>DESIGN & BUILD PRIVATE LIMITED<br/><i>One Stop Solution is What We Do</i>", 
-                               ParagraphStyle('LogoText', fontSize=11, alignment=TA_RIGHT, fontName='Helvetica-Bold', textColor=colors.HexColor('#127285')))
+                logo_element = Paragraph("<b>ACTIVUS INDUSTRIAL DESIGN & BUILD LLP</b><br/><i>One Stop Solution is What We Do</i>", 
+                                       ParagraphStyle('LogoFallback', fontSize=14, alignment=TA_RIGHT, fontName='Helvetica-Bold', textColor=colors.HexColor('#127285')))
+        except Exception:
+            logo_element = Paragraph("<b>ACTIVUS INDUSTRIAL DESIGN & BUILD LLP</b><br/><i>One Stop Solution is What We Do</i>", 
+                                   ParagraphStyle('LogoFallback', fontSize=14, alignment=TA_RIGHT, fontName='Helvetica-Bold', textColor=colors.HexColor('#127285')))
         
-        # Header table exactly matching target layout
-        header_data = [[
-            Paragraph("TAX Invoice", tax_invoice_style),
-            logo_img
+        # Header layout with proper spacing
+        header_content = [[
+            Paragraph("TAX Invoice", tax_invoice_title),
+            logo_element
         ]]
         
-        header_table = Table(header_data, colWidths=[300, 200])
+        header_table = Table(header_content, colWidths=[4*inch, 3*inch])
         header_table.setStyle(TableStyle([
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('LEFTPADDING', (0, 0), (-1, -1), 0),
             ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+            ('TOPPADDING', (0, 0), (-1, -1), 0),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
         ]))
         
         elements.append(header_table)
-        elements.append(Spacer(1, 10))  # Reduced spacing to match target
+        elements.append(Spacer(1, 24))  # Professional spacing
         
         # ===== INVOICE IDENTIFICATION BLOCK =====
         invoice_id_style = ParagraphStyle(
