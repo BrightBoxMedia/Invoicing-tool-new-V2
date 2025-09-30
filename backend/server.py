@@ -1112,33 +1112,50 @@ class PDFGenerator:
         styles = getSampleStyleSheet()
         
         # ===== EXACT HEADER MATCHING TARGET PDF =====
-        # TAX Invoice title - large, bold, left aligned
+        from reportlab.platypus import Image as RLImage
+        
+        # TAX Invoice title - EXACTLY matching target PDF
         tax_invoice_style = ParagraphStyle(
             'TAXInvoiceTitle',
             parent=styles['Normal'],
-            fontSize=20,
+            fontSize=18,
             textColor=colors.black,
             alignment=TA_LEFT,
-            spaceAfter=12,
+            spaceAfter=6,
             fontName='Helvetica-Bold'
         )
         
-        # Logo placeholder for right side (actual logo would go here)
+        # Company logo and name for right side
         logo_style = ParagraphStyle(
             'LogoStyle',
             parent=styles['Normal'],
-            fontSize=12,
-            alignment=2,  # TA_RIGHT = 2
-            textColor=colors.black
+            fontSize=14,
+            alignment=TA_RIGHT,
+            textColor=colors.HexColor('#00ACC1'),
+            fontName='Helvetica-Bold',
+            lineHeight=16
         )
         
-        # Header table: TAX Invoice on left, Logo space on right
+        # Try to add actual logo image - download it locally first
+        try:
+            # Use the local logo we downloaded earlier
+            logo_path = '/app/frontend/public/activus-logo.png'
+            if os.path.exists(logo_path):
+                logo_img = RLImage(logo_path, width=80, height=40)
+                logo_content = logo_img
+            else:
+                # Fallback to text if logo not found
+                logo_content = Paragraph("ACTIVUS INDUSTRIAL DESIGN & BUILD LLP<br/><i>One Stop Solution is What We Do</i>", logo_style)
+        except:
+            logo_content = Paragraph("ACTIVUS INDUSTRIAL DESIGN & BUILD LLP<br/><i>One Stop Solution is What We Do</i>", logo_style)
+        
+        # Header table: TAX Invoice on left, Logo on right
         header_data = [[
             Paragraph("TAX Invoice", tax_invoice_style),
-            Paragraph("ACTIVUS INDUSTRIAL DESIGN & BUILD LLP<br/><i>One Stop Solution is What We Do</i>", logo_style)
+            logo_content
         ]]
         
-        header_table = Table(header_data, colWidths=[280*mm, 120*mm])
+        header_table = Table(header_data, colWidths=[300, 200])
         header_table.setStyle(TableStyle([
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('LEFTPADDING', (0, 0), (-1, -1), 0),
@@ -1148,7 +1165,7 @@ class PDFGenerator:
         ]))
         
         elements.append(header_table)
-        elements.append(Spacer(1, 8))
+        elements.append(Spacer(1, 12))
         
         # ===== INVOICE IDENTIFICATION BLOCK =====
         invoice_id_style = ParagraphStyle(
