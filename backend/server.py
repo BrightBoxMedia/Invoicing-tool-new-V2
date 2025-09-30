@@ -1247,8 +1247,8 @@ PLOT NO M-1 & M-1 /2,TALOJA DIST. RAIGAD,Maharashtra-410208., Taloja, Maharashtr
         
         table_data = [table_headers] + list(exact_items)
         
-        # Column widths exactly matching target PDF proportions
-        col_widths = [68*mm, 20*mm, 22*mm, 20*mm, 28*mm, 26*mm, 30*mm]
+        # Fixed column widths to prevent text overlap and truncation
+        col_widths = [85*mm, 20*mm, 22*mm, 20*mm, 30*mm, 28*mm, 35*mm]  # Increased Item and Total columns
         items_table = Table(table_data, colWidths=col_widths)
         
         # Styling to match target PDF exactly - CORRECT BLUE COLOR
