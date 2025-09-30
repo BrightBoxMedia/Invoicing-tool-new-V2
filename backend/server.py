@@ -1099,62 +1099,63 @@ class PDFGenerator:
     async def generate_invoice_pdf(self, invoice: Invoice, project: Project, client: ClientInfo):
         buffer = io.BytesIO()
         
+        # EXACT page setup matching target PDF
         doc = SimpleDocTemplate(
             buffer,
-            pagesize=letter,
-            rightMargin=0.75*inch,
-            leftMargin=0.75*inch, 
-            topMargin=0.75*inch,
-            bottomMargin=0.75*inch
+            pagesize=A4,
+            rightMargin=20*mm,
+            leftMargin=20*mm, 
+            topMargin=15*mm,
+            bottomMargin=20*mm
         )
         
         elements = []
         styles = getSampleStyleSheet()
         
-        # ===== PROFESSIONAL HEADER EXACTLY MATCHING TARGET PDF =====
+        # ===== EXACT HEADER LAYOUT MATCHING TARGET PDF =====
         
-        # TAX Invoice title - LARGE and PROMINENT like target
-        tax_invoice_title = ParagraphStyle(
+        # TAX Invoice title - EXACTLY positioned and styled like target
+        tax_invoice_style = ParagraphStyle(
             'TAXInvoiceTitle',
             parent=styles['Normal'],
-            fontSize=24,
+            fontSize=18,
             textColor=colors.black,
-            alignment=TA_LEFT,
+            alignment=TA_CENTER,  # CENTERED like in target
             spaceAfter=0,
-            fontName='Helvetica-Bold',
-            leftIndent=0
+            fontName='Helvetica-Bold'
         )
         
-        # LARGE PROFESSIONAL LOGO - matching target prominence
+        # Logo - EXACT size and positioning like target
         try:
             logo_path = '/app/frontend/public/activus-new-logo.png'
             if os.path.exists(logo_path):
-                # LARGE logo like in target PDF - should be clearly visible
-                logo_element = RLImage(logo_path, width=200, height=100)  # Much larger professional size
+                logo_element = RLImage(logo_path, width=120, height=60)  # Professional size matching target
             else:
                 logo_element = Paragraph("<b>ACTIVUS INDUSTRIAL DESIGN & BUILD LLP</b><br/><i>One Stop Solution is What We Do</i>", 
-                                       ParagraphStyle('LogoFallback', fontSize=14, alignment=TA_RIGHT, fontName='Helvetica-Bold', textColor=colors.HexColor('#127285')))
-        except Exception:
+                                       ParagraphStyle('LogoText', fontSize=10, alignment=TA_RIGHT, fontName='Helvetica-Bold'))
+        except:
             logo_element = Paragraph("<b>ACTIVUS INDUSTRIAL DESIGN & BUILD LLP</b><br/><i>One Stop Solution is What We Do</i>", 
-                                   ParagraphStyle('LogoFallback', fontSize=14, alignment=TA_RIGHT, fontName='Helvetica-Bold', textColor=colors.HexColor('#127285')))
+                                   ParagraphStyle('LogoText', fontSize=10, alignment=TA_RIGHT, fontName='Helvetica-Bold'))
         
-        # Header layout with proper spacing
-        header_content = [[
-            Paragraph("TAX Invoice", tax_invoice_title),
+        # Header layout EXACTLY like target - TAX Invoice centered, logo top right
+        header_data = [[
+            "",  # Empty left space
             logo_element
         ]]
         
-        header_table = Table(header_content, colWidths=[4*inch, 3*inch])
+        header_table = Table(header_data, colWidths=[400, 150])
         header_table.setStyle(TableStyle([
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('LEFTPADDING', (0, 0), (-1, -1), 0),
             ('RIGHTPADDING', (0, 0), (-1, -1), 0),
-            ('TOPPADDING', (0, 0), (-1, -1), 0),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
         ]))
         
         elements.append(header_table)
-        elements.append(Spacer(1, 24))  # Professional spacing
+        elements.append(Spacer(1, 10))
+        
+        # TAX Invoice title - CENTERED like target
+        elements.append(Paragraph("TAX Invoice", tax_invoice_style))
+        elements.append(Spacer(1, 15))
         
         # ===== INVOICE IDENTIFICATION BLOCK =====
         invoice_id_style = ParagraphStyle(
