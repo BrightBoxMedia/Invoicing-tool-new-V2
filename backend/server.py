@@ -1128,7 +1128,7 @@ class PDFGenerator:
             'LogoStyle',
             parent=styles['Normal'],
             fontSize=12,
-            alignment=TA_RIGHT,
+            alignment=2,  # TA_RIGHT = 2
             textColor=colors.black
         )
         
