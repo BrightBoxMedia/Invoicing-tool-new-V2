@@ -1275,10 +1275,11 @@ PLOT NO M-1 & M-1 /2,TALOJA DIST. RAIGAD,Maharashtra-410208., Taloja, Maharashtr
             ('FONTSIZE', (0, 1), (-1, -1), 9),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             
-            # Alignment - matching target PDF exactly
+            # Professional alignment with text wrapping
             ('ALIGN', (0, 1), (0, -1), 'LEFT'),     # Item descriptions - left
             ('ALIGN', (1, 1), (1, -1), 'CENTER'),   # GST Rate - center  
             ('ALIGN', (2, 1), (-1, -1), 'RIGHT'),   # All numeric columns - right
+            ('VALIGN', (0, 1), (-1, -1), 'TOP'),    # Top align for better text wrapping
             
             # Padding
             ('LEFTPADDING', (0, 0), (-1, -1), 6),
