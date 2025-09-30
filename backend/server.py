@@ -1266,35 +1266,35 @@ PLOT NO M-1 & M-1 /2,TALOJA DIST. RAIGAD,Maharashtra-410208., Taloja, Maharashtr
         col_widths = [100*mm, 20*mm, 22*mm, 25*mm, 30*mm, 25*mm, 30*mm]
         items_table = Table(table_data, colWidths=col_widths, repeatRows=1)
         
-        # Styling to match target PDF exactly - CORRECT BLUE COLOR
+        # PROFESSIONAL table styling with proper borders and alignment
         items_table.setStyle(TableStyle([
-            # Header row - EXACT company color as specified by user
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#127285')),  # EXACT color specified by user
+            # Header row - company color #127285
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#127285')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('FONTSIZE', (0, 0), (-1, 0), 11),
             ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
             
-            # Data rows
+            # Data rows - proper alignment and spacing
             ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
             ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 1), (-1, -1), 9),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('VALIGN', (0, 1), (-1, -1), 'TOP'),
             
-            # Professional alignment with text wrapping
-            ('ALIGN', (0, 1), (0, -1), 'LEFT'),     # Item descriptions - left
-            ('ALIGN', (1, 1), (1, -1), 'CENTER'),   # GST Rate - center  
-            ('ALIGN', (2, 1), (-1, -1), 'RIGHT'),   # All numeric columns - right
-            ('VALIGN', (0, 1), (-1, -1), 'TOP'),    # Top align for better text wrapping
+            # Column-specific alignment
+            ('ALIGN', (0, 1), (0, -1), 'LEFT'),     # Item - left
+            ('ALIGN', (1, 1), (1, -1), 'CENTER'),   # GST Rate - center
+            ('ALIGN', (2, 1), (-1, -1), 'RIGHT'),   # Numbers - right
             
-            # Padding
-            ('LEFTPADDING', (0, 0), (-1, -1), 6),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            # Professional padding
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
             
-            # Grid lines
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+            # Strong borders
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('BOX', (0, 0), (-1, -1), 2, colors.black),
         ]))
         
         elements.append(items_table)
