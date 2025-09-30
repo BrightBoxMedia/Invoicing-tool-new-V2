@@ -1309,11 +1309,11 @@ PLOT NO M-1 & M-1 /2,TALOJA DIST. RAIGAD,Maharashtra-410208., Taloja, Maharashtr
         elements.append(Paragraph(total_words, total_words_style))
         elements.append(Spacer(1, 16))
         
-        # Financial summary table - positioned on right side (fixing rupee symbol encoding)
+        # Professional financial summary with proper rupee symbols
         summary_data = [
-            ['Amount', 'Rs.53,63,000.00'],
-            ['IGST (18%)', 'Rs.9,65,340.00'],
-            ['Total (INR)', 'Rs.63,28,340.00']
+            ['Amount', '₹53,63,000.00'],
+            ['IGST (18%)', '₹9,65,340.00'],
+            ['Total (INR)', '₹63,28,340.00']
         ]
         
         summary_table = Table(summary_data, colWidths=[40*mm, 45*mm])
