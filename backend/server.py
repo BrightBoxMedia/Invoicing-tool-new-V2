@@ -1250,15 +1250,15 @@ PLOT NO M-1 & M-1 /2,TALOJA DIST. RAIGAD,Maharashtra-410208., Taloja, Maharashtr
             table_row = [item_desc] + list(item_row[1:])
             table_data.append(table_row)
         
-        # EXACT column proportions matching target PDF
+        # WIDER item column to accommodate proper word wrapping
         available_width = 170*mm
         col_widths = [
-            available_width * 0.35,  # Item: 35%
+            available_width * 0.40,  # Item: 40% (wider for word wrapping)
             available_width * 0.08,  # GST Rate: 8%
-            available_width * 0.10,  # Quantity: 10%
-            available_width * 0.12,  # Rate: 12%
-            available_width * 0.15,  # Amount: 15%
-            available_width * 0.10,  # IGST: 10%
+            available_width * 0.09,  # Quantity: 9%
+            available_width * 0.11,  # Rate: 11%
+            available_width * 0.13,  # Amount: 13%
+            available_width * 0.09,  # IGST: 9%
             available_width * 0.10   # Total: 10%
         ]
         
