@@ -1157,24 +1157,25 @@ class PDFGenerator:
         elements.append(Paragraph("TAX Invoice", tax_invoice_style))
         elements.append(Spacer(1, 15))
         
-        # ===== INVOICE IDENTIFICATION BLOCK =====
-        invoice_id_style = ParagraphStyle(
-            'InvoiceIDStyle',
+        # ===== INVOICE IDENTIFICATION BLOCK - EXACT MATCH =====
+        invoice_details_style = ParagraphStyle(
+            'InvoiceDetailsStyle',
             parent=styles['Normal'],
-            fontSize=11,
+            fontSize=12,
             textColor=colors.black,
             alignment=TA_LEFT,
             fontName='Helvetica',
-            lineHeight=14,
-            spaceAfter=16
+            lineHeight=16,
+            spaceAfter=20
         )
         
-        invoice_id_text = f"""<b>Invoice No #</b> {invoice.invoice_number}<br/>
+        # EXACT text format matching target PDF
+        invoice_details_text = f"""<b>Invoice No #</b> {invoice.invoice_number}<br/>
 <b>Invoice Date</b> {invoice.invoice_date.strftime('%b %d, %Y')}<br/>
 <b>Created By</b> Sathiya Narayanan Kannan"""
         
-        elements.append(Paragraph(invoice_id_text, invoice_id_style))
-        elements.append(Spacer(1, 16))
+        elements.append(Paragraph(invoice_details_text, invoice_details_style))
+        elements.append(Spacer(1, 20))
         
         # ===== BILLED BY / BILLED TO SECTIONS =====
         billing_style = ParagraphStyle(
