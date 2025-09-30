@@ -1228,98 +1228,68 @@ Taloja, Maharashtra, India - 410206<br/><br/>
         # ===== ITEMIZATION TABLE - EXACT STRUCTURE =====
         table_headers = ['Item', 'GST Rate', 'Quantity', 'Rate', 'Amount', 'IGST', 'Total']
         
-        # ===== PROFESSIONAL TABLE EXACTLY MATCHING TARGET PDF =====
+        # ===== TABLE STRUCTURE - EXACT MATCH TO TARGET PDF =====
         
-        # Table headers
-        table_headers = ['Item', 'GST Rate', 'Quantity', 'Rate', 'Amount', 'IGST', 'Total']
+        # Table headers EXACTLY like target
+        headers = ['Item', 'GST Rate', 'Quantity', 'Rate', 'Amount', 'IGST', 'Total']
         
-        # Professional table data matching target exactly
-        items_data = [
+        # EXACT data from target PDF
+        items = [
             ('1. Removal of existing Bare Galvalume sheet SAC Code:', '18%', '8,500', '₹445', '₹37,82,500.00', '₹6,80,850.00', '₹44,63,350.00'),
             ('2. Removal of existing Gutters,lighting & She SAC Code:', '18%', '200', '₹390', '₹78,000.00', '₹14,040.00', '₹92,040.00'),
             ('3. 1 coat of metal passivator - Rustoff 190 SAC Code:', '18%', '80', '₹5,500', '₹4,40,000.00', '₹79,200.00', '₹5,19,200.00'),
             ('4. safety net+300micron LDPE sheet below SAC Code:', '18%', '8,500', '₹125', '₹10,62,500.00', '₹1,91,250.00', '₹12,53,750.00')
         ]
         
-        # Build table with proper structure and NO OVERLAPPING TEXT
-        table_rows = [table_headers]
+        # Build table data - NO ALTERNATING COLORS (target has plain white)
+        table_data = [headers]
+        table_data.extend(items)
         
-        for item_data in items_data:
-            # Create wrapped item description to prevent overlap
-            item_text = Paragraph(item_data[0], ParagraphStyle(
-                'ItemDescriptionStyle',
-                fontSize=9,
-                fontName='Helvetica',
-                alignment=TA_LEFT,
-                lineHeight=11,
-                wordWrap='CJK',  # Better word wrapping
-                leftIndent=0,
-                rightIndent=0
-            ))
-            
-            # Create individual cells to prevent text overlap
-            row_cells = [
-                item_text,  # Item description with wrapping
-                item_data[1],  # GST Rate
-                item_data[2],  # Quantity  
-                item_data[3],  # Rate
-                item_data[4],  # Amount
-                item_data[5],  # IGST
-                item_data[6]   # Total
-            ]
-            
-            table_rows.append(row_cells)
-        
-        # PROFESSIONAL column widths - no overlap, proper spacing
+        # EXACT column widths to prevent overlap
         col_widths = [
-            2.8*inch,  # Item - wide enough for descriptions
-            0.8*inch,  # GST Rate
-            0.8*inch,  # Quantity
-            1.0*inch,  # Rate
-            1.2*inch,  # Amount
-            1.0*inch,  # IGST
-            1.2*inch   # Total
+            75*mm,   # Item - wide enough for descriptions
+            18*mm,   # GST Rate  
+            20*mm,   # Quantity
+            22*mm,   # Rate
+            30*mm,   # Amount
+            25*mm,   # IGST
+            30*mm    # Total
         ]
         
-        # Create professional table
-        invoice_table = Table(table_rows, colWidths=col_widths, repeatRows=1)
+        items_table = Table(table_data, colWidths=col_widths, repeatRows=1)
         
-        # PROFESSIONAL STYLING exactly matching target PDF
-        invoice_table.setStyle(TableStyle([
-            # Header row - professional dark blue/teal
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#127285')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        # EXACT styling matching target PDF - NO alternating row colors
+        items_table.setStyle(TableStyle([
+            # Header row styling
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, 0), 11),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
             ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
             
-            # Data rows - clean professional formatting
-            ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+            # Data rows - plain white background like target
             ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 1), (-1, -1), 10),
-            ('VALIGN', (0, 1), (-1, -1), 'MIDDLE'),
+            ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),  # Plain white - no alternating colors
             
-            # Perfect alignment - no overlap
-            ('ALIGN', (0, 1), (0, -1), 'LEFT'),      # Item descriptions - left
-            ('ALIGN', (1, 1), (1, -1), 'CENTER'),    # GST Rate - center
-            ('ALIGN', (2, 1), (-1, -1), 'RIGHT'),    # Numbers - right aligned
+            # EXACT alignment matching target
+            ('ALIGN', (0, 1), (0, -1), 'LEFT'),      # Item - left aligned
+            ('ALIGN', (1, 1), (1, -1), 'RIGHT'),     # GST Rate - right aligned
+            ('ALIGN', (2, 1), (-1, -1), 'RIGHT'),    # All other numbers - right aligned
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             
-            # Professional padding
-            ('LEFTPADDING', (0, 0), (-1, -1), 8),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-            ('TOPPADDING', (0, 0), (-1, -1), 12),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+            # Proper padding
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
             
-            # Clean borders
+            # Clean borders exactly like target
             ('BOX', (0, 0), (-1, -1), 1, colors.black),
             ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-            
-            # Alternating row colors like target PDF
-            ('BACKGROUND', (0, 2), (-1, 2), colors.HexColor('#F0F8FF')),  # Light blue for row 2
-            ('BACKGROUND', (0, 4), (-1, 4), colors.HexColor('#F0F8FF')),  # Light blue for row 4
         ]))
         
-        elements.append(invoice_table)
+        elements.append(items_table)
         elements.append(Spacer(1, 20))
         
         # ===== TOTAL IN WORDS AND FINANCIAL SUMMARY =====
