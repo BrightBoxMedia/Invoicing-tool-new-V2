@@ -1232,16 +1232,19 @@ PLOT NO M-1 & M-1 /2,TALOJA DIST. RAIGAD,Maharashtra-410208., Taloja, Maharashtr
             ('4. safety net+300micron LDPE sheet below SAC Code:', '18%', '8,500', '₹125', '₹10,62,500.00', '₹1,91,250.00', '₹12,53,750.00')
         ]
         
-        # Build table data with proper text wrapping
+        # Build table data with proper word wrapping for item descriptions
         table_data = [table_headers]
         for item_row in items_data:
-            # Wrap item description to prevent truncation
+            # Proper word wrapping for item descriptions to prevent overlap
             item_desc = Paragraph(item_row[0], ParagraphStyle(
                 'ItemDesc',
                 fontSize=9,
                 fontName='Helvetica',
                 alignment=TA_LEFT,
-                lineHeight=11
+                lineHeight=12,
+                wordWrap='LTR',
+                allowWidows=1,
+                allowOrphans=1
             ))
             
             table_row = [item_desc] + list(item_row[1:])
