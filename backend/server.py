@@ -1156,7 +1156,7 @@ class PDFGenerator:
             logo_content
         ]]
         
-        header_table = Table(header_data, colWidths=[280, 220])  # More space for larger logo
+        header_table = Table(header_data, colWidths=[250, 270])  # Professional logo space allocation
         header_table.setStyle(TableStyle([
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('LEFTPADDING', (0, 0), (-1, -1), 0),
