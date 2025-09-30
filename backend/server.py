@@ -1250,10 +1250,10 @@ PLOT NO M-1 & M-1 /2,TALOJA DIST. RAIGAD,Maharashtra-410208., Taloja, Maharashtr
         col_widths = [68*mm, 20*mm, 22*mm, 20*mm, 28*mm, 26*mm, 30*mm]
         items_table = Table(table_data, colWidths=col_widths)
         
-        # Styling to match target PDF exactly
+        # Styling to match target PDF exactly - CORRECT BLUE COLOR
         items_table.setStyle(TableStyle([
-            # Header row - dark blue/teal background with white text
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1B4B5C')),
+            # Header row - EXACT blue color from your target PDF
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2E5C7A')),  # Correct blue from target
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, 0), 10),
