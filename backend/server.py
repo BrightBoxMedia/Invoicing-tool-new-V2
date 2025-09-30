@@ -1247,8 +1247,17 @@ PLOT NO M-1 & M-1 /2,TALOJA DIST. RAIGAD,Maharashtra-410208., Taloja, Maharashtr
         
         table_data = [table_headers] + list(exact_items)
         
-        # Properly adjusted column widths to show all content without truncation
-        col_widths = [95*mm, 18*mm, 20*mm, 18*mm, 25*mm, 25*mm, 30*mm]  # Much wider Item column, balanced others
+        # Professional dynamic column widths - no text truncation
+        page_width = 180*mm  # Available width after margins
+        col_widths = [
+            page_width * 0.40,  # Item: 40% of page width
+            page_width * 0.08,  # GST Rate: 8%
+            page_width * 0.12,  # Quantity: 12%
+            page_width * 0.10,  # Rate: 10%
+            page_width * 0.12,  # Amount: 12%
+            page_width * 0.08,  # IGST: 8%
+            page_width * 0.10   # Total: 10%
+        ]
         items_table = Table(table_data, colWidths=col_widths)
         
         # Styling to match target PDF exactly - CORRECT BLUE COLOR
