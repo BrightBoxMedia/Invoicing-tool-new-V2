@@ -1099,74 +1099,71 @@ class PDFGenerator:
     async def generate_invoice_pdf(self, invoice: Invoice, project: Project, client: ClientInfo):
         buffer = io.BytesIO()
         
+        # Register proper fonts to handle rupee symbol
+        from reportlab.pdfbase import pdfmetrics
+        from reportlab.pdfbase.ttfonts import TTFont
+        
         doc = SimpleDocTemplate(
             buffer,
             pagesize=self.page_size,
             rightMargin=15*mm,
             leftMargin=15*mm, 
-            topMargin=10*mm,
+            topMargin=15*mm,
             bottomMargin=15*mm
         )
         
         elements = []
         styles = getSampleStyleSheet()
         
-        # ===== EXACT HEADER MATCHING TARGET PDF =====
-        
-        # TAX Invoice title - EXACTLY matching target PDF
+        # ===== LARGE PROMINENT TAX INVOICE HEADER =====
         tax_invoice_style = ParagraphStyle(
             'TAXInvoiceTitle',
             parent=styles['Normal'],
-            fontSize=18,
+            fontSize=24,
             textColor=colors.black,
             alignment=TA_LEFT,
-            spaceAfter=6,
+            spaceAfter=15,
             fontName='Helvetica-Bold'
         )
         
-        # Company logo and name for right side
+        # Company logo style for right side - MUCH LARGER
         logo_style = ParagraphStyle(
             'LogoStyle',
             parent=styles['Normal'],
-            fontSize=14,
+            fontSize=16,
             alignment=TA_RIGHT,
-            textColor=colors.HexColor('#127285'),  # EXACT company color as specified
+            textColor=colors.HexColor('#127285'),
             fontName='Helvetica-Bold',
-            lineHeight=16
+            lineHeight=18
         )
         
-        # Add properly sized and positioned logo
+        # MASSIVE LOGO - ACTUALLY VISIBLE
         try:
-            # Use the local logo we downloaded earlier
             logo_path = '/app/frontend/public/activus-logo.png'
             if os.path.exists(logo_path):
-                # Professional logo sizing - much larger and prominent
-                logo_img = RLImage(logo_path, width=250, height=125)  # Professional size
+                # HUGE logo - 300x150 pixels for maximum visibility
+                logo_img = RLImage(logo_path, width=300, height=150)
                 logo_content = logo_img
             else:
-                # Fallback to company name if logo not found
-                logo_content = Paragraph("<b>ACTIVUS INDUSTRIAL DESIGN & BUILD LLP</b><br/><i>One Stop Solution is What We Do</i>", logo_style)
-        except Exception as e:
-            # Fallback to company name
-            logo_content = Paragraph("<b>ACTIVUS INDUSTRIAL DESIGN & BUILD LLP</b><br/><i>One Stop Solution is What We Do</i>", logo_style)
+                logo_content = Paragraph("<b>ACTIVUS INDUSTRIAL<br/>DESIGN & BUILD LLP</b><br/><i>One Stop Solution is What We Do</i>", logo_style)
+        except:
+            logo_content = Paragraph("<b>ACTIVUS INDUSTRIAL<br/>DESIGN & BUILD LLP</b><br/><i>One Stop Solution is What We Do</i>", logo_style)
         
-        # Header table: TAX Invoice on left, Logo on right
+        # Header with PROMINENT TAX Invoice title and LARGE logo
         header_data = [[
-            Paragraph("TAX Invoice", tax_invoice_style),
+            Paragraph("<b>TAX Invoice</b>", tax_invoice_style),
             logo_content
         ]]
         
-        header_table = Table(header_data, colWidths=[250, 270])  # Professional logo space allocation
+        header_table = Table(header_data, colWidths=[200, 320])
         header_table.setStyle(TableStyle([
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('LEFTPADDING', (0, 0), (-1, -1), 0),
             ('RIGHTPADDING', (0, 0), (-1, -1), 0),
-            ('TOPPADDING', (0, 0), (-1, -1), 0),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
         ]))
         
         elements.append(header_table)
-        elements.append(Spacer(1, 12))
+        elements.append(Spacer(1, 20))
         
         # ===== INVOICE IDENTIFICATION BLOCK =====
         invoice_id_style = ParagraphStyle(
