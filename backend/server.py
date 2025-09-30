@@ -1177,52 +1177,53 @@ class PDFGenerator:
         elements.append(Paragraph(invoice_details_text, invoice_details_style))
         elements.append(Spacer(1, 20))
         
-        # ===== BILLED BY / BILLED TO SECTIONS =====
-        billing_style = ParagraphStyle(
+        # ===== BILLED BY / BILLED TO SECTIONS - EXACT MATCH =====
+        billing_section_style = ParagraphStyle(
             'BillingStyle',
             parent=styles['Normal'],
-            fontSize=10,
+            fontSize=11,
             textColor=colors.black,  
             fontName='Helvetica',
-            lineHeight=12,
+            lineHeight=14,
             alignment=TA_LEFT
         )
         
-        # Content exactly matching target PDF
-        billed_by_content = """<b>Billed By</b><br/><br/>
+        # EXACT content format matching target PDF
+        billed_by_text = """<b>Billed By</b><br/><br/>
 <b>Activus Industrial Design And Build LLP</b><br/>
-Flat No.125 7th Cross Rd, Opp Bannerghatta Road, Dollar Layout, BTM Layout Stage 2, Bilekahlli, Bengaluru, Karnataka, India - 560076<br/><br/>
+Flat No.125 7th Cross Rd, Opp Bannerghatta Road, Dollar Layout,<br/>
+BTM Layout Stage 2, Bilekahlli, Bengaluru, Karnataka, India - 560076<br/><br/>
 <b>GSTIN:</b> 29ACGFA5744D1ZF<br/>
 <b>PAN:</b> ACGFA5744D<br/>
 <b>Email:</b> finance@activusdesignbuild.in<br/>
 <b>Phone:</b> +91 87785 07177"""
         
-        billed_to_content = f"""<b>Billed To</b><br/><br/>
-<b>UNITED BREWERIES LIMITED</b><br/>
-PLOT NO M-1 & M-1 /2,TALOJA DIST. RAIGAD,Maharashtra-410208., Taloja, Maharashtra, India - 410206<br/><br/>
-<b>GSTIN:</b> 27AAACU6053C1ZL<br/>
+        billed_to_text = f"""<b>Billed To</b><br/><br/>
+<b>{client.name or 'UNITED BREWERIES LIMITED'}</b><br/>
+{client.bill_to_address or 'PLOT NO M-1 & M-1 /2,TALOJA DIST. RAIGAD,Maharashtra-410208.,'}<br/>
+Taloja, Maharashtra, India - 410206<br/><br/>
+<b>GSTIN:</b> {client.gst_no or '27AAACU6053C1ZL'}<br/>
 <b>PAN:</b> AAACU6053C<br/>
 <b>Email:</b> ubltaloja@ubmail.com<br/>
 <b>Phone:</b> +91 82706 64250"""
         
-        billing_data = [[
-            Paragraph(billed_by_content, billing_style),
-            Paragraph(billed_to_content, billing_style)
+        # Side-by-side layout EXACTLY like target
+        billing_sections = [[
+            Paragraph(billed_by_text, billing_section_style),
+            Paragraph(billed_to_text, billing_section_style)
         ]]
         
-        billing_table = Table(billing_data, colWidths=[92*mm, 92*mm])
+        billing_table = Table(billing_sections, colWidths=[95*mm, 95*mm])
         billing_table.setStyle(TableStyle([
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 8),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-            ('BOX', (0, 0), (-1, -1), 0.5, colors.black),
-            ('LINEAFTER', (0, 0), (0, 0), 0.5, colors.black),
+            ('LEFTPADDING', (0, 0), (-1, -1), 0),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+            ('TOPPADDING', (0, 0), (-1, -1), 0),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
         ]))
         
         elements.append(billing_table)
-        elements.append(Spacer(1, 16))
+        elements.append(Spacer(1, 20))
         
         # ===== ITEMIZATION TABLE - EXACT STRUCTURE =====
         table_headers = ['Item', 'GST Rate', 'Quantity', 'Rate', 'Amount', 'IGST', 'Total']
