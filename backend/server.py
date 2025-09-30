@@ -1266,8 +1266,8 @@ PLOT NO M-1 & M-1 /2,TALOJA DIST. RAIGAD,Maharashtra-410208., Taloja, Maharashtr
         
         table_data = [table_headers] + table_rows
         
-        # FIXED column widths that actually work - no overlap
-        col_widths = [100*mm, 20*mm, 22*mm, 25*mm, 30*mm, 25*mm, 30*mm]
+        # WIDER column widths to fix text alignment issues
+        col_widths = [110*mm, 18*mm, 20*mm, 22*mm, 28*mm, 22*mm, 32*mm]  # Much wider Item and Total columns
         items_table = Table(table_data, colWidths=col_widths, repeatRows=1)
         
         # PROFESSIONAL table styling with proper borders and alignment
