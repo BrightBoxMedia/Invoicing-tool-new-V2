@@ -1317,9 +1317,6 @@ PLOT NO M-1 & M-1 /2,TALOJA DIST. RAIGAD,Maharashtra-410208., Taloja, Maharashtr
         ]))
         
         elements.append(invoice_table)
-        elements.append(Spacer(1, 24))
-        
-        elements.append(items_table)
         elements.append(Spacer(1, 20))
         
         # ===== TOTAL IN WORDS AND FINANCIAL SUMMARY =====
