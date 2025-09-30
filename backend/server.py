@@ -1325,7 +1325,7 @@ PLOT NO M-1 & M-1 /2,TALOJA DIST. RAIGAD,Maharashtra-410208., Taloja, Maharashtr
             ('TEXTCOLOR', (0, 0), (-1, -2), colors.black),
             ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
             
-            # Total row - EXACT company color as specified by user
+            # Total row - company color #127285
             ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#127285')),
             ('TEXTCOLOR', (0, -1), (-1, -1), colors.white),
             ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
