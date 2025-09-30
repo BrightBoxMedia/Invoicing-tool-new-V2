@@ -1310,7 +1310,7 @@ PLOT NO M-1 & M-1 /2,TALOJA DIST. RAIGAD,Maharashtra-410208., Taloja, Maharashtr
         elements.append(Paragraph(total_words, total_words_style))
         elements.append(Spacer(1, 16))
         
-        # Financial summary with RUPEE SYMBOL as requested
+        # EXACT financial summary matching target PDF
         summary_data = [
             ['Amount', '₹53,63,000.00'],
             ['IGST (18%)', '₹9,65,340.00'],
