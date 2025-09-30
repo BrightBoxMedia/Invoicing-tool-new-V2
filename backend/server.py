@@ -1338,11 +1338,25 @@ PLOT NO M-1 & M-1 /2,TALOJA DIST. RAIGAD,Maharashtra-410208., Taloja, Maharashtr
         elements.append(Paragraph(total_words, total_words_style))
         elements.append(Spacer(1, 16))
         
-        # EXACT financial summary - using Rs to avoid encoding issues
+        # PROFESSIONAL financial summary matching target PDF exactly
+        
+        # Total in words section
+        total_words_style = ParagraphStyle(
+            'TotalWordsStyle',
+            fontSize=11,
+            fontName='Helvetica-Bold',
+            alignment=TA_LEFT,
+            textColor=colors.black
+        )
+        
+        elements.append(Paragraph("Total (in words): SIXTY THREE LAKH TWENTY EIGHT THOUSAND THREE HUNDRED FORTY RUPEES ONLY", total_words_style))
+        elements.append(Spacer(1, 16))
+        
+        # Financial summary table - right aligned like target
         summary_data = [
-            ['Amount', 'Rs.53,63,000.00'],
-            ['IGST (18%)', 'Rs.9,65,340.00'],
-            ['Total (INR)', 'Rs.63,28,340.00']
+            ['Amount', '₹53,63,000.00'],
+            ['IGST (18%)', '₹9,65,340.00'],
+            ['Total (INR)', '₹63,28,340.00']
         ]
         
         summary_table = Table(summary_data, colWidths=[40*mm, 45*mm])
