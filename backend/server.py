@@ -1141,8 +1141,8 @@ class PDFGenerator:
         try:
             logo_path = '/app/frontend/public/activus-logo.png'
             if os.path.exists(logo_path):
-                # HUGE logo - 300x150 pixels for maximum visibility
-                logo_img = RLImage(logo_path, width=300, height=150)
+                # BIGGER logo as requested
+                logo_img = RLImage(logo_path, width=400, height=200)  # Even bigger logo
                 logo_content = logo_img
             else:
                 logo_content = Paragraph("<b>ACTIVUS INDUSTRIAL<br/>DESIGN & BUILD LLP</b><br/><i>One Stop Solution is What We Do</i>", logo_style)
