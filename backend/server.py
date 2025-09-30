@@ -1238,15 +1238,15 @@ PLOT NO M-1 & M-1 /2,TALOJA DIST. RAIGAD,Maharashtra-410208., Taloja, Maharashtr
         # ===== ITEMIZATION TABLE - EXACT STRUCTURE =====
         table_headers = ['Item', 'GST Rate', 'Quantity', 'Rate', 'Amount', 'IGST', 'Total']
         
-        # Create proper table data with text wrapping for item descriptions
+        # Create proper table data - BACK TO RUPEE SYMBOL as requested
         table_rows = []
         
-        # Sample data with proper text wrapping and INR symbol
+        # Sample data with RUPEE SYMBOL as originally requested  
         items_data = [
-            ('1. Removal of existing Bare Galvalume sheet SAC Code:', '18%', '8,500', 'INR 445', 'INR 37,82,500.00', 'INR 6,80,850.00', 'INR 44,63,350.00'),
-            ('2. Removal of existing Gutters, lighting & She SAC Code:', '18%', '200', 'INR 390', 'INR 78,000.00', 'INR 14,040.00', 'INR 92,040.00'),
-            ('3. 1 coat of metal passivator - Rustoff 190 SAC Code:', '18%', '80', 'INR 5,500', 'INR 4,40,000.00', 'INR 79,200.00', 'INR 5,19,200.00'),
-            ('4. Safety net+300micron LDPE sheet below SAC Code:', '18%', '8,500', 'INR 125', 'INR 10,62,500.00', 'INR 1,91,250.00', 'INR 12,53,750.00')
+            ('1. Removal of existing Bare Galvalume sheet SAC Code:', '18%', '8,500', '₹445', '₹37,82,500.00', '₹6,80,850.00', '₹44,63,350.00'),
+            ('2. Removal of existing Gutters, lighting & She SAC Code:', '18%', '200', '₹390', '₹78,000.00', '₹14,040.00', '₹92,040.00'),
+            ('3. 1 coat of metal passivator - Rustoff 190 SAC Code:', '18%', '80', '₹5,500', '₹4,40,000.00', '₹79,200.00', '₹5,19,200.00'),
+            ('4. Safety net+300micron LDPE sheet below SAC Code:', '18%', '8,500', '₹125', '₹10,62,500.00', '₹1,91,250.00', '₹12,53,750.00')
         ]
         
         # Create properly wrapped table rows
