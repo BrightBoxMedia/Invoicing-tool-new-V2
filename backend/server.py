@@ -1264,9 +1264,9 @@ PLOT NO M-1 & M-1 /2,TALOJA DIST. RAIGAD,Maharashtra-410208., Taloja, Maharashtr
         
         items_table = Table(table_data, colWidths=col_widths, repeatRows=1)
         
-        # EXACT styling matching target PDF
-        items_table.setStyle(TableStyle([
-            # Header with EXACT company color
+        # EXACT styling with alternating row colors matching target PDF
+        table_style = [
+            # Header with company color
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#127285')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
@@ -1277,22 +1277,30 @@ PLOT NO M-1 & M-1 /2,TALOJA DIST. RAIGAD,Maharashtra-410208., Taloja, Maharashtr
             ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
             ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 1), (-1, -1), 9),
-            ('VALIGN', (0, 1), (-1, -1), 'MIDDLE'),
+            ('VALIGN', (0, 1), (-1, -1), 'TOP'),  # TOP align for better word wrapping
             
             # EXACT alignment matching target
             ('ALIGN', (0, 1), (0, -1), 'LEFT'),     # Item - left
             ('ALIGN', (1, 1), (1, -1), 'CENTER'),   # GST Rate - center
             ('ALIGN', (2, 1), (-1, -1), 'RIGHT'),   # All numbers - right
             
-            # Proper padding
+            # Better padding for word wrapping
             ('LEFTPADDING', (0, 0), (-1, -1), 6),
             ('RIGHTPADDING', (0, 0), (-1, -1), 6),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
             
-            # Clean borders exactly like target
+            # Clean borders
             ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-        ]))
+        ]
+        
+        # Add alternating row colors like in target PDF
+        for i in range(1, len(table_data)):
+            if i % 2 == 0:  # Even rows (2nd, 4th, etc.) - light blue background
+                table_style.append(('BACKGROUND', (0, i), (-1, i), colors.HexColor('#E8F4FD')))
+            # Odd rows remain white (default)
+        
+        items_table.setStyle(TableStyle(table_style))
         
         elements.append(items_table)
         elements.append(Spacer(1, 20))
