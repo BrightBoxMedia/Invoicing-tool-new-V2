@@ -1251,8 +1251,8 @@ PLOT NO M-1 & M-1 /2,TALOJA DIST. RAIGAD,Maharashtra-410208., Taloja, Maharashtr
         
         # Styling to match target PDF exactly - CORRECT BLUE COLOR
         items_table.setStyle(TableStyle([
-            # Header row - EXACT blue color from your target PDF
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2E5C7A')),  # Correct blue from target
+            # Header row - EXACT company color as specified by user
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#127285')),  # EXACT color specified by user
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, 0), 10),
