@@ -1140,8 +1140,8 @@ class PDFGenerator:
             # Use the local logo we downloaded earlier
             logo_path = '/app/frontend/public/activus-logo.png'
             if os.path.exists(logo_path):
-                # Make logo much larger and properly positioned
-                logo_img = RLImage(logo_path, width=120, height=60)  # Increased size for visibility
+                # Make logo MUCH larger and properly visible
+                logo_img = RLImage(logo_path, width=180, height=90)  # Much larger size for proper visibility
                 logo_content = logo_img
             else:
                 # Fallback to company name if logo not found
