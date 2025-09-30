@@ -1135,18 +1135,20 @@ class PDFGenerator:
             lineHeight=16
         )
         
-        # Try to add actual logo image - download it locally first
+        # Add properly sized and positioned logo
         try:
             # Use the local logo we downloaded earlier
             logo_path = '/app/frontend/public/activus-logo.png'
             if os.path.exists(logo_path):
-                logo_img = RLImage(logo_path, width=80, height=40)
+                # Make logo much larger and properly positioned
+                logo_img = RLImage(logo_path, width=120, height=60)  # Increased size for visibility
                 logo_content = logo_img
             else:
-                # Fallback to text if logo not found
-                logo_content = Paragraph("ACTIVUS INDUSTRIAL DESIGN & BUILD LLP<br/><i>One Stop Solution is What We Do</i>", logo_style)
-        except:
-            logo_content = Paragraph("ACTIVUS INDUSTRIAL DESIGN & BUILD LLP<br/><i>One Stop Solution is What We Do</i>", logo_style)
+                # Fallback to company name if logo not found
+                logo_content = Paragraph("<b>ACTIVUS INDUSTRIAL DESIGN & BUILD LLP</b><br/><i>One Stop Solution is What We Do</i>", logo_style)
+        except Exception as e:
+            # Fallback to company name
+            logo_content = Paragraph("<b>ACTIVUS INDUSTRIAL DESIGN & BUILD LLP</b><br/><i>One Stop Solution is What We Do</i>", logo_style)
         
         # Header table: TAX Invoice on left, Logo on right
         header_data = [[
