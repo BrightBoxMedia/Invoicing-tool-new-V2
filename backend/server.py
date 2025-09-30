@@ -1361,24 +1361,24 @@ PLOT NO M-1 & M-1 /2,TALOJA DIST. RAIGAD,Maharashtra-410208., Taloja, Maharashtr
         
         summary_table = Table(summary_data, colWidths=[40*mm, 45*mm])
         summary_table.setStyle(TableStyle([
-            # Regular rows
-            ('FONTNAME', (0, 0), (-1, -2), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -2), 11),
+            # Clean professional styling
+            ('FONTNAME', (0, 0), (-1, -2), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -2), 12),
             ('TEXTCOLOR', (0, 0), (-1, -2), colors.black),
             ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
             
-            # Total row - company color #127285
+            # Total row - professional highlighting
             ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#127285')),
             ('TEXTCOLOR', (0, -1), (-1, -1), colors.white),
             ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, -1), (-1, -1), 12),
+            ('FONTSIZE', (0, -1), (-1, -1), 14),
             
-            # Padding and borders
-            ('LEFTPADDING', (0, 0), (-1, -1), 8),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-            ('TOPPADDING', (0, 0), (-1, -1), 6),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-            ('BOX', (0, 0), (-1, -1), 0.5, colors.black),
+            # Professional padding and borders
+            ('LEFTPADDING', (0, 0), (-1, -1), 12),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('BOX', (0, 0), (-1, -1), 1, colors.black),
             ('LINEBELOW', (0, 0), (-1, -2), 0.5, colors.black),
         ]))
         
