@@ -1130,7 +1130,7 @@ class PDFGenerator:
             parent=styles['Normal'],
             fontSize=14,
             alignment=TA_RIGHT,
-            textColor=colors.HexColor('#00ACC1'),
+            textColor=colors.HexColor('#127285'),  # EXACT company color as specified
             fontName='Helvetica-Bold',
             lineHeight=16
         )
