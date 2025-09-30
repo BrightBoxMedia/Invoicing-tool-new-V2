@@ -1221,67 +1221,74 @@ PLOT NO M-1 & M-1 /2,TALOJA DIST. RAIGAD,Maharashtra-410208., Taloja, Maharashtr
         # ===== ITEMIZATION TABLE - EXACT STRUCTURE =====
         table_headers = ['Item', 'GST Rate', 'Quantity', 'Rate', 'Amount', 'IGST', 'Total']
         
-        # Create proper table data - BACK TO RUPEE SYMBOL as requested
-        table_rows = []
+        # ===== ITEMIZATION TABLE - EXACT TARGET MATCH =====
+        table_headers = ['Item', 'GST Rate', 'Quantity', 'Rate', 'Amount', 'IGST', 'Total']
         
-        # Sample data with RUPEE SYMBOL as originally requested  
+        # EXACT data from target PDF
         items_data = [
             ('1. Removal of existing Bare Galvalume sheet SAC Code:', '18%', '8,500', '₹445', '₹37,82,500.00', '₹6,80,850.00', '₹44,63,350.00'),
-            ('2. Removal of existing Gutters, lighting & She SAC Code:', '18%', '200', '₹390', '₹78,000.00', '₹14,040.00', '₹92,040.00'),
+            ('2. Removal of existing Gutters,lighting & She SAC Code:', '18%', '200', '₹390', '₹78,000.00', '₹14,040.00', '₹92,040.00'),
             ('3. 1 coat of metal passivator - Rustoff 190 SAC Code:', '18%', '80', '₹5,500', '₹4,40,000.00', '₹79,200.00', '₹5,19,200.00'),
-            ('4. Safety net+300micron LDPE sheet below SAC Code:', '18%', '8,500', '₹125', '₹10,62,500.00', '₹1,91,250.00', '₹12,53,750.00')
+            ('4. safety net+300micron LDPE sheet below SAC Code:', '18%', '8,500', '₹125', '₹10,62,500.00', '₹1,91,250.00', '₹12,53,750.00')
         ]
         
-        # Create properly wrapped table rows
-        for item_data in items_data:
-            # Wrap item description in paragraph for proper text wrapping
-            item_desc = Paragraph(item_data[0], ParagraphStyle(
-                'ItemStyle',
-                parent=styles['Normal'],
-                fontSize=10,
+        # Build table data with proper text wrapping
+        table_data = [table_headers]
+        for item_row in items_data:
+            # Wrap item description to prevent truncation
+            item_desc = Paragraph(item_row[0], ParagraphStyle(
+                'ItemDesc',
+                fontSize=9,
                 fontName='Helvetica',
-                lineHeight=12,
-                alignment=TA_LEFT
+                alignment=TA_LEFT,
+                lineHeight=11
             ))
             
-            row = [item_desc] + list(item_data[1:])
-            table_rows.append(row)
+            table_row = [item_desc] + list(item_row[1:])
+            table_data.append(table_row)
         
-        table_data = [table_headers] + table_rows
+        # EXACT column proportions matching target PDF
+        available_width = 170*mm
+        col_widths = [
+            available_width * 0.35,  # Item: 35%
+            available_width * 0.08,  # GST Rate: 8%
+            available_width * 0.10,  # Quantity: 10%
+            available_width * 0.12,  # Rate: 12%
+            available_width * 0.15,  # Amount: 15%
+            available_width * 0.10,  # IGST: 10%
+            available_width * 0.10   # Total: 10%
+        ]
         
-        # WIDER column widths to fix text alignment issues
-        col_widths = [110*mm, 18*mm, 20*mm, 22*mm, 28*mm, 22*mm, 32*mm]  # Much wider Item and Total columns
         items_table = Table(table_data, colWidths=col_widths, repeatRows=1)
         
-        # PROFESSIONAL table styling with proper borders and alignment
+        # EXACT styling matching target PDF
         items_table.setStyle(TableStyle([
-            # Header row - company color #127285
+            # Header with EXACT company color
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#127285')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 11),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
             ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
             
-            # Data rows - proper alignment and spacing
+            # Data rows
             ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
             ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 1), (-1, -1), 10),
-            ('VALIGN', (0, 1), (-1, -1), 'TOP'),
+            ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ('VALIGN', (0, 1), (-1, -1), 'MIDDLE'),
             
-            # Column-specific alignment
+            # EXACT alignment matching target
             ('ALIGN', (0, 1), (0, -1), 'LEFT'),     # Item - left
             ('ALIGN', (1, 1), (1, -1), 'CENTER'),   # GST Rate - center
-            ('ALIGN', (2, 1), (-1, -1), 'RIGHT'),   # Numbers - right
+            ('ALIGN', (2, 1), (-1, -1), 'RIGHT'),   # All numbers - right
             
-            # Professional padding
-            ('LEFTPADDING', (0, 0), (-1, -1), 8),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-            ('TOPPADDING', (0, 0), (-1, -1), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+            # Proper padding
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
             
-            # Strong borders
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('BOX', (0, 0), (-1, -1), 2, colors.black),
+            # Clean borders exactly like target
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
         ]))
         
         elements.append(items_table)
