@@ -1237,7 +1237,7 @@ PLOT NO M-1 & M-1 /2,TALOJA DIST. RAIGAD,Maharashtra-410208., Taloja, Maharashtr
         # ===== ITEMIZATION TABLE - EXACT STRUCTURE =====
         table_headers = ['Item', 'GST Rate', 'Quantity', 'Rate', 'Amount', 'IGST', 'Total']
         
-        # Exact data matching target PDF - using Rs instead of ₹ to avoid encoding issues
+        # Exact data with proper item numbering and descriptions
         exact_items = [
             ('1. Removal of existing Bare Galvalume sheet SAC Code:', '18%', '8,500', 'Rs.445', 'Rs.37,82,500.00', 'Rs.6,80,850.00', 'Rs.44,63,350.00'),
             ('2. Removal of existing Gutters,lighting & She SAC Code:', '18%', '200', 'Rs.390', 'Rs.78,000.00', 'Rs.14,040.00', 'Rs.92,040.00'),
