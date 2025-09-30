@@ -1124,17 +1124,20 @@ class PDFGenerator:
             fontName='Helvetica-Bold'
         )
         
-        # Logo - EXACTLY matching target size and position
+        # Professional logo - using the new high-quality version
         try:
-            logo_path = '/app/frontend/public/activus-logo.png'
+            logo_path = '/app/frontend/public/activus-new-logo.png'
             if os.path.exists(logo_path):
-                logo_img = RLImage(logo_path, width=120, height=60)  # Professional size matching target
+                # Professional logo sizing - should be prominently visible
+                logo_img = RLImage(logo_path, width=160, height=80)  # Larger for better visibility
             else:
-                logo_img = Paragraph("ACTIVUS INDUSTRIAL<br/>DESIGN & BUILD LLP<br/><i>One Stop Solution is What We Do</i>", 
-                                   ParagraphStyle('LogoText', fontSize=12, alignment=TA_RIGHT, fontName='Helvetica-Bold'))
-        except:
-            logo_img = Paragraph("ACTIVUS INDUSTRIAL<br/>DESIGN & BUILD LLP<br/><i>One Stop Solution is What We Do</i>", 
-                               ParagraphStyle('LogoText', fontSize=12, alignment=TA_RIGHT, fontName='Helvetica-Bold'))
+                # Fallback if logo not found
+                logo_img = Paragraph("ACTIVUS INDUSTRIAL<br/>DESIGN & BUILD PRIVATE LIMITED<br/><i>One Stop Solution is What We Do</i>", 
+                                   ParagraphStyle('LogoText', fontSize=11, alignment=TA_RIGHT, fontName='Helvetica-Bold', textColor=colors.HexColor('#127285')))
+        except Exception as e:
+            # Fallback text version
+            logo_img = Paragraph("ACTIVUS INDUSTRIAL<br/>DESIGN & BUILD PRIVATE LIMITED<br/><i>One Stop Solution is What We Do</i>", 
+                               ParagraphStyle('LogoText', fontSize=11, alignment=TA_RIGHT, fontName='Helvetica-Bold', textColor=colors.HexColor('#127285')))
         
         # Header table exactly matching target layout
         header_data = [[
