@@ -1149,9 +1149,9 @@ class PDFGenerator:
         except:
             logo_content = Paragraph("<b>ACTIVUS INDUSTRIAL<br/>DESIGN & BUILD LLP</b><br/><i>One Stop Solution is What We Do</i>", logo_style)
         
-        # Header with PROMINENT TAX Invoice title and LARGE logo
+        # Logo only in header - TAX Invoice will be above invoice details
         header_data = [[
-            Paragraph("<b>TAX Invoice</b>", tax_invoice_style),
+            "",  # Empty left side
             logo_content
         ]]
         
@@ -1163,7 +1163,11 @@ class PDFGenerator:
         ]))
         
         elements.append(header_table)
-        elements.append(Spacer(1, 20))
+        elements.append(Spacer(1, 15))
+        
+        # TAX Invoice title ABOVE invoice number (as requested)
+        elements.append(Paragraph("<b>TAX Invoice</b>", tax_invoice_style))
+        elements.append(Spacer(1, 10))
         
         # ===== INVOICE IDENTIFICATION BLOCK =====
         invoice_id_style = ParagraphStyle(
