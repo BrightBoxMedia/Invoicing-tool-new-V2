@@ -1112,7 +1112,6 @@ class PDFGenerator:
         styles = getSampleStyleSheet()
         
         # ===== EXACT HEADER MATCHING TARGET PDF =====
-        from reportlab.platypus import Image as RLImage
         
         # TAX Invoice title - EXACTLY matching target PDF
         tax_invoice_style = ParagraphStyle(
