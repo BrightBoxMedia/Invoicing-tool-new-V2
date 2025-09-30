@@ -1099,63 +1099,50 @@ class PDFGenerator:
     async def generate_invoice_pdf(self, invoice: Invoice, project: Project, client: ClientInfo):
         buffer = io.BytesIO()
         
-        # Register proper fonts to handle rupee symbol
-        from reportlab.pdfbase import pdfmetrics
-        from reportlab.pdfbase.ttfonts import TTFont
-        
         doc = SimpleDocTemplate(
             buffer,
             pagesize=self.page_size,
-            rightMargin=15*mm,
-            leftMargin=15*mm, 
-            topMargin=15*mm,
-            bottomMargin=15*mm
+            rightMargin=20*mm,
+            leftMargin=20*mm, 
+            topMargin=20*mm,
+            bottomMargin=20*mm
         )
         
         elements = []
         styles = getSampleStyleSheet()
         
-        # ===== LARGE PROMINENT TAX INVOICE HEADER =====
+        # ===== EXACT MATCH TO TARGET PDF LAYOUT =====
+        
+        # Header section with TAX Invoice title on left, logo on right
         tax_invoice_style = ParagraphStyle(
             'TAXInvoiceTitle',
             parent=styles['Normal'],
-            fontSize=24,
+            fontSize=20,
             textColor=colors.black,
             alignment=TA_LEFT,
-            spaceAfter=15,
+            spaceAfter=0,
             fontName='Helvetica-Bold'
         )
         
-        # Company logo style for right side - MUCH LARGER
-        logo_style = ParagraphStyle(
-            'LogoStyle',
-            parent=styles['Normal'],
-            fontSize=16,
-            alignment=TA_RIGHT,
-            textColor=colors.HexColor('#127285'),
-            fontName='Helvetica-Bold',
-            lineHeight=18
-        )
-        
-        # MASSIVE LOGO - ACTUALLY VISIBLE
+        # Logo - EXACTLY matching target size and position
         try:
             logo_path = '/app/frontend/public/activus-logo.png'
             if os.path.exists(logo_path):
-                # BIGGER logo as requested
-                logo_img = RLImage(logo_path, width=400, height=200)  # Even bigger logo
-                logo_content = logo_img
+                logo_img = RLImage(logo_path, width=120, height=60)  # Professional size matching target
             else:
-                logo_content = Paragraph("<b>ACTIVUS INDUSTRIAL<br/>DESIGN & BUILD LLP</b><br/><i>One Stop Solution is What We Do</i>", logo_style)
+                logo_img = Paragraph("ACTIVUS INDUSTRIAL<br/>DESIGN & BUILD LLP<br/><i>One Stop Solution is What We Do</i>", 
+                                   ParagraphStyle('LogoText', fontSize=12, alignment=TA_RIGHT, fontName='Helvetica-Bold'))
         except:
-            logo_content = Paragraph("<b>ACTIVUS INDUSTRIAL<br/>DESIGN & BUILD LLP</b><br/><i>One Stop Solution is What We Do</i>", logo_style)
+            logo_img = Paragraph("ACTIVUS INDUSTRIAL<br/>DESIGN & BUILD LLP<br/><i>One Stop Solution is What We Do</i>", 
+                               ParagraphStyle('LogoText', fontSize=12, alignment=TA_RIGHT, fontName='Helvetica-Bold'))
         
-        # Logo only in header - TAX Invoice will be above invoice details
+        # Header table exactly matching target layout
         header_data = [[
-            "",  # Empty left side
-            logo_content
+            Paragraph("TAX Invoice", tax_invoice_style),
+            logo_img
         ]]
         
-        header_table = Table(header_data, colWidths=[200, 320])
+        header_table = Table(header_data, colWidths=[300, 200])
         header_table.setStyle(TableStyle([
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('LEFTPADDING', (0, 0), (-1, -1), 0),
@@ -1163,11 +1150,7 @@ class PDFGenerator:
         ]))
         
         elements.append(header_table)
-        elements.append(Spacer(1, 15))
-        
-        # TAX Invoice title ABOVE invoice number (as requested)
-        elements.append(Paragraph("<b>TAX Invoice</b>", tax_invoice_style))
-        elements.append(Spacer(1, 10))
+        elements.append(Spacer(1, 20))
         
         # ===== INVOICE IDENTIFICATION BLOCK =====
         invoice_id_style = ParagraphStyle(
