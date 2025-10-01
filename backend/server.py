@@ -72,6 +72,7 @@ import logging
 # Environment setup
 SECRET_KEY = os.getenv('JWT_SECRET', 'activus-invoice-secret-key-2025')
 MONGO_URL = os.getenv('MONGO_URL', 'mongodb://localhost:27017')
+PORT = int(os.getenv('PORT', '8001'))
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
