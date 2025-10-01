@@ -104,7 +104,7 @@ class PDFTemplateManager:
     async def save_template(self, template: PDFTemplateConfig) -> bool:
         """Save PDF template configuration"""
         try:
-            if self.db:
+            if self.db is not None:
                 # Deactivate all other templates
                 await self.db.update_many({}, {"$set": {"is_active": False}})
                 
