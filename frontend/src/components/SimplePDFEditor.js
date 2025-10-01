@@ -61,15 +61,17 @@ const LogoEditor = ({ logoUrl, logoWidth, logoHeight, logoX, logoY, logoLayer, l
         <div
             ref={logoRef}
             className={`absolute select-none border-2 transition-all group hover:border-blue-400 cursor-move ${
-                isDragging || isResizing ? 'border-blue-500 shadow-lg bg-blue-50 bg-opacity-20' : 'border-dashed border-gray-300 hover:border-solid hover:border-blue-400'
+                isDragging || isResizing ? 'border-blue-500 shadow-xl bg-blue-50 bg-opacity-30' : 'border-dashed border-gray-300 hover:border-solid hover:border-blue-400'
             }`}
             style={{
                 left: logoX,
                 top: logoY,
                 width: logoWidth,
                 height: logoHeight,
-                zIndex: logoLayer === 'above' ? 20 : 5,
-                cursor: isDragging ? 'grabbing' : 'grab'
+                zIndex: logoLayer === 'above' ? 30 : 5,
+                cursor: isDragging ? 'grabbing' : 'grab',
+                transform: isDragging ? 'scale(1.05)' : 'scale(1)',
+                pointerEvents: 'auto'
             }}
             onMouseDown={handleMouseDown}
         >
