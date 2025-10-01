@@ -133,11 +133,15 @@ class PDFTemplateManager:
     
     async def get_template_by_id(self, template_id: str) -> Optional[PDFTemplateConfig]:
         """Get specific template by ID"""
-        if self.db is not None:
-            template_data = await self.db.find_one({"id": template_id})
-            if template_data:
-                return PDFTemplateConfig(**template_data)
-        return None
+        try:
+            if hasattr(self, 'db') and self.db is not None:
+                template_data = await self.db.find_one({"id": template_id})
+                if template_data:
+                    return PDFTemplateConfig(**template_data)
+            return None
+        except Exception as e:
+            print(f"Error in get_template_by_id: {e}")
+            return None
     
     async def list_templates(self) -> list:
         """List all available templates"""
