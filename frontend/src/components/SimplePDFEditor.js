@@ -480,7 +480,7 @@ const SimplePDFEditor = ({ currentUser }) => {
         canvas_elements: {}
     });
 
-    const [activeTab, setActiveTab] = useState('company');
+    const [activeTab, setActiveTab] = useState('elements');
     const [saving, setSaving] = useState(false);
     const [uploadingLogo, setUploadingLogo] = useState(false);
 
