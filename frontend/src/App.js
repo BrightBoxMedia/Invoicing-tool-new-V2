@@ -189,7 +189,7 @@ const Sidebar = ({ currentUser }) => {
 
         {currentUser && (currentUser.role === 'admin' || currentUser.role === 'super_admin' || currentUser.role === 'Manager' || currentUser.role === 'SuperAdmin') && (
           <>
-            <div className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 mt-8">
+            <div className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 mt-8">
               Administration
             </div>
             {adminSections.map((section) => {
@@ -208,24 +208,28 @@ const Sidebar = ({ currentUser }) => {
               if (filteredItems.length === 0) return null;
               
               return (
-                <div key={section.title} className="mb-6">
-                  <div className="px-4 text-xs font-medium text-gray-700 mb-2 mt-4">
+                <div key={section.title} className="mb-5">
+                  <div className="px-4 text-xs font-semibold text-gray-700 uppercase tracking-wide mb-3">
                     {section.title}
                   </div>
-                  {filteredItems.map((item) => (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      className={`flex items-center px-6 py-2 text-sm font-medium transition-colors ${
-                        isActive(item.path)
-                          ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-700'
-                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                      }`}
-                    >
-                      <span className="mr-3">{item.icon}</span>
-                      {item.label}
-                    </Link>
-                  ))}
+                  <div className="space-y-1">
+                    {filteredItems.map((item) => (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        className={`flex items-center px-6 py-3 text-sm font-medium transition-all duration-200 ${
+                          isActive(item.path)
+                            ? 'bg-blue-50 text-blue-700 border-r-3 border-blue-600 shadow-sm'
+                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
+                        }`}
+                      >
+                        <span className="mr-3 text-base flex items-center justify-center w-5 h-5">{item.icon}</span>
+                        <span className="font-medium">{item.label}</span>
+                      </Link>
+                    ))}
+                  </div>
+                  {/* Add subtle separator between sections */}
+                  <div className="mx-4 mt-4 border-t border-gray-200"></div>
                 </div>
               );
             })}
