@@ -894,8 +894,44 @@ const SimplePDFEditor = ({ currentUser }) => {
                                                         Delete
                                                     </button>
                                                 </div>
+                                                
+                                                {/* Quick positioning controls */}
+                                                <div className="mt-3">
+                                                    <div className="text-sm font-medium text-purple-800 mb-2">Position:</div>
+                                                    <div className="grid grid-cols-3 gap-1 text-xs">
+                                                        <button
+                                                            onClick={() => updateElementPosition(selectedElement, 20, 20)}
+                                                            className="px-2 py-1 bg-white rounded border border-purple-300 hover:bg-purple-100"
+                                                        >
+                                                            Top-Left
+                                                        </button>
+                                                        <button
+                                                            onClick={() => updateElementPosition(selectedElement, 200, 20)}
+                                                            className="px-2 py-1 bg-white rounded border border-purple-300 hover:bg-purple-100"
+                                                        >
+                                                            Top-Center
+                                                        </button>
+                                                        <button
+                                                            onClick={() => updateElementPosition(selectedElement, 380, 20)}
+                                                            className="px-2 py-1 bg-white rounded border border-purple-300 hover:bg-purple-100"
+                                                        >
+                                                            Top-Right
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
                                         )}
+                                        
+                                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                            <h4 className="font-medium text-blue-900 mb-2">🎯 How to Use</h4>
+                                            <div className="text-sm text-blue-800 space-y-1">
+                                                <p>• <strong>Add:</strong> Click element buttons to add to canvas</p>
+                                                <p>• <strong>Move:</strong> Drag elements to reposition</p>
+                                                <p>• <strong>Edit:</strong> Double-click text to edit</p>
+                                                <p>• <strong>Select:</strong> Single-click to select elements</p>
+                                                <p>• <strong>Delete:</strong> Select element, then click Delete</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 )}
 
