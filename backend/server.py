@@ -2518,15 +2518,29 @@ async def download_invoice_pdf(invoice_id: str, current_user: dict = Depends(get
         if hasattr(project, 'gst_type') and project.gst_type:
             invoice.gst_type = project.gst_type
         
-        # Generate PDF
-        pdf_generator = PDFGenerator()
-        pdf_buffer = await pdf_generator.generate_invoice_pdf(invoice, project, client)
+        # Initialize template manager if not already done
+        if not template_manager.db:
+            await initialize_template_manager(db)
+        
+        # Get active template
+        template_config = await template_manager.get_active_template()
+        
+        # Generate PDF using template-driven system
+        pdf_data = await generate_template_driven_pdf(
+            template_config,
+            invoice_data,
+            client_data,
+            project_data
+        )
         
         # Return PDF response
         return Response(
-            content=pdf_buffer.getvalue(),
+            content=pdf_data,
             media_type="application/pdf",
-            headers={"Content-Disposition": f"attachment; filename={invoice.invoice_number}.pdf"}
+            headers={
+                "Content-Disposition": f"attachment; filename={invoice.invoice_number}.pdf",
+                "Content-Length": str(len(pdf_data))
+            }
         )
         
     except HTTPException:
