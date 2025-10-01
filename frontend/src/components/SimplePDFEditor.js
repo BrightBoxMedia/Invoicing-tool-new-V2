@@ -641,6 +641,11 @@ const SimplePDFEditor = ({ currentUser }) => {
             if (response.ok) {
                 const data = await response.json();
                 setTemplate(prev => ({ ...prev, ...data }));
+                
+                // Load canvas elements if they exist
+                if (data.canvas_elements) {
+                    setCanvasElements(data.canvas_elements);
+                }
             }
         } catch (error) {
             console.error('Error loading template:', error);
