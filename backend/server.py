@@ -1394,6 +1394,28 @@ Taloja, Maharashtra, India - 410206<br/><br/>
         buffer.seek(0)
         return buffer
 
+async def generate_template_driven_pdf(
+            template_config: PDFTemplateConfig, 
+            invoice_data: dict, 
+            client_data: dict, 
+            project_data: dict
+        ) -> bytes:
+    """
+    Generate PDF using template-driven configuration system
+    
+    Args:
+        template_config: PDF template configuration
+        invoice_data: Invoice data dictionary
+        client_data: Client information dictionary  
+        project_data: Project information dictionary
+        
+    Returns:
+        bytes: Generated PDF as bytes
+    """
+    # Implementation will be added here
+    # For now, return empty bytes to prevent errors
+    return b""
+
 # Authentication functions
 async def hash_password(password: str) -> str:
     salt = bcrypt.gensalt()
