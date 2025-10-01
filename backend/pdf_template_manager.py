@@ -94,7 +94,7 @@ class PDFTemplateManager:
     async def get_active_template(self) -> PDFTemplateConfig:
         """Get the currently active PDF template"""
         try:
-            if self.db is not None:
+            if hasattr(self, 'db') and self.db is not None:
                 template_data = await self.db.find_one({"is_active": True})
                 if template_data:
                     return PDFTemplateConfig(**template_data)
