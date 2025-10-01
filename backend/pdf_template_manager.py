@@ -141,10 +141,14 @@ class PDFTemplateManager:
     
     async def list_templates(self) -> list:
         """List all available templates"""
-        if self.db is not None:
-            templates = await self.db.find().to_list(length=None)
-            return [PDFTemplateConfig(**t) for t in templates]
-        return [PDFTemplateConfig()]  # Default template
+        try:
+            if self.db is not None:
+                templates = await self.db.find().to_list(length=None)
+                return [PDFTemplateConfig(**t) for t in templates]
+            return [PDFTemplateConfig()]  # Default template
+        except Exception as e:
+            print(f"Error in list_templates: {e}")
+            return [PDFTemplateConfig()]  # Return default template on error
     
     def generate_column_widths(self, template: PDFTemplateConfig) -> list:
         """Generate column widths array from template config"""
