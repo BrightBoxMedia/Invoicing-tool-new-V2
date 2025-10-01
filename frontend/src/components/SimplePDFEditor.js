@@ -1465,74 +1465,76 @@ const SimplePDFEditor = ({ currentUser }) => {
                         </div>
                     </div>
 
-                    {/* Right Panel - Live Preview */}
-                    <div className="space-y-6">
+                    {/* Middle Panel - Interactive Canvas */}
+                    <div className="lg:col-span-2 space-y-6">
                         <div className="bg-white rounded-lg shadow-sm p-6">
-                            <h3 className="text-lg font-medium text-gray-900 mb-4">Live Preview</h3>
-                            
-                            {/* Invoice Preview - Canva Style Free Area */}
-                            <div className="border border-gray-300 bg-white p-6 rounded-lg relative overflow-visible" style={{ fontSize: '12px', fontFamily: 'Arial, sans-serif', minHeight: '800px' }}>
-                                
-                                {/* Header with ALL Draggable Elements */}
-                                <div className="relative mb-6" style={{ minHeight: '200px', overflow: 'visible' }}>
-                                    
-                                    {/* Draggable TAX INVOICE Title */}
-                                    <DraggableElement
-                                        elementId="tax-invoice-title"
-                                        x={template.title_x || 20}
-                                        y={template.title_y || 20}
-                                        onPositionChange={(x, y) => {
-                                            updateField('title_x', x);
-                                            updateField('title_y', y);
-                                        }}
-                                    >
-                                        <h1 
-                                            className="font-bold select-none" 
-                                            style={{ 
-                                                fontSize: `${template.header_font_size}px`, 
-                                                color: template.header_text_color 
-                                            }}
-                                        >
-                                            TAX INVOICE
-                                        </h1>
-                                    </DraggableElement>
-                                    
-                                    {/* Draggable Invoice Details */}
-                                    <DraggableElement
-                                        elementId="invoice-details"
-                                        x={template.details_x || 20}
-                                        y={template.details_y || 70}
-                                        onPositionChange={(x, y) => {
-                                            updateField('details_x', x);
-                                            updateField('details_y', y);
-                                        }}
-                                    >
-                                        <div style={{ 
-                                            fontSize: `${template.content_font_size}px`,
-                                            color: template.invoice_details_text_color 
-                                        }}>
-                                            <div><strong>Invoice No:</strong> #PREVIEW-001</div>
-                                            <div><strong>Invoice Date:</strong> {new Date().toLocaleDateString()}</div>
-                                            <div><strong>Created By:</strong> {template.company_name}</div>
-                                        </div>
-                                    </DraggableElement>
-                                    
-                                    {/* Draggable Logo */}
-                                    {template.logo_url && (
-                                        <DraggableLogo 
-                                            logoUrl={template.logo_url}
-                                            logoWidth={template.logo_width}
-                                            logoHeight={template.logo_height}
-                                            logoX={template.logo_x || 350}
-                                            logoY={template.logo_y || 20}
-                                            onLogoChange={(changes) => {
-                                                Object.keys(changes).forEach(key => {
-                                                    updateField(key, changes[key]);
-                                                });
-                                            }}
-                                        />
-                                    )}
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-lg font-medium text-gray-900">Interactive Canvas</h3>
+                                <div className="text-sm text-gray-500">
+                                    Click elements to select • Double-click to edit • Drag to move
                                 </div>
+                            </div>
+                            
+                            {/* Interactive Canvas - Canva Style */}
+                            <div 
+                                className="border border-gray-300 bg-white rounded-lg relative overflow-visible cursor-default"
+                                style={{ 
+                                    fontSize: '12px', 
+                                    fontFamily: 'Arial, sans-serif', 
+                                    minHeight: '800px',
+                                    width: '600px',
+                                    maxWidth: '100%'
+                                }}
+                                onClick={handleCanvasClick}
+                            >
+                                {/* Render all canvas elements */}
+                                {Object.entries(canvasElements).map(([elementId, element]) => {
+                                    const isSelected = selectedElement === elementId;
+                                    
+                                    return (
+                                        <DraggableElement
+                                            key={elementId}
+                                            elementId={elementId}
+                                            x={element.x}
+                                            y={element.y}
+                                            width={element.width}
+                                            height={element.height}
+                                            isSelected={isSelected}
+                                            onSelect={setSelectedElement}
+                                            onPositionChange={(x, y) => updateElementPosition(elementId, x, y)}
+                                            onSizeChange={(width, height) => updateElementSize(elementId, width, height)}
+                                            canResize={element.type !== 'text'}
+                                            zIndex={element.zIndex || 10}
+                                        >
+                                            {renderElementContent(elementId, element)}
+                                        </DraggableElement>
+                                    );
+                                })}
+                                
+                                {/* Logo element (if exists) */}
+                                {template.logo_url && (
+                                    <DraggableLogo 
+                                        logoUrl={template.logo_url}
+                                        logoWidth={template.logo_width}
+                                        logoHeight={template.logo_height}
+                                        logoX={template.logo_x || 350}
+                                        logoY={template.logo_y || 20}
+                                        onLogoChange={(changes) => {
+                                            Object.keys(changes).forEach(key => {
+                                                updateField(key, changes[key]);
+                                            });
+                                        }}
+                                    />
+                                )}
+                                
+                                {/* Canvas guide lines (optional) */}
+                                {selectedElement && (
+                                    <>
+                                        <div className="absolute top-0 left-0 w-full h-px bg-blue-300 opacity-50 pointer-events-none" style={{ top: canvasElements[selectedElement]?.y }} />
+                                        <div className="absolute top-0 left-0 w-px h-full bg-blue-300 opacity-50 pointer-events-none" style={{ left: canvasElements[selectedElement]?.x }} />
+                                    </>
+                                )}
+                            </div>
 
                                 {/* Company and Client Info */}
                                 <div className="grid grid-cols-2 gap-4 mb-6">
