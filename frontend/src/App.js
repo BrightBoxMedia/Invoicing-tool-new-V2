@@ -10,8 +10,6 @@ import SmartSearch from './components/SmartSearch';
 import Reports from './components/Reports';
 import AdminInterface from './components/AdminInterface';
 import CompanyProfileManagement from './components/CompanyProfileManagement';
-import InvoiceDesignCustomizer from './components/InvoiceDesignCustomizer';
-import PixelPerfectInvoiceTemplate from './components/PixelPerfectInvoiceTemplate';
 import ModernPDFDesigner2025 from './components/ModernPDFDesigner2025';
 import EnhancedInvoiceCreation from './components/EnhancedInvoiceCreation';
 import InvoiceSuccessModal from './components/InvoiceSuccessModal';
