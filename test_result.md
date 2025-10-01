@@ -105,6 +105,55 @@
 ## user_problem_statement: "Build a Super Admin PDF Template Management System that allows creating and editing multiple PDF invoice templates through a user interface with live preview, logo upload, and dynamic template application to all invoice generation."
 
 ## backend:
+  - task: "PDF Template Management System Backend"
+    implemented: false
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+        - working: false
+        - agent: "main"
+        - comment: "Starting implementation of Super Admin PDF Template Management System - need to create API endpoints for template CRUD operations, logo upload, and dynamic PDF generation integration."
+
+  - task: "PDF Template CRUD API Endpoints" 
+    implemented: false
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical" 
+    needs_retesting: true
+    status_history:
+        - working: false
+        - agent: "main"
+        - comment: "Need to implement: GET /api/admin/pdf-template/active, POST /api/admin/pdf-template, POST /api/admin/pdf-template/preview endpoints as expected by frontend PDFTemplateManager.js"
+
+  - task: "Dynamic PDF Generation Engine"
+    implemented: false
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+        - working: false
+        - agent: "main"
+        - comment: "Need to replace static ReportLab PDF generation with dynamic template-driven system that reads from database templates and applies styling/layout configurations."
+
+  - task: "Logo Upload and File Management"
+    implemented: false
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+        - agent: "main"
+        - comment: "Need to implement file upload endpoint for template logos with proper validation, storage, and integration with template system."
+
+## backend:
   - task: "Pixel Perfect Invoice PDF Generation"
     implemented: true
     working: true
