@@ -2205,7 +2205,10 @@ async def get_clients(current_user: dict = Depends(get_current_user)):
         # Convert MongoDB documents to proper format
         formatted_clients = []
         for client in clients:
-            client["id"] = client.pop("_id", str(client.get("_id", "")))
+            # Handle ObjectId serialization
+            if "_id" in client:
+                client["id"] = str(client["_id"])
+                del client["_id"]
             formatted_clients.append(client)
         
         return formatted_clients
