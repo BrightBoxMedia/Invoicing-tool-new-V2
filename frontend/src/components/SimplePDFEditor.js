@@ -766,6 +766,102 @@ const SimplePDFEditor = ({ currentUser }) => {
                     </div>
                 );
 
+            case 'table':
+                return (
+                    <div className="w-full border border-gray-400 rounded" style={{ fontSize: `${style.fontSize}px` }}>
+                        {/* Table Headers */}
+                        <div 
+                            className="grid grid-cols-7 border-b border-gray-400 font-bold text-white p-2"
+                            style={{ 
+                                backgroundColor: style.headerColor || '#127285',
+                                color: style.headerTextColor || '#ffffff',
+                                fontSize: `${style.fontSize}px`
+                            }}
+                        >
+                            {content.headers?.map((header, index) => (
+                                <div key={index} className="text-center text-xs">
+                                    <EditableText
+                                        text={header}
+                                        onTextChange={(newText) => {
+                                            const newHeaders = [...content.headers];
+                                            newHeaders[index] = newText;
+                                            updateElementContent(elementId, { headers: newHeaders });
+                                        }}
+                                        style={{ color: 'white', fontSize: `${(style.fontSize || 12) - 1}px` }}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                        
+                        {/* Table Rows */}
+                        {content.rows?.map((row, rowIndex) => (
+                            <div 
+                                key={rowIndex} 
+                                className={`grid grid-cols-7 border-b border-gray-300 p-2 ${rowIndex % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}
+                            >
+                                {row.map((cell, cellIndex) => (
+                                    <div key={cellIndex} className="text-center text-xs">
+                                        <EditableText
+                                            text={cell}
+                                            onTextChange={(newText) => {
+                                                const newRows = [...content.rows];
+                                                newRows[rowIndex][cellIndex] = newText;
+                                                updateElementContent(elementId, { rows: newRows });
+                                            }}
+                                            style={{ fontSize: `${(style.fontSize || 12) - 1}px` }}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        ))}
+                    </div>
+                );
+
+            case 'total-section':
+                return (
+                    <div 
+                        className="p-3 rounded border"
+                        style={{ 
+                            backgroundColor: style.backgroundColor,
+                            fontSize: `${style.fontSize}px`,
+                            color: style.color,
+                            borderColor: template.border_color
+                        }}
+                    >
+                        <div className="font-bold mb-2">
+                            <EditableText
+                                text={content.title}
+                                onTextChange={(newText) => updateElementContent(elementId, { title: newText })}
+                                style={{ fontWeight: 'bold' }}
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <div className="flex justify-between">
+                                <span>Subtotal:</span>
+                                <EditableText
+                                    text={content.subtotal}
+                                    onTextChange={(newText) => updateElementContent(elementId, { subtotal: newText })}
+                                />
+                            </div>
+                            <div className="flex justify-between">
+                                <span>IGST (18%):</span>
+                                <EditableText
+                                    text={content.igst}
+                                    onTextChange={(newText) => updateElementContent(elementId, { igst: newText })}
+                                />
+                            </div>
+                            <div className="flex justify-between font-bold border-t pt-1">
+                                <span>Total Amount:</span>
+                                <EditableText
+                                    text={content.total}
+                                    onTextChange={(newText) => updateElementContent(elementId, { total: newText })}
+                                    style={{ fontWeight: 'bold' }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                );
+
             default:
                 return (
                     <div style={{ fontSize: `${style.fontSize}px`, color: style.color }}>
