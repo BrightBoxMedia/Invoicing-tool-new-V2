@@ -98,7 +98,8 @@ security = HTTPBearer()
 
 # Database connection
 client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URL)
-db: AsyncIOMotorDatabase = client.activus_invoice_db
+DB_NAME = os.getenv('DB_NAME', 'activus_invoice_db')
+db: AsyncIOMotorDatabase = client[DB_NAME]
 
 # Real-time WebSocket Infrastructure for AWS Compatibility
 class ConnectionManager:
