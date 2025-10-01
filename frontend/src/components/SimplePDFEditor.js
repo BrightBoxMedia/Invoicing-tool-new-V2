@@ -834,7 +834,6 @@ const SimplePDFEditor = ({ currentUser }) => {
                                 </button>
                             </div>
 
-                            <div className="p-6">
                                 {/* Company Info Tab */}
                                 {activeTab === 'company' && (
                                     <div className="space-y-6">
