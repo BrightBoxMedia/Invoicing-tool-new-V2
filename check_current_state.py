@@ -7,7 +7,7 @@ import requests
 import json
 
 def check_current_state():
-    base_url = 'https://flex-invoice.preview.emergentagent.com/api'
+    base_url = 'https://template-maestro.preview.emergentagent.com/api'
     
     # Authenticate
     login_response = requests.post(f'{base_url}/auth/login', 

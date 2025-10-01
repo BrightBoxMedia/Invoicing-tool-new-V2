@@ -15,9 +15,9 @@ class DebugTester:
                         self.base_url = line.split('=')[1].strip()
                         break
                 else:
-                    self.base_url = "https://flex-invoice.preview.emergentagent.com"
+                    self.base_url = "https://template-maestro.preview.emergentagent.com"
         except:
-            self.base_url = "https://flex-invoice.preview.emergentagent.com"
+            self.base_url = "https://template-maestro.preview.emergentagent.com"
         
         self.api_url = f"{self.base_url}/api"
         self.token = None
