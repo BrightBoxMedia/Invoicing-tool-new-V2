@@ -93,13 +93,18 @@ class PDFTemplateManager:
         
     async def get_active_template(self) -> PDFTemplateConfig:
         """Get the currently active PDF template"""
-        if self.db is not None:
-            template_data = await self.db.find_one({"is_active": True})
-            if template_data:
-                return PDFTemplateConfig(**template_data)
-        
-        # Return default template if none found
-        return PDFTemplateConfig()
+        try:
+            if self.db is not None:
+                template_data = await self.db.find_one({"is_active": True})
+                if template_data:
+                    return PDFTemplateConfig(**template_data)
+            
+            # Return default template if none found
+            return PDFTemplateConfig()
+        except Exception as e:
+            print(f"Error in get_active_template: {e}")
+            # Return default template on error
+            return PDFTemplateConfig()
     
     async def save_template(self, template: PDFTemplateConfig) -> bool:
         """Save PDF template configuration"""
