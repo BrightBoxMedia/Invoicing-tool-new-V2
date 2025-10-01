@@ -108,6 +108,9 @@ class PDFTemplateConfig(BaseModel):
     # Custom Styling
     custom_css: Optional[str] = None
     
+    # Canvas Elements for Canva-like functionality
+    canvas_elements: Dict[str, CanvasElement] = {}
+    
     # Metadata
     created_by: str = "system"
     created_at: datetime = datetime.now(timezone.utc)
