@@ -1712,22 +1712,17 @@ async def verify_token(token: str) -> Dict:
         raise HTTPException(status_code=401, detail="Token expired")
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
-        else:
-            formatted_date = datetime.now(timezone.utc).strftime("%d/%m/%Y")
-        
-        # Invoice details
-        story.append(Paragraph(f"<b>Invoice No:</b> #{invoice_data.get('invoice_number', 'N/A')}", invoice_details_style))
-        story.append(Paragraph(f"<b>Invoice Date:</b> {formatted_date}", invoice_details_style))
-        story.append(Paragraph("<b>Created By:</b> Activus Industrial Design & Build", invoice_details_style))
-        story.append(Spacer(1, template_config.billing_section_spacing))
-        
-        # 3. BILLING SECTIONS
-        billing_style = ParagraphStyle(
-            'BillingStyle',
-            parent=styles['Normal'],
-            fontSize=template_config.billing_font_size,
-            fontName='Helvetica',
-            leading=template_config.billing_line_height
+
+# User authentication dependency
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    try:
+        token = credentials.credentials
+        payload = await verify_token(token)
+        return payload
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid authentication")
+
+# API Endpoints start here
         )
         
         # Create billing table
