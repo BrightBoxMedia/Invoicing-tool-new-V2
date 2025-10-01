@@ -2048,6 +2048,200 @@ async def upload_boq_file(file: UploadFile = File(...), current_user: dict = Dep
         logger.error(f"BOQ upload error: {e}")
         raise HTTPException(status_code=500, detail="Internal server error during file upload")
 
+# ============================================================================
+# PROJECTS API - CORE FUNCTIONALITY
+# ============================================================================
+
+@api_router.get("/projects")
+async def get_projects(current_user: dict = Depends(get_current_user)):
+    """Get all projects for the current user"""
+    try:
+        projects = await db.projects.find({"user_id": current_user["user_id"]}).to_list(length=None)
+        
+        # Convert MongoDB documents to proper format
+        formatted_projects = []
+        for project in projects:
+            project["id"] = project.pop("_id", str(project.get("_id", "")))
+            formatted_projects.append(project)
+        
+        return formatted_projects
+    except Exception as e:
+        logger.error(f"Error fetching projects: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching projects")
+
+@api_router.post("/projects")
+async def create_project(project_data: dict, current_user: dict = Depends(get_current_user)):
+    """Create a new project"""
+    try:
+        # Add metadata
+        project_data.update({
+            "id": f"proj_{int(datetime.now(timezone.utc).timestamp())}",
+            "user_id": current_user["user_id"],
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "status": "active"
+        })
+        
+        # Insert into database
+        result = await db.projects.insert_one(project_data)
+        
+        # Return the created project
+        project_data["_id"] = str(result.inserted_id)
+        return {"message": "Project created successfully", "project": project_data}
+        
+    except Exception as e:
+        logger.error(f"Error creating project: {e}")
+        raise HTTPException(status_code=500, detail="Error creating project")
+
+@api_router.put("/projects/{project_id}")
+async def update_project(project_id: str, project_data: dict, current_user: dict = Depends(get_current_user)):
+    """Update an existing project"""
+    try:
+        # Add updated timestamp
+        project_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+        
+        result = await db.projects.update_one(
+            {"id": project_id, "user_id": current_user["user_id"]},
+            {"$set": project_data}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Project not found")
+        
+        return {"message": "Project updated successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating project: {e}")
+        raise HTTPException(status_code=500, detail="Error updating project")
+
+@api_router.delete("/projects/{project_id}")
+async def delete_project(project_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a project"""
+    try:
+        result = await db.projects.delete_one({"id": project_id, "user_id": current_user["user_id"]})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Project not found")
+        
+        return {"message": "Project deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting project: {e}")
+        raise HTTPException(status_code=500, detail="Error deleting project")
+
+# ============================================================================
+# DASHBOARD API - STATS AND METRICS
+# ============================================================================
+
+@api_router.get("/dashboard/stats")
+async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
+    """Get dashboard statistics"""
+    try:
+        user_id = current_user["user_id"]
+        
+        # Get counts for different entities
+        projects_count = await db.projects.count_documents({"user_id": user_id, "status": "active"})
+        invoices_count = await db.invoices.count_documents({"user_id": user_id})
+        clients_count = await db.clients.count_documents({"user_id": user_id})
+        
+        # Get financial data
+        invoices = await db.invoices.find({"user_id": user_id}).to_list(length=None)
+        
+        total_revenue = sum(float(inv.get("total_amount", 0)) for inv in invoices)
+        pending_amount = sum(float(inv.get("total_amount", 0)) for inv in invoices if inv.get("status") != "paid")
+        
+        # Recent activity count
+        recent_activity = await db.activity_logs.count_documents({
+            "user_id": user_id,
+            "created_at": {"$gte": (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()}
+        })
+        
+        return {
+            "total_projects": projects_count,
+            "total_invoices": invoices_count,
+            "total_clients": clients_count,
+            "total_revenue": total_revenue,
+            "pending_amount": pending_amount,
+            "recent_activity": recent_activity,
+            "last_updated": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching dashboard stats: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching dashboard statistics")
+
+# ============================================================================
+# CLIENTS API - CLIENT MANAGEMENT
+# ============================================================================
+
+@api_router.get("/clients")
+async def get_clients(current_user: dict = Depends(get_current_user)):
+    """Get all clients for the current user"""
+    try:
+        clients = await db.clients.find({"user_id": current_user["user_id"]}).to_list(length=None)
+        
+        # Convert MongoDB documents to proper format
+        formatted_clients = []
+        for client in clients:
+            client["id"] = client.pop("_id", str(client.get("_id", "")))
+            formatted_clients.append(client)
+        
+        return formatted_clients
+    except Exception as e:
+        logger.error(f"Error fetching clients: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching clients")
+
+@api_router.post("/clients")
+async def create_client(client_data: dict, current_user: dict = Depends(get_current_user)):
+    """Create a new client"""
+    try:
+        # Add metadata
+        client_data.update({
+            "id": f"client_{int(datetime.now(timezone.utc).timestamp())}",
+            "user_id": current_user["user_id"],
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "status": "active"
+        })
+        
+        # Insert into database
+        result = await db.clients.insert_one(client_data)
+        
+        # Return the created client
+        client_data["_id"] = str(result.inserted_id)
+        return {"message": "Client created successfully", "client": client_data}
+        
+    except Exception as e:
+        logger.error(f"Error creating client: {e}")
+        raise HTTPException(status_code=500, detail="Error creating client")
+
+@api_router.put("/clients/{client_id}")
+async def update_client(client_id: str, client_data: dict, current_user: dict = Depends(get_current_user)):
+    """Update an existing client"""
+    try:
+        # Add updated timestamp
+        client_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+        
+        result = await db.clients.update_one(
+            {"id": client_id, "user_id": current_user["user_id"]},
+            {"$set": client_data}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        return {"message": "Client updated successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating client: {e}")
+        raise HTTPException(status_code=500, detail="Error updating client")
+
 # Include the API router in the app
 app.include_router(api_router)
 
