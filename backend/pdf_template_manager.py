@@ -190,10 +190,14 @@ template_manager = PDFTemplateManager()
 async def initialize_template_manager(db):
     """Initialize the template manager with database connection"""
     global template_manager
-    template_manager.db = db.pdf_templates
-    
-    # Ensure default template exists
-    default_exists = await template_manager.db.find_one({"id": "default"})
-    if not default_exists:
-        default_template = PDFTemplateConfig()
-        await template_manager.save_template(default_template)
+    try:
+        template_manager.db = db.pdf_templates
+        
+        # Ensure default template exists
+        default_exists = await template_manager.db.find_one({"id": "default"})
+        if not default_exists:
+            default_template = PDFTemplateConfig()
+            await template_manager.save_template(default_template)
+    except Exception as e:
+        print(f"Error initializing template manager: {e}")
+        # Continue without database connection - will use default template
