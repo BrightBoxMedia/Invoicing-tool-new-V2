@@ -25,14 +25,16 @@ const LogoEditor = ({ logoUrl, logoWidth, logoHeight, logoX, logoY, logoLayer, l
     const handleMouseMove = (e) => {
         if (isDragging) {
             const containerRect = logoRef.current.parentElement.getBoundingClientRect();
-            const newX = Math.max(0, Math.min(e.clientX - dragStart.x - containerRect.left, containerRect.width - logoWidth));
-            const newY = Math.max(0, Math.min(e.clientY - dragStart.y - containerRect.top, containerRect.height - logoHeight));
+            // COMPLETELY FREE MOVEMENT - No restrictions!
+            const newX = e.clientX - dragStart.x - containerRect.left;
+            const newY = e.clientY - dragStart.y - containerRect.top;
             
             onLogoChange({ logo_x: newX, logo_y: newY });
         } else if (isResizing) {
             const containerRect = logoRef.current.parentElement.getBoundingClientRect();
-            const newWidth = Math.max(50, Math.min(e.clientX - containerRect.left - logoX, 300));
-            const newHeight = Math.max(30, Math.min(e.clientY - containerRect.top - logoY, 200));
+            // FREE RESIZING - Much more flexible limits
+            const newWidth = Math.max(20, Math.min(e.clientX - containerRect.left - logoX, 500));
+            const newHeight = Math.max(15, Math.min(e.clientY - containerRect.top - logoY, 300));
             
             onLogoChange({ logo_width: newWidth, logo_height: newHeight });
         }
