@@ -1436,22 +1436,70 @@ async def generate_template_driven_pdf(
         # Get styles
         styles = getSampleStyleSheet()
         
-        # 1. TAX INVOICE HEADER
-        header_style = ParagraphStyle(
-            'CustomHeader',
-            parent=styles['Normal'],
-            fontSize=template_config.header_tax_invoice_font_size,
-            alignment=getattr(
-                sys.modules['reportlab.lib.enums'], 
-                f'TA_{template_config.header_tax_invoice_alignment}', 
-                TA_CENTER
-            ),
-            textColor=colors.toColor(template_config.header_tax_invoice_color),
-            fontName='Helvetica-Bold',
-            spaceAfter=template_config.invoice_details_spacing
-        )
+        # 1. HEADER WITH LOGO AND TAX INVOICE TITLE
+        # Create header table with logo and title
+        header_data = []
         
-        story.append(Paragraph("TAX INVOICE", header_style))
+        # Check if template has logo
+        if hasattr(template_config, 'logo_url') and template_config.logo_url:
+            try:
+                # Handle base64 logo
+                if template_config.logo_url.startswith('data:image'):
+                    # Extract base64 data
+                    logo_data = template_config.logo_url.split(',')[1]
+                    logo_bytes = base64.b64decode(logo_data)
+                    logo_buffer = BytesIO(logo_bytes)
+                    
+                    # Create logo image
+                    logo_img = RLImage(
+                        logo_buffer,
+                        width=template_config.logo_width,
+                        height=template_config.logo_height
+                    )
+                    
+                    # Create header with logo
+                    if template_config.logo_position == "TOP_LEFT":
+                        header_data = [[logo_img, "TAX INVOICE"]]
+                    else:  # TOP_RIGHT (default)
+                        header_data = [["TAX INVOICE", logo_img]]
+                        
+                    header_table = Table(header_data, colWidths=[95*mm, 95*mm])
+                    header_table.setStyle(TableStyle([
+                        ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+                        ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+                        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, -1), template_config.header_tax_invoice_font_size),
+                        ('TEXTCOLOR', (0, 0), (-1, -1), colors.toColor(template_config.header_tax_invoice_color)),
+                        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')
+                    ]))
+                    story.append(header_table)
+                    
+            except Exception as e:
+                logger.warning(f"Logo rendering failed: {e}")
+                # Fallback to text-only header
+                header_style = ParagraphStyle(
+                    'CustomHeader',
+                    parent=styles['Normal'],
+                    fontSize=template_config.header_tax_invoice_font_size,
+                    alignment=TA_CENTER,
+                    textColor=colors.toColor(template_config.header_tax_invoice_color),
+                    fontName='Helvetica-Bold',
+                    spaceAfter=template_config.invoice_details_spacing
+                )
+                story.append(Paragraph("TAX INVOICE", header_style))
+        else:
+            # No logo - text-only header
+            header_style = ParagraphStyle(
+                'CustomHeader',
+                parent=styles['Normal'],
+                fontSize=template_config.header_tax_invoice_font_size,
+                alignment=TA_CENTER,
+                textColor=colors.toColor(template_config.header_tax_invoice_color),
+                fontName='Helvetica-Bold',
+                spaceAfter=template_config.invoice_details_spacing
+            )
+            story.append(Paragraph("TAX INVOICE", header_style))
+            
         story.append(Spacer(1, 10))
         
         # 2. INVOICE DETAILS SECTION
