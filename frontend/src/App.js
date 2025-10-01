@@ -125,14 +125,39 @@ const Sidebar = ({ currentUser }) => {
     { path: '/company-profiles', icon: '🏢', label: 'Company Profiles' },
   ];
 
-  const adminItems = [
-    { path: '/activity-logs', icon: '📝', label: 'Activity Logs' },
-    { path: '/user-management', icon: '👤', label: 'User Management' },
-    { path: '/admin-interface', icon: '⚙️', label: 'Admin Interface' },
-    { path: '/gst-approval', icon: '🧾', label: 'GST Approval', roles: ['Manager', 'SuperAdmin'] },
-    { path: '/amendment-requests', icon: '📝', label: 'Amendment Requests', roles: ['Manager', 'SuperAdmin'] },
-    { path: '/invoice-design', icon: '🎨', label: 'Invoice Template' },
-    { path: '/pdf-template-manager', icon: '📄', label: 'PDF Template Manager', roles: ['super_admin'] },
+  // Organized admin menu with professional grouping
+  const adminSections = [
+    {
+      title: 'System Logs',
+      items: [
+        { path: '/activity-logs', icon: '📊', label: 'Activity Logs' },
+      ]
+    },
+    {
+      title: 'User & Access Management',
+      items: [
+        { path: '/user-management', icon: '👤', label: 'User Management' },
+      ]
+    },
+    {
+      title: 'System Configuration',
+      items: [
+        { path: '/admin-interface', icon: '⚙️', label: 'System Settings' },
+        { path: '/gst-approval', icon: '🧾', label: 'GST Approval', roles: ['Manager', 'SuperAdmin'] },
+      ]
+    },
+    {
+      title: 'Document Templates',
+      items: [
+        { path: '/pdf-template-manager', icon: '📄', label: 'Invoice PDF Designer', roles: ['super_admin'] },
+      ]
+    },
+    {
+      title: 'Workflow Management',
+      items: [
+        { path: '/amendment-requests', icon: '📝', label: 'Amendment Requests', roles: ['Manager', 'SuperAdmin'] },
+      ]
+    }
   ];
 
   const isActive = (path) => location.pathname === path;
