@@ -1689,15 +1689,6 @@ async def generate_template_driven_pdf(
 # End of generate_template_driven_pdf function
 # Authentication functions
 async def hash_password(password: str) -> str:
-                    story.append(header_table)
-                    
-            except Exception as e:
-                logger.warning(f"Logo rendering failed: {e}")
-                # Fallback to text-only header
-                header_style = ParagraphStyle(
-                    'CustomHeader',
-                    parent=styles['Normal'],
-                    fontSize=template_config.header_tax_invoice_font_size,
                     alignment=TA_CENTER,
                     textColor=colors.toColor(template_config.header_tax_invoice_color),
                     fontName='Helvetica-Bold',
