@@ -1689,24 +1689,8 @@ async def generate_template_driven_pdf(
 # End of generate_template_driven_pdf function
 # Authentication functions
 async def hash_password(password: str) -> str:
-                    alignment=TA_CENTER,
-                    textColor=colors.toColor(template_config.header_tax_invoice_color),
-                    fontName='Helvetica-Bold',
-                    spaceAfter=template_config.invoice_details_spacing
-                )
-                story.append(Paragraph("TAX INVOICE", header_style))
-        else:
-            # No logo - text-only header
-            header_style = ParagraphStyle(
-                'CustomHeader',
-                parent=styles['Normal'],
-                fontSize=template_config.header_tax_invoice_font_size,
-                alignment=TA_CENTER,
-                textColor=colors.toColor(template_config.header_tax_invoice_color),
-                fontName='Helvetica-Bold',
-                spaceAfter=template_config.invoice_details_spacing
-            )
-            story.append(Paragraph("TAX INVOICE", header_style))
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
             
         story.append(Spacer(1, 10))
         
