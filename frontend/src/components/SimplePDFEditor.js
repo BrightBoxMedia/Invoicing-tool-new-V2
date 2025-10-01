@@ -373,14 +373,14 @@ const SimplePDFEditor = ({ currentUser }) => {
     const [canvasElements, setCanvasElements] = useState({
         'tax-invoice-title': {
             type: 'text',
-            x: 20, y: 20, width: 200, height: 40,
+            x: 200, y: 20, width: 200, height: 40,
             content: 'TAX INVOICE',
             style: { fontSize: 24, fontWeight: 'bold', color: '#127285' },
             editable: true
         },
         'invoice-details': {
             type: 'text-group',
-            x: 20, y: 70, width: 300, height: 80,
+            x: 20, y: 80, width: 300, height: 80,
             content: {
                 invoice_no: '#PREVIEW-001',
                 invoice_date: new Date().toLocaleDateString(),
@@ -405,7 +405,7 @@ const SimplePDFEditor = ({ currentUser }) => {
         },
         'billed-to-section': {
             type: 'info-section',
-            x: 290, y: 180, width: 250, height: 150,
+            x: 310, y: 180, width: 250, height: 150,
             content: {
                 title: 'BILLED TO:',
                 company_name: 'Sample Client Ltd.',
@@ -419,12 +419,44 @@ const SimplePDFEditor = ({ currentUser }) => {
         },
         'project-info': {
             type: 'text-group',
-            x: 20, y: 350, width: 500, height: 40,
+            x: 20, y: 350, width: 520, height: 60,
             content: {
                 project_name: 'Sample Construction Project',
                 location: 'Sample Location, Sample City'
             },
             style: { fontSize: 12, color: '#000000' },
+            editable: true
+        },
+        'items-table': {
+            type: 'table',
+            x: 20, y: 430, width: 540, height: 200,
+            content: {
+                headers: ['Item', 'GST Rate', 'Qty', 'Rate', 'Amount', 'IGST', 'Total'],
+                rows: [
+                    ['Sample Construction Work', '18%', '100', 'Rs. 1,000', 'Rs. 100,000', 'Rs. 18,000', 'Rs. 118,000'],
+                    ['Additional Work', '18%', '50', 'Rs. 800', 'Rs. 40,000', 'Rs. 7,200', 'Rs. 47,200']
+                ]
+            },
+            style: { fontSize: 11, backgroundColor: '#f8fafc', headerColor: '#127285', headerTextColor: '#ffffff' },
+            editable: true
+        },
+        'total-section': {
+            type: 'info-section',
+            x: 350, y: 650, width: 210, height: 100,
+            content: {
+                title: 'TOTAL SUMMARY:',
+                subtotal: 'Rs. 140,000',
+                igst: 'Rs. 25,200',
+                total: 'Rs. 165,200'
+            },
+            style: { backgroundColor: '#f0f9ff', fontSize: 12, color: '#000000' },
+            editable: true
+        },
+        'footer-section': {
+            type: 'text',
+            x: 20, y: 770, width: 540, height: 40,
+            content: 'Thank you for your business!\n\nAuthorised Signatory',
+            style: { fontSize: 12, color: '#000000', textAlign: 'center' },
             editable: true
         }
     });
