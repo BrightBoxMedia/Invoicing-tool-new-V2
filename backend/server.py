@@ -287,8 +287,7 @@ async def generate_traditional_pdf(
     project_data: dict
 ) -> bytes:
     """Traditional PDF generation using ReportLab Platypus (story-based)"""
-    # This is the existing implementation - will be renamed from generate_template_driven_pdf
-    pass
+    try:
 
 # Environment setup
 SECRET_KEY = os.getenv('JWT_SECRET', 'activus-invoice-secret-key-2025')
