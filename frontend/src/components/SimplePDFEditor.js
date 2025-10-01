@@ -1,5 +1,273 @@
 import React, { useState, useEffect, useRef } from 'react';
 
+// ============================================================================
+// PHASE 1: CORE CANVAS INFRASTRUCTURE - CANVA-LIKE FUNCTIONALITY
+// ============================================================================
+
+// Universal Draggable Element Component - Works for ANY element type
+const DraggableElement = ({ 
+    children, 
+    elementId, 
+    x, 
+    y, 
+    width, 
+    height, 
+    onPositionChange, 
+    onSizeChange, 
+    onDoubleClick,
+    isSelected = false,
+    onSelect,
+    canResize = false,
+    zIndex = 10
+}) => {
+    const [isDragging, setIsDragging] = useState(false);
+    const [isResizing, setIsResizing] = useState(false);
+    const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+
+    const handleMouseDown = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onSelect && onSelect(elementId);
+        setIsDragging(true);
+        setStartPos({
+            x: e.clientX - x,
+            y: e.clientY - y
+        });
+    };
+
+    const handleDoubleClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onDoubleClick && onDoubleClick(elementId);
+    };
+
+    const handleResizeStart = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsResizing(true);
+        setStartPos({
+            x: e.clientX,
+            y: e.clientY
+        });
+    };
+
+    useEffect(() => {
+        const handleMouseMove = (e) => {
+            if (isDragging) {
+                const newX = e.clientX - startPos.x;
+                const newY = e.clientY - startPos.y;
+                onPositionChange && onPositionChange(Math.max(0, newX), Math.max(0, newY));
+            } else if (isResizing && canResize) {
+                const deltaX = e.clientX - startPos.x;
+                const deltaY = e.clientY - startPos.y;
+                const newWidth = Math.max(50, (width || 100) + deltaX);
+                const newHeight = Math.max(30, (height || 50) + deltaY);
+                onSizeChange && onSizeChange(newWidth, newHeight);
+                setStartPos({ x: e.clientX, y: e.clientY });
+            }
+        };
+
+        const handleMouseUp = () => {
+            setIsDragging(false);
+            setIsResizing(false);
+        };
+
+        if (isDragging || isResizing) {
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+            
+            return () => {
+                document.removeEventListener('mousemove', handleMouseMove);
+                document.removeEventListener('mouseup', handleMouseUp);
+            };
+        }
+    }, [isDragging, isResizing, startPos, x, y, width, height, onPositionChange, onSizeChange, canResize]);
+
+    return (
+        <div
+            className={`absolute select-none group cursor-move ${
+                isSelected ? 'ring-2 ring-blue-500' : 'hover:ring-1 hover:ring-blue-300'
+            }`}
+            style={{
+                left: x,
+                top: y,
+                width: width || 'auto',
+                height: height || 'auto',
+                zIndex: isSelected ? zIndex + 10 : zIndex
+            }}
+            onMouseDown={handleMouseDown}
+            onDoubleClick={handleDoubleClick}
+        >
+            {/* Element Content */}
+            <div className="w-full h-full">
+                {children}
+            </div>
+            
+            {/* Selection Indicators */}
+            {isSelected && (
+                <>
+                    {/* Corner resize handles (only if resizable) */}
+                    {canResize && (
+                        <>
+                            <div
+                                className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-se-resize shadow-sm hover:bg-blue-600"
+                                onMouseDown={handleResizeStart}
+                                title="Drag to resize"
+                            />
+                            <div className="absolute -top-1 -left-1 w-2 h-2 bg-blue-500 border border-white rounded-full"></div>
+                            <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 border border-white rounded-full"></div>
+                            <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-blue-500 border border-white rounded-full"></div>
+                        </>
+                    )}
+                    
+                    {/* Element ID label */}
+                    <div className="absolute -top-6 left-0 text-xs bg-blue-500 text-white px-2 py-1 rounded opacity-75">
+                        {elementId}
+                    </div>
+                </>
+            )}
+        </div>
+    );
+};
+
+// Editable Text Component - Click to edit functionality
+const EditableText = ({ text, onTextChange, style = {}, className = "", placeholder = "Click to edit" }) => {
+    const [isEditing, setIsEditing] = useState(false);
+    const [editValue, setEditValue] = useState(text);
+    const inputRef = useRef(null);
+
+    useEffect(() => {
+        if (isEditing && inputRef.current) {
+            inputRef.current.focus();
+            inputRef.current.select();
+        }
+    }, [isEditing]);
+
+    const handleDoubleClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsEditing(true);
+        setEditValue(text);
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            saveText();
+        } else if (e.key === 'Escape') {
+            cancelEdit();
+        }
+    };
+
+    const saveText = () => {
+        onTextChange(editValue);
+        setIsEditing(false);
+    };
+
+    const cancelEdit = () => {
+        setEditValue(text);
+        setIsEditing(false);
+    };
+
+    if (isEditing) {
+        return (
+            <input
+                ref={inputRef}
+                type="text"
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                onBlur={saveText}
+                onKeyDown={handleKeyDown}
+                className={`bg-white border border-blue-500 rounded px-1 ${className}`}
+                style={style}
+                placeholder={placeholder}
+            />
+        );
+    }
+
+    return (
+        <span
+            className={`cursor-text hover:bg-blue-50 hover:outline hover:outline-1 hover:outline-blue-300 rounded px-1 ${className}`}
+            style={style}
+            onDoubleClick={handleDoubleClick}
+            title="Double-click to edit"
+        >
+            {text || placeholder}
+        </span>
+    );
+};
+
+// Multi-line Editable Text Component
+const EditableTextArea = ({ text, onTextChange, style = {}, className = "", placeholder = "Click to edit" }) => {
+    const [isEditing, setIsEditing] = useState(false);
+    const [editValue, setEditValue] = useState(text);
+    const textareaRef = useRef(null);
+
+    useEffect(() => {
+        if (isEditing && textareaRef.current) {
+            textareaRef.current.focus();
+            textareaRef.current.select();
+        }
+    }, [isEditing]);
+
+    const handleDoubleClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsEditing(true);
+        setEditValue(text);
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && e.ctrlKey) {
+            e.preventDefault();
+            saveText();
+        } else if (e.key === 'Escape') {
+            cancelEdit();
+        }
+    };
+
+    const saveText = () => {
+        onTextChange(editValue);
+        setIsEditing(false);
+    };
+
+    const cancelEdit = () => {
+        setEditValue(text);
+        setIsEditing(false);
+    };
+
+    if (isEditing) {
+        return (
+            <textarea
+                ref={textareaRef}
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                onBlur={saveText}
+                onKeyDown={handleKeyDown}
+                className={`bg-white border border-blue-500 rounded px-2 py-1 resize-none ${className}`}
+                style={{ ...style, minHeight: '60px' }}
+                placeholder={placeholder}
+                rows={3}
+            />
+        );
+    }
+
+    return (
+        <div
+            className={`cursor-text hover:bg-blue-50 hover:outline hover:outline-1 hover:outline-blue-300 rounded px-2 py-1 ${className}`}
+            style={style}
+            onDoubleClick={handleDoubleClick}
+            title="Double-click to edit (Ctrl+Enter to save)"
+        >
+            {text ? (
+                <div className="whitespace-pre-line">{text}</div>
+            ) : (
+                <div className="text-gray-400 italic">{placeholder}</div>
+            )}
+        </div>
+    );
+};
+
 // WORKING Draggable Logo - Actually Functions!
 const DraggableLogo = ({ logoUrl, logoWidth, logoHeight, logoX, logoY, onLogoChange }) => {
     const [isDragging, setIsDragging] = useState(false);
