@@ -885,17 +885,14 @@ const SimplePDFEditor = ({ currentUser }) => {
                                         </div>
                                     </div>
                                     
-                                    {/* Interactive Draggable Logo */}
+                                    {/* SIMPLE Draggable Logo */}
                                     {template.logo_url && (
-                                        <LogoEditor 
+                                        <DraggableLogo 
                                             logoUrl={template.logo_url}
                                             logoWidth={template.logo_width}
                                             logoHeight={template.logo_height}
-                                            logoX={template.logo_x || 400}
-                                            logoY={template.logo_y || 10}
-                                            logoLayer={template.logo_layer || 'above'}
-                                            logoOpacity={template.logo_opacity || 100}
-                                            logoFit={template.logo_fit || 'contain'}
+                                            logoX={template.logo_x || 350}
+                                            logoY={template.logo_y || 20}
                                             onLogoChange={(changes) => {
                                                 Object.keys(changes).forEach(key => {
                                                     updateField(key, changes[key]);
