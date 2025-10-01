@@ -13,6 +13,7 @@ import CompanyProfileManagement from './components/CompanyProfileManagement';
 import InvoiceDesignCustomizer from './components/InvoiceDesignCustomizer';
 import PixelPerfectInvoiceTemplate from './components/PixelPerfectInvoiceTemplate';
 import PDFTemplateManager from './components/PDFTemplateManager';
+import ModernPDFDesigner from './components/ModernPDFDesigner';
 import EnhancedInvoiceCreation from './components/EnhancedInvoiceCreation';
 import InvoiceSuccessModal from './components/InvoiceSuccessModal';
 import GSTApprovalInterface from './components/GSTApprovalInterface';
