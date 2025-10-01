@@ -1871,6 +1871,105 @@ const SimplePDFEditor = ({ currentUser }) => {
                                 </div>
                                 <div className="flex gap-2">
                                     <button
+                                        onClick={() => {
+                                            // Reset to original invoice design format
+                                            setCanvasElements({
+                                                'tax-invoice-title': {
+                                                    type: 'text',
+                                                    x: 200, y: 20, width: 200, height: 40,
+                                                    content: 'TAX INVOICE',
+                                                    style: { fontSize: 24, fontWeight: 'bold', color: '#127285' },
+                                                    editable: true
+                                                },
+                                                'invoice-details': {
+                                                    type: 'text-group',
+                                                    x: 20, y: 80, width: 300, height: 80,
+                                                    content: {
+                                                        invoice_no: '#PREVIEW-001',
+                                                        invoice_date: new Date().toLocaleDateString(),
+                                                        created_by: 'Activus Industrial Design & Build'
+                                                    },
+                                                    style: { fontSize: 12, color: '#000000' },
+                                                    editable: true
+                                                },
+                                                'billed-by-section': {
+                                                    type: 'info-section',
+                                                    x: 20, y: 180, width: 250, height: 150,
+                                                    content: {
+                                                        title: 'BILLED BY:',
+                                                        company_name: 'Activus Industrial Design & Build',
+                                                        company_address: 'Plot no. A-52, Sector no. 27, Phase - 2\nTaloja, Maharashtra, India - 410206',
+                                                        company_gst: '27ABCCS1234A1Z5',
+                                                        company_email: 'info@activus.co.in',
+                                                        company_phone: '+91 99999 99999'
+                                                    },
+                                                    style: { backgroundColor: '#e8f5e8', fontSize: 12, color: '#000000' },
+                                                    editable: true
+                                                },
+                                                'billed-to-section': {
+                                                    type: 'info-section',
+                                                    x: 310, y: 180, width: 250, height: 150,
+                                                    content: {
+                                                        title: 'BILLED TO:',
+                                                        company_name: 'Sample Client Ltd.',
+                                                        company_address: '123 Client Street, Client City - 400001',
+                                                        company_gst: '27BBBBB1234B1Z5',
+                                                        company_email: 'client@example.com',
+                                                        company_phone: '+91 9876543210'
+                                                    },
+                                                    style: { backgroundColor: '#e8f8ff', fontSize: 12, color: '#000000' },
+                                                    editable: true
+                                                },
+                                                'project-info': {
+                                                    type: 'text-group',
+                                                    x: 20, y: 350, width: 520, height: 60,
+                                                    content: {
+                                                        project_name: 'Sample Construction Project',
+                                                        location: 'Sample Location, Sample City'
+                                                    },
+                                                    style: { fontSize: 12, color: '#000000' },
+                                                    editable: true
+                                                },
+                                                'items-table': {
+                                                    type: 'table',
+                                                    x: 20, y: 430, width: 540, height: 200,
+                                                    content: {
+                                                        headers: ['Item', 'GST Rate', 'Qty', 'Rate', 'Amount', 'IGST', 'Total'],
+                                                        rows: [
+                                                            ['Sample Construction Work', '18%', '100', 'Rs. 1,000', 'Rs. 100,000', 'Rs. 18,000', 'Rs. 118,000'],
+                                                            ['Additional Work', '18%', '50', 'Rs. 800', 'Rs. 40,000', 'Rs. 7,200', 'Rs. 47,200']
+                                                        ]
+                                                    },
+                                                    style: { fontSize: 11, backgroundColor: '#f8fafc', headerColor: '#127285', headerTextColor: '#ffffff' },
+                                                    editable: true
+                                                },
+                                                'total-section': {
+                                                    type: 'info-section',
+                                                    x: 350, y: 650, width: 210, height: 100,
+                                                    content: {
+                                                        title: 'TOTAL SUMMARY:',
+                                                        subtotal: 'Rs. 140,000',
+                                                        igst: 'Rs. 25,200',
+                                                        total: 'Rs. 165,200'
+                                                    },
+                                                    style: { backgroundColor: '#f0f9ff', fontSize: 12, color: '#000000' },
+                                                    editable: true
+                                                },
+                                                'footer-section': {
+                                                    type: 'text',
+                                                    x: 20, y: 770, width: 540, height: 40,
+                                                    content: 'Thank you for your business!\n\nAuthorised Signatory',
+                                                    style: { fontSize: 12, color: '#000000', textAlign: 'center' },
+                                                    editable: true
+                                                }
+                                            });
+                                            setSelectedElement(null);
+                                        }}
+                                        className="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                                    >
+                                        Reset to Original Design
+                                    </button>
+                                    <button
                                         onClick={() => setCanvasElements({})}
                                         className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"
                                     >
