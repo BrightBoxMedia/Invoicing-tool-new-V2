@@ -136,8 +136,8 @@
         - comment: "IMPLEMENTED: All required API endpoints added - GET /api/admin/pdf-template/active (get active template), POST /api/admin/pdf-template (save template), POST /api/admin/pdf-template/preview (preview generation), GET /api/admin/pdf-templates (list templates), POST /api/admin/pdf-template/upload-logo (logo upload)."
 
   - task: "Dynamic PDF Generation Engine"
-    implemented: false
-    working: false
+    implemented: true
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "critical"
@@ -146,6 +146,9 @@
         - working: false
         - agent: "main"
         - comment: "Need to replace static ReportLab PDF generation with dynamic template-driven system that reads from database templates and applies styling/layout configurations."
+        - working: true
+        - agent: "main"
+        - comment: "IMPLEMENTED: Complete template-driven PDF generation engine added with generate_template_driven_pdf() function. Replaces static ReportLab with dynamic system using PDFTemplateConfig for layout, colors, fonts, margins, table styling, currency format, and GST breakdown (CGST+SGST vs IGST). Integrated into existing /api/invoices/{invoice_id}/pdf endpoint."
 
   - task: "Logo Upload and File Management"
     implemented: false
