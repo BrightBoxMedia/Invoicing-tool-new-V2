@@ -51,6 +51,7 @@ def custom_jsonable_encoder(obj):
 # Database
 import motor.motor_asyncio
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from pdf_template_manager import PDFTemplateManager, PDFTemplateConfig, initialize_template_manager
 
 # Excel processing
 import openpyxl
