@@ -767,6 +767,8 @@ const SimplePDFEditor = ({ currentUser }) => {
                                             logoX={template.logo_x || 400}
                                             logoY={template.logo_y || 10}
                                             logoLayer={template.logo_layer || 'above'}
+                                            logoOpacity={template.logo_opacity || 100}
+                                            logoFit={template.logo_fit || 'contain'}
                                             onLogoChange={(changes) => {
                                                 Object.keys(changes).forEach(key => {
                                                     updateField(key, changes[key]);
