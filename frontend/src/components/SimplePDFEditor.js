@@ -1,81 +1,97 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-// SIMPLE Draggable Logo - Just Works!
+// WORKING Draggable Logo - Actually Functions!
 const DraggableLogo = ({ logoUrl, logoWidth, logoHeight, logoX, logoY, onLogoChange }) => {
-    const [dragging, setDragging] = useState(false);
-    const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+    const [isDragging, setIsDragging] = useState(false);
+    const [isResizing, setIsResizing] = useState(false);
+    const [startPos, setStartPos] = useState({ x: 0, y: 0 });
 
-    const handleMouseDown = (e) => {
-        setDragging(true);
-        const rect = e.currentTarget.getBoundingClientRect();
-        setDragOffset({
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top
-        });
+    const handleDragStart = (e) => {
         e.preventDefault();
-    };
-
-    const handleGlobalMouseMove = (e) => {
-        if (!dragging) return;
-        
-        // Find the preview container
-        const container = document.querySelector('.border.border-gray-300.bg-white');
-        if (!container) return;
-        
-        const containerRect = container.getBoundingClientRect();
-        const newX = e.clientX - containerRect.left - dragOffset.x;
-        const newY = e.clientY - containerRect.top - dragOffset.y;
-        
-        onLogoChange({
-            logo_x: newX,
-            logo_y: newY
+        setIsDragging(true);
+        setStartPos({
+            x: e.clientX - logoX,
+            y: e.clientY - logoY
         });
     };
 
-    const handleMouseUp = () => {
-        setDragging(false);
+    const handleResizeStart = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsResizing(true);
+        setStartPos({
+            x: e.clientX,
+            y: e.clientY
+        });
     };
 
     useEffect(() => {
-        if (dragging) {
-            document.addEventListener('mousemove', handleGlobalMouseMove);
+        const handleMouseMove = (e) => {
+            if (isDragging) {
+                onLogoChange({
+                    logo_x: e.clientX - startPos.x,
+                    logo_y: e.clientY - startPos.y
+                });
+            } else if (isResizing) {
+                const deltaX = e.clientX - startPos.x;
+                const deltaY = e.clientY - startPos.y;
+                onLogoChange({
+                    logo_width: Math.max(50, logoWidth + deltaX),
+                    logo_height: Math.max(30, logoHeight + deltaY)
+                });
+                setStartPos({ x: e.clientX, y: e.clientY });
+            }
+        };
+
+        const handleMouseUp = () => {
+            setIsDragging(false);
+            setIsResizing(false);
+        };
+
+        if (isDragging || isResizing) {
+            document.addEventListener('mousemove', handleMouseMove);
             document.addEventListener('mouseup', handleMouseUp);
             
             return () => {
-                document.removeEventListener('mousemove', handleGlobalMouseMove);
+                document.removeEventListener('mousemove', handleMouseMove);
                 document.removeEventListener('mouseup', handleMouseUp);
             };
         }
-    }, [dragging, dragOffset]);
+    }, [isDragging, isResizing, startPos, logoX, logoY, logoWidth, logoHeight, onLogoChange]);
 
     return (
         <div
-            className={`absolute border-2 border-dashed border-blue-400 cursor-move hover:border-solid hover:shadow-lg ${
-                dragging ? 'border-blue-600 shadow-xl' : ''
-            }`}
+            className="absolute select-none group"
             style={{
                 left: logoX,
                 top: logoY,
                 width: logoWidth,
                 height: logoHeight,
-                zIndex: 10
+                zIndex: 20
             }}
-            onMouseDown={handleMouseDown}
         >
-            <img
-                src={logoUrl}
-                alt="Logo"
-                className="w-full h-full object-contain"
-                draggable={false}
-            />
-            
-            {/* Simple resize handle */}
+            {/* Logo Image with drag */}
             <div
-                className="absolute -bottom-1 -right-1 w-4 h-4 bg-blue-500 border border-white rounded cursor-se-resize"
-                onMouseDown={(e) => {
-                    e.stopPropagation();
-                    // Simple resize logic here
-                }}
+                className={`w-full h-full border-2 cursor-move ${
+                    isDragging 
+                        ? 'border-blue-500 shadow-lg' 
+                        : 'border-dashed border-gray-400 hover:border-blue-400'
+                }`}
+                onMouseDown={handleDragStart}
+            >
+                <img
+                    src={logoUrl}
+                    alt="Logo"
+                    className="w-full h-full object-contain pointer-events-none"
+                    draggable={false}
+                />
+            </div>
+            
+            {/* Working Resize Handle */}
+            <div
+                className="absolute -bottom-2 -right-2 w-4 h-4 bg-blue-500 border-2 border-white rounded-full cursor-se-resize shadow-md hover:bg-blue-600 group-hover:opacity-100 opacity-75"
+                onMouseDown={handleResizeStart}
+                title="Drag to resize"
             />
         </div>
     );
