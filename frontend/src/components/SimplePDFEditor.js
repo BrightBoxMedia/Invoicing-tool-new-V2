@@ -834,6 +834,71 @@ const SimplePDFEditor = ({ currentUser }) => {
                                 </button>
                             </div>
 
+                                {/* Elements Tab */}
+                                {activeTab === 'elements' && (
+                                    <div className="space-y-6">
+                                        <h3 className="text-lg font-medium text-gray-900">Add Elements</h3>
+                                        
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <button
+                                                onClick={() => addCanvasElement('text')}
+                                                className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-400 hover:bg-purple-50 transition-colors text-center"
+                                            >
+                                                <div className="text-2xl mb-2">📝</div>
+                                                <div className="font-medium">Text</div>
+                                                <div className="text-sm text-gray-500">Add text element</div>
+                                            </button>
+                                            
+                                            <button
+                                                onClick={() => addCanvasElement('text-group')}
+                                                className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-400 hover:bg-purple-50 transition-colors text-center"
+                                            >
+                                                <div className="text-2xl mb-2">📄</div>
+                                                <div className="font-medium">Text Group</div>
+                                                <div className="text-sm text-gray-500">Multiple text lines</div>
+                                            </button>
+                                            
+                                            <button
+                                                onClick={() => addCanvasElement('info-section')}
+                                                className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-400 hover:bg-purple-50 transition-colors text-center"
+                                            >
+                                                <div className="text-2xl mb-2">🏢</div>
+                                                <div className="font-medium">Info Section</div>
+                                                <div className="text-sm text-gray-500">Company/client info</div>
+                                            </button>
+                                            
+                                            <button
+                                                onClick={() => addCanvasElement('table')}
+                                                className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-400 hover:bg-purple-50 transition-colors text-center"
+                                            >
+                                                <div className="text-2xl mb-2">📊</div>
+                                                <div className="font-medium">Table</div>
+                                                <div className="text-sm text-gray-500">Data table</div>
+                                            </button>
+                                        </div>
+                                        
+                                        {selectedElement && (
+                                            <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                                                <h4 className="font-medium text-purple-900 mb-2">Selected: {selectedElement}</h4>
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => duplicateElement(selectedElement)}
+                                                        className="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700"
+                                                    >
+                                                        Duplicate
+                                                    </button>
+                                                    <button
+                                                        onClick={() => removeCanvasElement(selectedElement)}
+                                                        className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
                                 {/* Company Info Tab */}
                                 {activeTab === 'company' && (
                                     <div className="space-y-6">
