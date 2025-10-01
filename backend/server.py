@@ -1653,12 +1653,6 @@ async def generate_template_driven_pdf(
             logger.error(f"Fallback PDF generation also failed: {fallback_error}")
             raise
 # End of generate_template_driven_pdf function
-        
-        # Check if template has logo
-        if hasattr(template_config, 'logo_url') and template_config.logo_url:
-            try:
-                # Handle base64 logo
-                if template_config.logo_url.startswith('data:image'):
                     # Extract base64 data
                     logo_data = template_config.logo_url.split(',')[1]
                     logo_bytes = base64.b64decode(logo_data)
