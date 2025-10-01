@@ -1537,13 +1537,12 @@ async def generate_template_driven_pdf(
         # Create billing table
         billing_data = [
             [
-                Paragraph("""<b>BILLED BY:</b><br/>
-                Activus Industrial Design & Build<br/>
-                Plot no. A-52, Sector no. 27, Phase - 2<br/>
-                Taloja, Maharashtra, India - 410206<br/>
-                GST: 27ABCCS1234A1Z5<br/>
-                Email: info@activus.co.in<br/>
-                Phone: +91 99999 99999""", billing_style),
+                Paragraph(f"""<b>BILLED BY:</b><br/>
+                {getattr(template_config, 'company_name', 'Activus Industrial Design & Build')}<br/>
+                {getattr(template_config, 'company_address', 'Plot no. A-52, Sector no. 27, Phase - 2<br/>Taloja, Maharashtra, India - 410206')}<br/>
+                GST: {getattr(template_config, 'company_gst', '27ABCCS1234A1Z5')}<br/>
+                Email: {getattr(template_config, 'company_email', 'info@activus.co.in')}<br/>
+                Phone: {getattr(template_config, 'company_phone', '+91 99999 99999')}""", billing_style),
                 
                 Paragraph(f"""<b>BILLED TO:</b><br/>
                 {client_data.get('name', 'N/A')}<br/>
