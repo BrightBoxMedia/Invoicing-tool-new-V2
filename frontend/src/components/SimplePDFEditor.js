@@ -500,9 +500,10 @@ const SimplePDFEditor = ({ currentUser }) => {
                             {/* Invoice Preview */}
                             <div className="border border-gray-300 bg-white p-6 rounded-lg" style={{ fontSize: '12px', fontFamily: 'Arial, sans-serif' }}>
                                 
-                                {/* Header */}
-                                <div className="flex justify-between items-start mb-6">
-                                    <div>
+                                {/* Header with Interactive Logo */}
+                                <div className="relative mb-6" style={{ minHeight: '120px' }}>
+                                    {/* Header Text */}
+                                    <div className="relative z-10">
                                         <h1 
                                             className="font-bold mb-2" 
                                             style={{ 
@@ -519,18 +520,21 @@ const SimplePDFEditor = ({ currentUser }) => {
                                         </div>
                                     </div>
                                     
+                                    {/* Interactive Draggable Logo */}
                                     {template.logo_url && (
-                                        <div>
-                                            <img 
-                                                src={template.logo_url} 
-                                                alt="Logo" 
-                                                style={{ 
-                                                    width: `${template.logo_width}px`, 
-                                                    height: `${template.logo_height}px`,
-                                                    objectFit: 'contain'
-                                                }}
-                                            />
-                                        </div>
+                                        <LogoEditor 
+                                            logoUrl={template.logo_url}
+                                            logoWidth={template.logo_width}
+                                            logoHeight={template.logo_height}
+                                            logoX={template.logo_x || 400}
+                                            logoY={template.logo_y || 10}
+                                            logoLayer={template.logo_layer || 'above'}
+                                            onLogoChange={(changes) => {
+                                                Object.keys(changes).forEach(key => {
+                                                    updateField(key, changes[key]);
+                                                });
+                                            }}
+                                        />
                                     )}
                                 </div>
 
