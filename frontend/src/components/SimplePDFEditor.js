@@ -123,7 +123,7 @@ const SimplePDFEditor = ({ currentUser }) => {
         logo_y: 10,
         logo_layer: 'above', // 'above' or 'behind' text
         logo_opacity: 100,
-        logo_fit: 'contain'
+        logo_fit: 'contain',
         
         // Invoice Styling
         header_color: '#127285',
