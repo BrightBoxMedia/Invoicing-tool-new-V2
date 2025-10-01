@@ -207,6 +207,65 @@ async def generate_canvas_based_pdf(
                         if content.get('location'):
                             c.drawString(x, current_y, f"Location: {content['location']}")
                 
+                elif element_type == "table":
+                    # Table element (simplified for canvas)
+                    if isinstance(content, dict) and content.get('headers'):
+                        line_height = (style.fontSize or 11) + 2
+                        current_y = y
+                        
+                        # Draw headers
+                        c.setFillColor(colors.toColor(style.get('headerColor', '#127285')))
+                        c.rect(x, y, element.width, -20, fill=1, stroke=1)
+                        
+                        c.setFillColor(colors.toColor(style.get('headerTextColor', '#FFFFFF')))
+                        c.setFont("Helvetica-Bold", style.fontSize or 11)
+                        col_width = element.width / len(content['headers'])
+                        
+                        for i, header in enumerate(content['headers']):
+                            c.drawString(x + (i * col_width) + 5, current_y - 15, str(header))
+                        
+                        # Draw rows
+                        c.setFillColor(colors.toColor(style.color or "#000000"))
+                        c.setFont("Helvetica", (style.fontSize or 11) - 1)
+                        current_y -= 25
+                        
+                        if content.get('rows'):
+                            for row in content['rows'][:5]:  # Limit to 5 rows for preview
+                                for i, cell in enumerate(row):
+                                    c.drawString(x + (i * col_width) + 5, current_y, str(cell))
+                                current_y -= line_height + 2
+                
+                elif element_type == "total-section":
+                    # Total summary section
+                    if isinstance(content, dict):
+                        line_height = (style.fontSize or 12) + 2
+                        current_y = y
+                        
+                        # Draw background
+                        if style.get('backgroundColor'):
+                            c.setFillColor(colors.toColor(style['backgroundColor']))
+                            c.rect(x - 5, y - 5, element.width + 10, -(element.height or 80), fill=1, stroke=0)
+                            
+                        c.setFillColor(colors.toColor(style.color or "#000000"))
+                        
+                        # Draw title
+                        if content.get('title'):
+                            c.setFont("Helvetica-Bold", style.fontSize or 12)
+                            c.drawString(x, current_y, content['title'])
+                            current_y -= line_height + 5
+                        
+                        # Draw totals
+                        c.setFont("Helvetica", style.fontSize or 12)
+                        if content.get('subtotal'):
+                            c.drawString(x, current_y, f"Subtotal: {content['subtotal']}")
+                            current_y -= line_height
+                        if content.get('igst'):
+                            c.drawString(x, current_y, f"IGST: {content['igst']}")
+                            current_y -= line_height
+                        if content.get('total'):
+                            c.setFont("Helvetica-Bold", style.fontSize or 12)
+                            c.drawString(x, current_y, f"Total: {content['total']}")
+                
             except Exception as e:
                 logger.warning(f"Error rendering canvas element {element_id}: {e}")
                 continue
