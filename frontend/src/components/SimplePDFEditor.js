@@ -740,62 +740,62 @@ const SimplePDFEditor = ({ currentUser }) => {
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                            Position X (Left) - UNLIMITED
+                                                            Position X (Within Invoice)
                                                         </label>
                                                         <input
                                                             type="range"
-                                                            min="-200"
-                                                            max="800"
+                                                            min="0"
+                                                            max="450"
                                                             value={template.logo_x}
                                                             onChange={(e) => updateField('logo_x', parseInt(e.target.value))}
                                                             className="w-full"
                                                         />
-                                                        <div className="text-xs text-gray-500 text-center mt-1">{template.logo_x}px</div>
+                                                        <div className="text-xs text-gray-500 text-center mt-1">{template.logo_x}px from left</div>
                                                     </div>
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                            Position Y (Top) - UNLIMITED
+                                                            Position Y (Within Invoice)
                                                         </label>
                                                         <input
                                                             type="range"
-                                                            min="-100"
-                                                            max="400"
+                                                            min="0"
+                                                            max="200"
                                                             value={template.logo_y}
                                                             onChange={(e) => updateField('logo_y', parseInt(e.target.value))}
                                                             className="w-full"
                                                         />
-                                                        <div className="text-xs text-gray-500 text-center mt-1">{template.logo_y}px</div>
+                                                        <div className="text-xs text-gray-500 text-center mt-1">{template.logo_y}px from top</div>
                                                     </div>
                                                 </div>
 
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                            Width - UNLIMITED
+                                                            Width (Canva Style)
                                                         </label>
                                                         <input
                                                             type="range"
-                                                            min="20"
-                                                            max="500"
+                                                            min="30"
+                                                            max="300"
                                                             value={template.logo_width}
                                                             onChange={(e) => updateField('logo_width', parseInt(e.target.value))}
                                                             className="w-full"
                                                         />
-                                                        <div className="text-xs text-gray-500 text-center mt-1">{template.logo_width}px</div>
+                                                        <div className="text-xs text-gray-500 text-center mt-1">{template.logo_width}px wide</div>
                                                     </div>
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                            Height - UNLIMITED
+                                                            Height (Canva Style)
                                                         </label>
                                                         <input
                                                             type="range"
-                                                            min="15"
-                                                            max="300"
+                                                            min="20"
+                                                            max="200"
                                                             value={template.logo_height}
                                                             onChange={(e) => updateField('logo_height', parseInt(e.target.value))}
                                                             className="w-full"
                                                         />
-                                                        <div className="text-xs text-gray-500 text-center mt-1">{template.logo_height}px</div>
+                                                        <div className="text-xs text-gray-500 text-center mt-1">{template.logo_height}px tall</div>
                                                     </div>
                                                 </div>
 
