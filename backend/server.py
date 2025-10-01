@@ -1405,7 +1405,7 @@ async def generate_template_driven_pdf(
             project_data: dict
         ) -> bytes:
     """
-    Generate PDF using template-driven configuration system
+    Generate PDF using template-driven configuration system with Canvas Elements support
     
     Args:
         template_config: PDF template configuration
@@ -1417,6 +1417,11 @@ async def generate_template_driven_pdf(
         bytes: Generated PDF as bytes
     """
     try:
+        # Check if template has canvas elements (new Canva-like functionality)
+        if hasattr(template_config, 'canvas_elements') and template_config.canvas_elements:
+            return await generate_canvas_based_pdf(template_config, invoice_data, client_data, project_data)
+        
+        # Fall back to traditional template-based generation
         # Create PDF buffer
         buffer = BytesIO()
         
