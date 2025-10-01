@@ -4152,8 +4152,8 @@ async def upload_template_logo(
         if len(file_content) > max_size:
             raise HTTPException(status_code=400, detail="File size must be less than 5MB")
         
-        # Create upload directory if it doesn't exist
-        upload_dir = "/app/backend/uploads/logos"
+        # Create upload directory if it doesn't exist (AWS-compatible)
+        upload_dir = os.getenv('UPLOAD_DIR', '/tmp/uploads/logos')
         os.makedirs(upload_dir, exist_ok=True)
         
         # Generate unique filename
