@@ -649,7 +649,7 @@ const ModernPDFDesigner2025 = ({ currentUser }) => {
                             </button>
                         )}
                         
-                        <h1 className="text-xl font-bold text-gray-900">Visual Invoice Designer 2025</h1>
+                        <h1 className="text-xl font-bold text-gray-900">PDF Editor</h1>
                         
                         <div className="flex items-center space-x-3">
                             <motion.button
