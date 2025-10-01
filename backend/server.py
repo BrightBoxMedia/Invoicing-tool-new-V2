@@ -1723,16 +1723,25 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         raise HTTPException(status_code=401, detail="Invalid authentication")
 
 # API Endpoints start here
-                GST: {client_data.get('gst_no', 'N/A')}<br/>
-                Email: {client_data.get('email', 'N/A')}<br/>
-                Phone: {client_data.get('phone', 'N/A')}""", billing_style)
-            ]
-        ]
-        
-        billing_table = Table(billing_data, colWidths=[95*mm, 95*mm])
-        billing_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (0, 0), colors.toColor('#E8F5E8')),
-            ('BACKGROUND', (1, 0), (1, 0), colors.toColor('#E8F8FF')),
+# Health endpoints
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
+
+@app.get("/ready")
+async def readiness_check():
+    try:
+        # Check database connection
+        await db.command("ping")
+        return {"status": "ready", "database": "connected"}
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Database not ready: {str(e)}")
+
+# Create API router
+api_router = APIRouter(prefix="/api")
+
+# Authentication endpoints
+@api_router.post("/auth/login")
             ('PADDING', (0, 0), (-1, -1), template_config.table_padding_horizontal),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('BOX', (0, 0), (-1, -1), 1, colors.black),
