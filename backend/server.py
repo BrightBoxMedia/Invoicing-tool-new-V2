@@ -2276,7 +2276,10 @@ async def get_invoices(current_user: dict = Depends(get_current_user)):
         # Convert MongoDB documents to proper format
         formatted_invoices = []
         for invoice in invoices:
-            invoice["id"] = invoice.pop("_id", str(invoice.get("_id", "")))
+            # Handle ObjectId serialization
+            if "_id" in invoice:
+                invoice["id"] = str(invoice["_id"])
+                del invoice["_id"]
             formatted_invoices.append(invoice)
         
         return formatted_invoices
