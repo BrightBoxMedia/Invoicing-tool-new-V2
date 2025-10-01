@@ -605,6 +605,148 @@ const SimplePDFEditor = ({ currentUser }) => {
         }
     };
 
+    // Render content for different element types
+    const renderElementContent = (elementId, element) => {
+        const { type, content, style } = element;
+        
+        switch (type) {
+            case 'text':
+                return (
+                    <EditableText
+                        text={content}
+                        onTextChange={(newText) => updateElementContent(elementId, newText)}
+                        style={{
+                            fontSize: `${style.fontSize}px`,
+                            fontWeight: style.fontWeight,
+                            color: style.color,
+                            display: 'block',
+                            width: '100%'
+                        }}
+                        className="font-bold select-none"
+                    />
+                );
+
+            case 'text-group':
+                return (
+                    <div style={{ fontSize: `${style.fontSize}px`, color: style.color }}>
+                        <div>
+                            <strong>Invoice No:</strong> 
+                            <EditableText
+                                text={content.invoice_no}
+                                onTextChange={(newText) => updateElementContent(elementId, { invoice_no: newText })}
+                                style={{ marginLeft: '8px' }}
+                            />
+                        </div>
+                        <div>
+                            <strong>Invoice Date:</strong> 
+                            <EditableText
+                                text={content.invoice_date}
+                                onTextChange={(newText) => updateElementContent(elementId, { invoice_date: newText })}
+                                style={{ marginLeft: '8px' }}
+                            />
+                        </div>
+                        <div>
+                            <strong>Created By:</strong> 
+                            <EditableText
+                                text={content.created_by}
+                                onTextChange={(newText) => updateElementContent(elementId, { created_by: newText })}
+                                style={{ marginLeft: '8px' }}
+                            />
+                        </div>
+                    </div>
+                );
+
+            case 'info-section':
+                return (
+                    <div 
+                        className="p-3 rounded border"
+                        style={{ 
+                            backgroundColor: style.backgroundColor,
+                            fontSize: `${style.fontSize}px`,
+                            color: style.color,
+                            borderColor: template.border_color
+                        }}
+                    >
+                        <div className="font-bold mb-2">
+                            <EditableText
+                                text={content.title}
+                                onTextChange={(newText) => updateElementContent(elementId, { title: newText })}
+                                style={{ fontWeight: 'bold' }}
+                            />
+                        </div>
+                        <div className="font-semibold">
+                            <EditableText
+                                text={content.company_name}
+                                onTextChange={(newText) => updateElementContent(elementId, { company_name: newText })}
+                                style={{ fontWeight: '600' }}
+                            />
+                        </div>
+                        <div className="text-sm mt-1">
+                            <EditableTextArea
+                                text={content.company_address}
+                                onTextChange={(newText) => updateElementContent(elementId, { company_address: newText })}
+                                style={{ fontSize: '11px', lineHeight: '1.4' }}
+                            />
+                        </div>
+                        <div className="text-sm">
+                            GST: <EditableText
+                                text={content.company_gst}
+                                onTextChange={(newText) => updateElementContent(elementId, { company_gst: newText })}
+                                style={{ fontSize: '11px' }}
+                            />
+                        </div>
+                        <div className="text-sm">
+                            Email: <EditableText
+                                text={content.company_email}
+                                onTextChange={(newText) => updateElementContent(elementId, { company_email: newText })}
+                                style={{ fontSize: '11px' }}
+                            />
+                        </div>
+                        <div className="text-sm">
+                            Phone: <EditableText
+                                text={content.company_phone}
+                                onTextChange={(newText) => updateElementContent(elementId, { company_phone: newText })}
+                                style={{ fontSize: '11px' }}
+                            />
+                        </div>
+                    </div>
+                );
+
+            case 'project-info':
+                return (
+                    <div style={{ fontSize: `${style.fontSize}px`, color: style.color }}>
+                        <div>
+                            <strong>Project:</strong> 
+                            <EditableText
+                                text={content.project_name}
+                                onTextChange={(newText) => updateElementContent(elementId, { project_name: newText })}
+                                style={{ marginLeft: '8px' }}
+                            />
+                        </div>
+                        <div>
+                            <strong>Location:</strong> 
+                            <EditableText
+                                text={content.location}
+                                onTextChange={(newText) => updateElementContent(elementId, { location: newText })}
+                                style={{ marginLeft: '8px' }}
+                            />
+                        </div>
+                    </div>
+                );
+
+            default:
+                return (
+                    <div style={{ fontSize: `${style.fontSize}px`, color: style.color }}>
+                        <EditableText
+                            text={content}
+                            onTextChange={(newText) => updateElementContent(elementId, newText)}
+                            style={{ display: 'block', width: '100%' }}
+                        />
+                    </div>
+                );
+        }
+    };
+
     // Duplicate element
     const duplicateElement = (elementId) => {
         const element = canvasElements[elementId];
