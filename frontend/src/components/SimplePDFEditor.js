@@ -714,11 +714,12 @@ const SimplePDFEditor = ({ currentUser }) => {
                                             <div className="space-y-4">
                                                 {/* Logo Positioning Controls */}
                                                 <div className="bg-blue-50 p-4 rounded-lg">
-                                                    <h4 className="font-medium text-blue-900 mb-3">Interactive Logo Controls</h4>
+                                                    <h4 className="font-medium text-blue-900 mb-3">🎨 Canva-Style Logo Controls</h4>
                                                     <div className="text-sm text-blue-700 space-y-2">
-                                                        <p>💡 <strong>In the preview:</strong> Drag the logo to move it around</p>
-                                                        <p>🔧 <strong>Resize:</strong> Drag the blue dot in bottom-right corner</p>
-                                                        <p>📑 <strong>Layer:</strong> Click ⬆️/⬇️ button to move above/behind text</p>
+                                                        <p>🖱️ <strong>Drag to Move:</strong> Click and drag logo anywhere within the invoice</p>
+                                                        <p>📏 <strong>Visual Resize:</strong> Drag the blue corner handle to resize smoothly</p>
+                                                        <p>📑 <strong>Layer Control:</strong> Move above or behind text with ⬆️/⬇️ button</p>
+                                                        <p>🎯 <strong>Smart Bounds:</strong> Logo stays within invoice format automatically</p>
                                                     </div>
                                                 </div>
 
