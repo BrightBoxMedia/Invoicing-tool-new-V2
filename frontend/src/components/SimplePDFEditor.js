@@ -75,7 +75,11 @@ const LogoEditor = ({ logoUrl, logoWidth, logoHeight, logoX, logoY, logoLayer, l
             <img
                 src={logoUrl}
                 alt="Logo"
-                className="w-full h-full object-contain pointer-events-none"
+                className="w-full h-full pointer-events-none"
+                style={{ 
+                    objectFit: logoFit,
+                    opacity: logoOpacity / 100
+                }}
                 draggable={false}
             />
             
