@@ -676,6 +676,39 @@ const SimplePDFEditor = ({ currentUser }) => {
                                                         </button>
                                                     </div>
                                                 </div>
+
+                                                {/* Logo Style Controls */}
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                        Logo Style & Effects
+                                                    </label>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div>
+                                                            <label className="block text-xs text-gray-500 mb-1">Opacity</label>
+                                                            <input
+                                                                type="range"
+                                                                min="20"
+                                                                max="100"
+                                                                value={template.logo_opacity || 100}
+                                                                onChange={(e) => updateField('logo_opacity', parseInt(e.target.value))}
+                                                                className="w-full"
+                                                            />
+                                                            <div className="text-xs text-gray-500 text-center">{template.logo_opacity || 100}%</div>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs text-gray-500 mb-1">Fit Style</label>
+                                                            <select
+                                                                value={template.logo_fit || 'contain'}
+                                                                onChange={(e) => updateField('logo_fit', e.target.value)}
+                                                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                                                            >
+                                                                <option value="contain">Fit (Keep aspect ratio)</option>
+                                                                <option value="cover">Fill (May crop)</option>
+                                                                <option value="fill">Stretch (May distort)</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         )}
 
