@@ -1,4 +1,106 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+
+// Interactive Logo Editor Component
+const LogoEditor = ({ logoUrl, logoWidth, logoHeight, logoX, logoY, logoLayer, onLogoChange }) => {
+    const [isDragging, setIsDragging] = useState(false);
+    const [isResizing, setIsResizing] = useState(false);
+    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+    const [resizeStart, setResizeStart] = useState({ width: 0, height: 0 });
+    const logoRef = useRef(null);
+
+    const handleMouseDown = (e) => {
+        if (e.target.classList.contains('resize-handle')) {
+            setIsResizing(true);
+            setResizeStart({ width: logoWidth, height: logoHeight });
+        } else {
+            setIsDragging(true);
+            setDragStart({
+                x: e.clientX - logoX,
+                y: e.clientY - logoY
+            });
+        }
+        e.preventDefault();
+    };
+
+    const handleMouseMove = (e) => {
+        if (isDragging) {
+            const containerRect = logoRef.current.parentElement.getBoundingClientRect();
+            const newX = Math.max(0, Math.min(e.clientX - dragStart.x - containerRect.left, containerRect.width - logoWidth));
+            const newY = Math.max(0, Math.min(e.clientY - dragStart.y - containerRect.top, containerRect.height - logoHeight));
+            
+            onLogoChange({ logo_x: newX, logo_y: newY });
+        } else if (isResizing) {
+            const containerRect = logoRef.current.parentElement.getBoundingClientRect();
+            const newWidth = Math.max(50, Math.min(e.clientX - containerRect.left - logoX, 300));
+            const newHeight = Math.max(30, Math.min(e.clientY - containerRect.top - logoY, 200));
+            
+            onLogoChange({ logo_width: newWidth, logo_height: newHeight });
+        }
+    };
+
+    const handleMouseUp = () => {
+        setIsDragging(false);
+        setIsResizing(false);
+    };
+
+    useEffect(() => {
+        if (isDragging || isResizing) {
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+            
+            return () => {
+                document.removeEventListener('mousemove', handleMouseMove);
+                document.removeEventListener('mouseup', handleMouseUp);
+            };
+        }
+    }, [isDragging, isResizing, dragStart, logoX, logoY, logoWidth, logoHeight]);
+
+    return (
+        <div
+            ref={logoRef}
+            className={`absolute select-none border-2 border-dashed transition-all group hover:border-blue-400 ${
+                isDragging || isResizing ? 'border-blue-500 shadow-lg' : 'border-transparent'
+            }`}
+            style={{
+                left: logoX,
+                top: logoY,
+                width: logoWidth,
+                height: logoHeight,
+                zIndex: logoLayer === 'above' ? 20 : 5,
+                cursor: isDragging ? 'grabbing' : 'grab'
+            }}
+            onMouseDown={handleMouseDown}
+        >
+            {/* Logo Image */}
+            <img
+                src={logoUrl}
+                alt="Logo"
+                className="w-full h-full object-contain pointer-events-none"
+                draggable={false}
+            />
+            
+            {/* Resize Handle */}
+            <div
+                className="resize-handle absolute bottom-0 right-0 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{ transform: 'translate(50%, 50%)' }}
+            />
+            
+            {/* Quick Action Buttons */}
+            <div className="absolute top-0 right-0 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity" style={{ transform: 'translate(100%, -100%)' }}>
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onLogoChange({ logo_layer: logoLayer === 'above' ? 'behind' : 'above' });
+                    }}
+                    className="px-2 py-1 bg-gray-700 text-white text-xs rounded hover:bg-gray-800"
+                    title={`Move ${logoLayer === 'above' ? 'Behind' : 'Above'} Text`}
+                >
+                    {logoLayer === 'above' ? '⬇️' : '⬆️'}
+                </button>
+            </div>
+        </div>
+    );
+};
 
 const SimplePDFEditor = ({ currentUser }) => {
     const [template, setTemplate] = useState({
