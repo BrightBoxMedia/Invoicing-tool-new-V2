@@ -30,6 +30,7 @@ class PDFTemplateConfig(BaseModel):
     logo_width: float = 120.0  # pixels
     logo_height: float = 60.0  # pixels
     logo_position: str = "TOP_RIGHT"  # TOP_LEFT, TOP_RIGHT, TOP_CENTER
+    logo_url: Optional[str] = None  # Base64 encoded logo or file path
     
     # Invoice Details Settings
     invoice_details_font_size: float = 12.0
