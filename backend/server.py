@@ -1687,10 +1687,6 @@ async def generate_template_driven_pdf(
             logger.error(f"Fallback PDF generation also failed: {fallback_error}")
             raise
 # End of generate_template_driven_pdf function
-                    # Extract base64 data
-                    logo_data = template_config.logo_url.split(',')[1]
-                    logo_bytes = base64.b64decode(logo_data)
-                    logo_buffer = BytesIO(logo_bytes)
                     
                     # Create logo image
                     logo_img = RLImage(
