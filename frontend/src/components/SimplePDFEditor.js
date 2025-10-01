@@ -640,6 +640,10 @@ const SimplePDFEditor = ({ currentUser }) => {
                 return { fontSize: 12, color: '#000000' };
             case 'info-section':
                 return { backgroundColor: '#f5f5f5', fontSize: 12, color: '#000000', padding: 12 };
+            case 'table':
+                return { fontSize: 11, backgroundColor: '#f8fafc', headerColor: '#127285', headerTextColor: '#ffffff' };
+            case 'total-section':
+                return { backgroundColor: '#f0f9ff', fontSize: 12, color: '#000000', padding: 12 };
             default:
                 return { fontSize: 12, color: '#000000' };
         }
