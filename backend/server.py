@@ -162,7 +162,7 @@ class ConnectionManager:
         for websocket in self.active_connections[project_id]:
             try:
                 await websocket.send_text(message_str)
-            except (WebSocketDisconnect, Exception) as e:
+            except (WebSocketDisconnect, Exception):
                 disconnected.append(websocket)
         
         # Clean up disconnected clients
@@ -1474,7 +1474,7 @@ async def generate_template_driven_pdf(
         # Invoice details
         story.append(Paragraph(f"<b>Invoice No:</b> #{invoice_data.get('invoice_number', 'N/A')}", invoice_details_style))
         story.append(Paragraph(f"<b>Invoice Date:</b> {formatted_date}", invoice_details_style))
-        story.append(Paragraph(f"<b>Created By:</b> Activus Industrial Design & Build", invoice_details_style))
+        story.append(Paragraph("<b>Created By:</b> Activus Industrial Design & Build", invoice_details_style))
         story.append(Spacer(1, template_config.billing_section_spacing))
         
         # 3. BILLING SECTIONS
@@ -1489,7 +1489,7 @@ async def generate_template_driven_pdf(
         # Create billing table
         billing_data = [
             [
-                Paragraph(f"""<b>BILLED BY:</b><br/>
+                Paragraph("""<b>BILLED BY:</b><br/>
                 Activus Industrial Design & Build<br/>
                 Plot no. A-52, Sector no. 27, Phase - 2<br/>
                 Taloja, Maharashtra, India - 410206<br/>
@@ -1817,7 +1817,7 @@ async def login(user_data: UserLogin):
         
         await log_activity(
             user["id"], user["email"], user["role"], 
-            "login", f"User logged in successfully"
+            "login", "User logged in successfully"
         )
         
         return {
