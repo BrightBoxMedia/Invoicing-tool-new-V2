@@ -863,8 +863,7 @@ function App() {
                     <Route path="/user-management" element={<UserManagement currentUser={user} />} />
                     <Route path="/admin-interface" element={<AdminInterface currentUser={user} />} />
                     <Route path="/gst-approval" element={<GSTApprovalInterface currentUser={user} />} />
-                    <Route path="/visual-designer-2025" element={<ModernPDFDesigner2025 currentUser={user} />} />
-                    <Route path="/pdf-template-manager" element={<PDFTemplateManager currentUser={user} />} />
+                    <Route path="/pdf-editor" element={<ModernPDFDesigner2025 currentUser={user} />} />
                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
                   </Routes>
                 </main>
