@@ -641,7 +641,7 @@
   run_ui: false
 
 ## test_plan:
-  current_focus: ["Navigation Cleanup and PDF Editor Testing"]
+  current_focus: ["AWS Deployment Readiness Verification"]
   stuck_tasks: []
   test_all: false
   test_priority: "completed"
