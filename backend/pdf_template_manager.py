@@ -136,7 +136,7 @@ class PDFTemplateManager:
     
     async def list_templates(self) -> list:
         """List all available templates"""
-        if self.db:
+        if self.db is not None:
             templates = await self.db.find().to_list(length=None)
             return [PDFTemplateConfig(**t) for t in templates]
         return [PDFTemplateConfig()]  # Default template
