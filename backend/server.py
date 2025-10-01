@@ -1845,19 +1845,30 @@ async def generate_template_preview(template_data: dict, current_user: dict = De
     except Exception as e:
         logger.error(f"Error generating template preview: {str(e)}")
         raise HTTPException(status_code=500, detail="Error generating preview")
-        # Determine table structure based on GST type
-        gst_type = invoice_data.get('gst_type', 'IGST')
-        # Use "Rs." instead of ₹ symbol to avoid font encoding issues
-        currency_symbol = "Rs."
-        
-        if gst_type == 'CGST_SGST':
-            # CGST+SGST table structure
-            table_headers = ['Item', 'GST Rate', 'Quantity', 'Rate', 'Amount', 'CGST', 'SGST', 'Total']
-            col_widths = [
-                template_config.col_item_width * mm,
-                template_config.col_gst_rate_width * mm,
-                template_config.col_quantity_width * mm,
-                template_config.col_rate_width * mm,
+
+# Include the API router in the app
+app.include_router(api_router)
+
+# Initialize template manager
+template_manager = None
+
+async def initialize_app():
+    """Initialize template manager and other dependencies"""
+    global template_manager
+    try:
+        template_manager = PDFTemplateManager(db_collection=db.pdf_templates)
+        logger.info("Template manager initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize template manager: {e}")
+
+# Add initialization to startup
+@app.on_event("startup") 
+async def startup_event():
+    await initialize_app()
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=PORT)
                 template_config.col_amount_width * mm,
                 25 * mm,  # CGST width
                 25 * mm,  # SGST width
