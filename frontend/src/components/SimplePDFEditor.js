@@ -1164,6 +1164,15 @@ const SimplePDFEditor = ({ currentUser }) => {
                                                 <div className="font-medium">Table</div>
                                                 <div className="text-sm text-gray-500">Data table</div>
                                             </button>
+                                            
+                                            <button
+                                                onClick={() => addCanvasElement('total-section')}
+                                                className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-400 hover:bg-purple-50 transition-colors text-center"
+                                            >
+                                                <div className="text-2xl mb-2">🧮</div>
+                                                <div className="font-medium">Total Summary</div>
+                                                <div className="text-sm text-gray-500">Subtotal/Total calc</div>
+                                            </button>
                                         </div>
                                         
                                         {selectedElement && (
