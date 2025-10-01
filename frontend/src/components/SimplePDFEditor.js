@@ -87,11 +87,20 @@ const LogoEditor = ({ logoUrl, logoWidth, logoHeight, logoX, logoY, logoLayer, l
                 draggable={false}
             />
             
-            {/* Resize Handle */}
-            <div
-                className="resize-handle absolute bottom-0 right-0 w-3 h-3 bg-blue-500 border border-white rounded-full cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity"
-                style={{ transform: 'translate(50%, 50%)' }}
-            />
+            {/* Canva-style Resize Handles */}
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                {/* Corner handles */}
+                <div className="resize-handle absolute -top-1 -left-1 w-3 h-3 bg-white border-2 border-blue-500 rounded-full cursor-nw-resize" />
+                <div className="resize-handle absolute -top-1 -right-1 w-3 h-3 bg-white border-2 border-blue-500 rounded-full cursor-ne-resize" />
+                <div className="resize-handle absolute -bottom-1 -left-1 w-3 h-3 bg-white border-2 border-blue-500 rounded-full cursor-sw-resize" />
+                <div className="resize-handle absolute -bottom-1 -right-1 w-3 h-3 bg-white border-2 border-blue-500 rounded-full cursor-se-resize" />
+                
+                {/* Side handles */}
+                <div className="resize-handle absolute -top-1 left-1/2 w-3 h-3 bg-white border-2 border-blue-500 rounded-full cursor-n-resize" style={{ transform: 'translateX(-50%)' }} />
+                <div className="resize-handle absolute -bottom-1 left-1/2 w-3 h-3 bg-white border-2 border-blue-500 rounded-full cursor-s-resize" style={{ transform: 'translateX(-50%)' }} />
+                <div className="resize-handle absolute -left-1 top-1/2 w-3 h-3 bg-white border-2 border-blue-500 rounded-full cursor-w-resize" style={{ transform: 'translateY(-50%)' }} />
+                <div className="resize-handle absolute -right-1 top-1/2 w-3 h-3 bg-white border-2 border-blue-500 rounded-full cursor-e-resize" style={{ transform: 'translateY(-50%)' }} />
+            </div>
             
             {/* Quick Action Buttons */}
             <div className="absolute top-0 right-0 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity" style={{ transform: 'translate(100%, -100%)' }}>
