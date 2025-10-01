@@ -1779,7 +1779,8 @@ const SimplePDFEditor = ({ currentUser }) => {
                                 style={{ 
                                     fontSize: '12px', 
                                     fontFamily: 'Arial, sans-serif', 
-                                    minHeight: '800px',
+                                    minHeight: '850px',
+                                    height: '850px',
                                     width: '600px',
                                     maxWidth: '100%'
                                 }}
