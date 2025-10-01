@@ -1642,11 +1642,16 @@ async def generate_template_driven_pdf(
             return await generate_canvas_based_pdf(template_config, invoice_data, client_data, project_data)
         
         # Fall back to traditional template-based generation
-        # Create PDF buffer
-        buffer = BytesIO()
+        return await generate_traditional_pdf(template_config, invoice_data, client_data, project_data)
         
-        # Determine page size
-        page_size = A4 if template_config.page_size == "A4" else letter
+    except Exception as e:
+        logger.error(f"Error in generate_template_driven_pdf: {str(e)}")
+        # Final fallback to traditional generation
+        try:
+            return await generate_traditional_pdf(template_config, invoice_data, client_data, project_data)
+        except Exception as fallback_error:
+            logger.error(f"Fallback PDF generation also failed: {fallback_error}")
+            raise
         
         # Create document with template margins
         doc = SimpleDocTemplate(
