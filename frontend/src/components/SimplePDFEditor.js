@@ -724,63 +724,53 @@ const SimplePDFEditor = ({ currentUser }) => {
                                                     </select>
                                                 </div>
 
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                            🆓 Position X (Complete Freedom)
-                                                        </label>
-                                                        <input
-                                                            type="number"
-                                                            value={template.logo_x}
-                                                            onChange={(e) => updateField('logo_x', parseInt(e.target.value) || 0)}
-                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                            placeholder="Any position"
-                                                        />
-                                                        <div className="text-xs text-gray-500 text-center mt-1">Pixels from left</div>
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                            🆓 Position Y (Complete Freedom)
-                                                        </label>
-                                                        <input
-                                                            type="number"
-                                                            value={template.logo_y}
-                                                            onChange={(e) => updateField('logo_y', parseInt(e.target.value) || 0)}
-                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                            placeholder="Any position"
-                                                        />
-                                                        <div className="text-xs text-gray-500 text-center mt-1">Pixels from top</div>
+                                                <div>
+                                                    <h5 className="font-medium text-gray-800 mb-3">Position</h5>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div>
+                                                            <label className="block text-sm text-gray-600 mb-1">Left</label>
+                                                            <input
+                                                                type="number"
+                                                                value={template.logo_x}
+                                                                onChange={(e) => updateField('logo_x', parseInt(e.target.value) || 0)}
+                                                                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-sm text-gray-600 mb-1">Top</label>
+                                                            <input
+                                                                type="number"
+                                                                value={template.logo_y}
+                                                                onChange={(e) => updateField('logo_y', parseInt(e.target.value) || 0)}
+                                                                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                                            />
+                                                        </div>
                                                     </div>
                                                 </div>
 
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                            📏 Width (Any Size)
-                                                        </label>
-                                                        <input
-                                                            type="number"
-                                                            min="10"
-                                                            value={template.logo_width}
-                                                            onChange={(e) => updateField('logo_width', parseInt(e.target.value) || 10)}
-                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                            placeholder="Any width"
-                                                        />
-                                                        <div className="text-xs text-gray-500 text-center mt-1">Pixels wide</div>
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                            📏 Height (Any Size)
-                                                        </label>
-                                                        <input
-                                                            type="number"
-                                                            min="10"
-                                                            value={template.logo_height}
-                                                            onChange={(e) => updateField('logo_height', parseInt(e.target.value) || 10)}
-                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                            placeholder="Any height"
-                                                        />
-                                                        <div className="text-xs text-gray-500 text-center mt-1">Pixels tall</div>
+                                                <div>
+                                                    <h5 className="font-medium text-gray-800 mb-3">Size</h5>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div>
+                                                            <label className="block text-sm text-gray-600 mb-1">Width</label>
+                                                            <input
+                                                                type="number"
+                                                                min="20"
+                                                                value={template.logo_width}
+                                                                onChange={(e) => updateField('logo_width', parseInt(e.target.value) || 20)}
+                                                                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-sm text-gray-600 mb-1">Height</label>
+                                                            <input
+                                                                type="number"
+                                                                min="15"
+                                                                value={template.logo_height}
+                                                                onChange={(e) => updateField('logo_height', parseInt(e.target.value) || 15)}
+                                                                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                                            />
+                                                        </div>
                                                     </div>
                                                 </div>
 
