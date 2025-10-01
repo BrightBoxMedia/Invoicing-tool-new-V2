@@ -3580,6 +3580,225 @@ async def get_project_snapshot(project_id: str, current_user: dict = Depends(get
         logger.error(f"Project snapshot error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get project snapshot: {str(e)}")
 
+# PDF Template Management API Endpoints
+@api_router.get("/admin/pdf-template/active")
+async def get_active_template(current_user: dict = Depends(get_current_user)):
+    """Get the currently active PDF template"""
+    try:
+        # Check super admin permission
+        if current_user.get('role') != 'super_admin':
+            raise HTTPException(status_code=403, detail="Super admin access required")
+        
+        # Initialize template manager if not already done
+        if not template_manager.db:
+            await initialize_template_manager(db)
+        
+        template = await template_manager.get_active_template()
+        return custom_jsonable_encoder(template.dict())
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting active template: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get active template: {str(e)}")
+
+@api_router.post("/admin/pdf-template")
+async def save_pdf_template(template_data: dict, current_user: dict = Depends(get_current_user)):
+    """Save PDF template configuration"""
+    try:
+        # Check super admin permission
+        if current_user.get('role') != 'super_admin':
+            raise HTTPException(status_code=403, detail="Super admin access required")
+        
+        # Initialize template manager if not already done
+        if not template_manager.db:
+            await initialize_template_manager(db)
+        
+        # Create PDFTemplateConfig from input data
+        template_data['created_by'] = current_user.get('id', 'unknown')
+        template_config = PDFTemplateConfig(**template_data)
+        
+        # Save template
+        success = await template_manager.save_template(template_config)
+        
+        if success:
+            await log_activity(
+                user_id=current_user.get('id'),
+                user_email=current_user.get('email'),
+                user_role=current_user.get('role'),
+                action="template_saved",
+                description=f"Saved PDF template configuration: {template_config.name}"
+            )
+            return {"message": "Template saved successfully", "template_id": template_config.id}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to save template")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error saving template: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to save template: {str(e)}")
+
+@api_router.post("/admin/pdf-template/preview")
+async def generate_template_preview(template_data: dict, current_user: dict = Depends(get_current_user)):
+    """Generate a preview PDF with the given template configuration"""
+    try:
+        # Check super admin permission
+        if current_user.get('role') != 'super_admin':
+            raise HTTPException(status_code=403, detail="Super admin access required")
+        
+        # Create template config
+        template_config = PDFTemplateConfig(**template_data)
+        
+        # Generate sample invoice data for preview
+        sample_invoice_data = {
+            "id": "preview-invoice",
+            "invoice_number": "PREVIEW-001",
+            "invoice_date": datetime.now(timezone.utc),
+            "due_date": datetime.now(timezone.utc) + timedelta(days=30),
+            "gst_type": "IGST",
+            "subtotal": 100000.0,
+            "cgst_amount": 0.0,
+            "sgst_amount": 0.0,
+            "igst_amount": 18000.0,
+            "total_gst_amount": 18000.0,
+            "total_amount": 118000.0,
+            "payment_terms": "Payment due within 30 days",
+            "advance_received": 0.0,
+            "net_amount_due": 118000.0,
+            "items": [
+                {
+                    "description": "Sample Construction Work",
+                    "unit": "Sqm",
+                    "quantity": 100.0,
+                    "rate": 1000.0,
+                    "amount": 100000.0,
+                    "gst_rate": 18.0
+                }
+            ]
+        }
+        
+        # Sample client and project data
+        sample_client = {
+            "name": "Sample Client Ltd.",
+            "email": "client@example.com",
+            "phone": "+91 9876543210",
+            "address": "123 Sample Street, Sample City",
+            "city": "Sample City",
+            "state": "Sample State",
+            "gst_no": "27AAAAA0000A1Z5",
+            "bill_to_address": "123 Sample Street, Sample City - 400001"
+        }
+        
+        sample_project = {
+            "project_name": "Sample Construction Project",
+            "location": "Sample Location, Sample City"
+        }
+        
+        # Generate PDF using template-driven system
+        pdf_buffer = await generate_template_driven_pdf(
+            template_config, 
+            sample_invoice_data, 
+            sample_client, 
+            sample_project
+        )
+        
+        # Return PDF response
+        return StreamingResponse(
+            io.BytesIO(pdf_buffer),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": "attachment; filename=template_preview.pdf",
+                "Content-Length": str(len(pdf_buffer))
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating template preview: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate preview: {str(e)}")
+
+@api_router.get("/admin/pdf-templates")
+async def list_pdf_templates(current_user: dict = Depends(get_current_user)):
+    """List all available PDF templates"""
+    try:
+        # Check super admin permission
+        if current_user.get('role') != 'super_admin':
+            raise HTTPException(status_code=403, detail="Super admin access required")
+        
+        # Initialize template manager if not already done
+        if not template_manager.db:
+            await initialize_template_manager(db)
+        
+        templates = await template_manager.list_templates()
+        return custom_jsonable_encoder([t.dict() for t in templates])
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error listing templates: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to list templates: {str(e)}")
+
+@api_router.post("/admin/pdf-template/upload-logo")
+async def upload_template_logo(
+    file: UploadFile = File(...), 
+    current_user: dict = Depends(get_current_user)
+):
+    """Upload logo for PDF template"""
+    try:
+        # Check super admin permission
+        if current_user.get('role') != 'super_admin':
+            raise HTTPException(status_code=403, detail="Super admin access required")
+        
+        # Validate file type
+        if not file.content_type or not file.content_type.startswith('image/'):
+            raise HTTPException(status_code=400, detail="Only image files are allowed")
+        
+        # Validate file size (max 5MB)
+        max_size = 5 * 1024 * 1024  # 5MB
+        file_content = await file.read()
+        if len(file_content) > max_size:
+            raise HTTPException(status_code=400, detail="File size must be less than 5MB")
+        
+        # Create upload directory if it doesn't exist
+        upload_dir = "/app/backend/uploads/logos"
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Generate unique filename
+        file_extension = os.path.splitext(file.filename)[1] or '.png'
+        unique_filename = f"logo_{str(uuid.uuid4())}{file_extension}"
+        file_path = os.path.join(upload_dir, unique_filename)
+        
+        # Save file
+        with open(file_path, "wb") as f:
+            f.write(file_content)
+        
+        # Convert to base64 for production deployment compatibility
+        file_base64 = base64.b64encode(file_content).decode('utf-8')
+        logo_url = f"data:{file.content_type};base64,{file_base64}"
+        
+        await log_activity(
+            user_id=current_user.get('id'),
+            user_email=current_user.get('email'),
+            user_role=current_user.get('role'),
+            action="logo_uploaded",
+            description=f"Uploaded template logo: {unique_filename}"
+        )
+        
+        return {
+            "message": "Logo uploaded successfully",
+            "logo_url": logo_url,
+            "filename": unique_filename,
+            "size": len(file_content)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error uploading logo: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to upload logo: {str(e)}")
+
 # Include API router
 app.include_router(api_router)
 
