@@ -5,9 +5,31 @@ Professional solution for managing invoice PDF templates with admin interface
 """
 
 from pydantic import BaseModel
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List, Union
 import json
 from datetime import datetime, timezone
+
+# Canvas Element Models for Canva-like functionality
+class CanvasElementStyle(BaseModel):
+    """Styling properties for canvas elements"""
+    fontSize: Optional[float] = 12.0
+    fontWeight: Optional[str] = "normal"
+    color: Optional[str] = "#000000"
+    backgroundColor: Optional[str] = None
+    padding: Optional[float] = 0
+    textAlign: Optional[str] = "left"
+
+class CanvasElement(BaseModel):
+    """Individual canvas element (text, text-group, info-section, etc.)"""
+    type: str  # text, text-group, info-section, project-info, table, etc.
+    x: float = 0.0  # X position
+    y: float = 0.0  # Y position  
+    width: Optional[float] = 100.0  # Width
+    height: Optional[float] = 50.0  # Height
+    content: Union[str, Dict[str, Any]] = ""  # Content (string or nested dict)
+    style: CanvasElementStyle = CanvasElementStyle()
+    editable: bool = True
+    zIndex: Optional[int] = 10
 
 class PDFTemplateConfig(BaseModel):
     """PDF Template Configuration Model"""
