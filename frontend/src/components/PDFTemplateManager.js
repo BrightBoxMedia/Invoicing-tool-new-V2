@@ -88,6 +88,51 @@ const PDFTemplateManager = ({ currentUser }) => {
         }));
     };
 
+    const handleLogoUpload = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            alert('Please select an image file');
+            return;
+        }
+
+        // Validate file size (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('File size must be less than 5MB');
+            return;
+        }
+
+        setUploadingLogo(true);
+        
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/pdf-template/upload-logo`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: formData
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                updateTemplate('logo_url', result.logo_url);
+                alert('Logo uploaded successfully!');
+            } else {
+                alert('Failed to upload logo');
+            }
+        } catch (error) {
+            console.error('Logo upload error:', error);
+            alert('Error uploading logo');
+        } finally {
+            setUploadingLogo(false);
+        }
+    };
+
     const tabs = [
         { id: 'layout', label: '📐 Layout & Spacing', icon: '📐' },
         { id: 'header', label: '📋 Header Settings', icon: '📋' },
