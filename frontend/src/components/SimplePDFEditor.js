@@ -1361,7 +1361,6 @@ const SimplePDFEditor = ({ currentUser }) => {
                                         )}
                                     </div>
                                 )}
-                            </div>
                         </div>
                     </div>
 
