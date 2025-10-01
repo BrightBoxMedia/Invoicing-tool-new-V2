@@ -2519,7 +2519,7 @@ async def download_invoice_pdf(invoice_id: str, current_user: dict = Depends(get
             invoice.gst_type = project.gst_type
         
         # Initialize template manager if not already done
-        if not template_manager.db:
+        if not hasattr(template_manager, 'db') or template_manager.db is None:
             await initialize_template_manager(db)
         
         # Get active template
