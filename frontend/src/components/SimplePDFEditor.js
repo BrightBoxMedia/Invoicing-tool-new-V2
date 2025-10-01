@@ -898,8 +898,8 @@ const SimplePDFEditor = ({ currentUser }) => {
                             {/* Invoice Preview - Canva Style Free Area */}
                             <div className="border border-gray-300 bg-white p-6 rounded-lg relative overflow-visible" style={{ fontSize: '12px', fontFamily: 'Arial, sans-serif', minHeight: '800px' }}>
                                 
-                                {/* Header with Interactive Logo */}
-                                <div className="relative mb-6" style={{ minHeight: '120px' }}>
+                                {/* Header with Interactive Logo - Canva Free Zone */}
+                                <div className="relative mb-6" style={{ minHeight: '200px', overflow: 'visible' }}>
                                     {/* Header Text */}
                                     <div className="relative z-10">
                                         <h1 
