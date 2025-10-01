@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-## user_problem_statement: "Implement pixel-perfect invoice design that exactly matches the provided screenshot with dynamic GST breakdown and locked design elements."
+## user_problem_statement: "Build a Super Admin PDF Template Management System that allows creating and editing multiple PDF invoice templates through a user interface with live preview, logo upload, and dynamic template application to all invoice generation."
 
 ## backend:
   - task: "Pixel Perfect Invoice PDF Generation"
