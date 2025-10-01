@@ -1799,6 +1799,21 @@ async def readiness_check():
 # Create API router
 api_router = APIRouter(prefix="/api")
 
+# API Health check endpoint
+@api_router.get("/health")
+async def api_health_check():
+    """API health check endpoint"""
+    try:
+        # Test database connection
+        await db.command("ping")
+        return {
+            "status": "healthy",
+            "database": "connected", 
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Database connection failed: {str(e)}")
+
 # Authentication endpoints
 @api_router.post("/auth/login")
 async def login(user_data: UserLogin):
