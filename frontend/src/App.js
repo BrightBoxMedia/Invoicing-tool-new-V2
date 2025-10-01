@@ -823,6 +823,7 @@ function App() {
                     <Route path="/gst-approval" element={<GSTApprovalInterface currentUser={user} />} />
                     <Route path="/gst-approval" element={<GSTApprovalInterface currentUser={user} />} />
                     <Route path="/invoice-design" element={<InvoiceDesignCustomizer currentUser={user} />} />
+                    <Route path="/pdf-template-manager" element={<PDFTemplateManager currentUser={user} />} />
                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
                   </Routes>
                 </main>
