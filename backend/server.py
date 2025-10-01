@@ -3953,7 +3953,7 @@ async def save_pdf_template(template_data: dict, current_user: dict = Depends(ge
             raise HTTPException(status_code=403, detail="Super admin access required")
         
         # Initialize template manager if not already done
-        if not template_manager.db:
+        if not hasattr(template_manager, 'db') or template_manager.db is None:
             await initialize_template_manager(db)
         
         # Create PDFTemplateConfig from input data
