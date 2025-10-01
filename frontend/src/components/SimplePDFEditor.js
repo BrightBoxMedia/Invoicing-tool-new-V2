@@ -15,12 +15,16 @@ const DraggableLogo = ({ logoUrl, logoWidth, logoHeight, logoX, logoY, onLogoCha
         e.preventDefault();
     };
 
-    const handleMouseMove = (e) => {
+    const handleGlobalMouseMove = (e) => {
         if (!dragging) return;
         
-        const container = e.currentTarget.parentElement.getBoundingClientRect();
-        const newX = e.clientX - container.left - dragOffset.x;
-        const newY = e.clientY - container.top - dragOffset.y;
+        // Find the preview container
+        const container = document.querySelector('.border.border-gray-300.bg-white');
+        if (!container) return;
+        
+        const containerRect = container.getBoundingClientRect();
+        const newX = e.clientX - containerRect.left - dragOffset.x;
+        const newY = e.clientY - containerRect.top - dragOffset.y;
         
         onLogoChange({
             logo_x: newX,
