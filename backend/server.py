@@ -3932,7 +3932,7 @@ async def get_active_template(current_user: dict = Depends(get_current_user)):
             raise HTTPException(status_code=403, detail="Super admin access required")
         
         # Initialize template manager if not already done
-        if not template_manager.db:
+        if not hasattr(template_manager, 'db') or template_manager.db is None:
             await initialize_template_manager(db)
         
         template = await template_manager.get_active_template()
