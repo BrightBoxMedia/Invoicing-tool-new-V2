@@ -1527,7 +1527,8 @@ async def generate_template_driven_pdf(
         # 5. ITEMS TABLE
         # Determine table structure based on GST type
         gst_type = invoice_data.get('gst_type', 'IGST')
-        currency_symbol = template_manager.get_currency_symbol(template_config)
+        # Use "Rs." instead of ₹ symbol to avoid font encoding issues
+        currency_symbol = "Rs."
         
         if gst_type == 'CGST_SGST':
             # CGST+SGST table structure
@@ -1569,11 +1570,11 @@ async def generate_template_driven_pdf(
                     item.get('description', 'N/A'),
                     f"{item.get('gst_rate', 18)}%",
                     f"{item.get('quantity', 0):.2f}",
-                    f"{currency_symbol}{item.get('rate', 0):,.2f}",
-                    f"{currency_symbol}{item.get('amount', 0):,.2f}",
-                    f"{currency_symbol}{cgst_amount:,.2f}",
-                    f"{currency_symbol}{sgst_amount:,.2f}",
-                    f"{currency_symbol}{total_amount:,.2f}"
+                    f"{currency_symbol} {item.get('rate', 0):,.2f}",
+                    f"{currency_symbol} {item.get('amount', 0):,.2f}",
+                    f"{currency_symbol} {cgst_amount:,.2f}",
+                    f"{currency_symbol} {sgst_amount:,.2f}",
+                    f"{currency_symbol} {total_amount:,.2f}"
                 ]
             else:
                 igst_amount = item.get('amount', 0) * item.get('gst_rate', 18) / 100
@@ -1583,10 +1584,10 @@ async def generate_template_driven_pdf(
                     item.get('description', 'N/A'),
                     f"{item.get('gst_rate', 18)}%",
                     f"{item.get('quantity', 0):.2f}",
-                    f"{currency_symbol}{item.get('rate', 0):,.2f}",
-                    f"{currency_symbol}{item.get('amount', 0):,.2f}",
-                    f"{currency_symbol}{igst_amount:,.2f}",
-                    f"{currency_symbol}{total_amount:,.2f}"
+                    f"{currency_symbol} {item.get('rate', 0):,.2f}",
+                    f"{currency_symbol} {item.get('amount', 0):,.2f}",
+                    f"{currency_symbol} {igst_amount:,.2f}",
+                    f"{currency_symbol} {total_amount:,.2f}"
                 ]
             
             table_data.append(row)
