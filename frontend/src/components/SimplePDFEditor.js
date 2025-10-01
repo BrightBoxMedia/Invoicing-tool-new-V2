@@ -1677,8 +1677,37 @@ const SimplePDFEditor = ({ currentUser }) => {
                                     </>
                                 )}
                             </div>
+                            
+                            {/* Canvas Tools */}
+                            <div className="flex justify-between items-center mt-4 text-sm text-gray-600">
+                                <div>
+                                    Elements: {Object.keys(canvasElements).length} | 
+                                    Selected: {selectedElement || 'None'}
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setCanvasElements({})}
+                                        className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"
+                                    >
+                                        Clear All
+                                    </button>
+                                    <button
+                                        onClick={() => setSelectedElement(null)}
+                                        className="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                                    >
+                                        Deselect
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
 
-                                {/* Company and Client Info */}
+export default SimplePDFEditor;
                                 <div className="grid grid-cols-2 gap-4 mb-6">
                                     <div 
                                         className="p-3 rounded"
