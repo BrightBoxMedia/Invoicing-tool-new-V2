@@ -25,18 +25,16 @@ const LogoEditor = ({ logoUrl, logoWidth, logoHeight, logoX, logoY, logoLayer, l
     const handleMouseMove = (e) => {
         if (isDragging) {
             const containerRect = logoRef.current.parentElement.getBoundingClientRect();
-            // CANVA-LIKE: Free movement but WITHIN the invoice bounds
-            const newX = Math.max(0, Math.min(e.clientX - dragStart.x - containerRect.left, containerRect.width - logoWidth));
-            const newY = Math.max(0, Math.min(e.clientY - dragStart.y - containerRect.top, containerRect.height - logoHeight));
+            // PURE CANVA FREEDOM - No restrictions at all!
+            const newX = e.clientX - dragStart.x - containerRect.left;
+            const newY = e.clientY - dragStart.y - containerRect.top;
             
             onLogoChange({ logo_x: newX, logo_y: newY });
         } else if (isResizing) {
             const containerRect = logoRef.current.parentElement.getBoundingClientRect();
-            // CANVA-LIKE: Smooth resizing within reasonable bounds
-            const maxWidth = Math.min(300, containerRect.width - logoX);
-            const maxHeight = Math.min(200, containerRect.height - logoY);
-            const newWidth = Math.max(30, Math.min(e.clientX - containerRect.left - logoX, maxWidth));
-            const newHeight = Math.max(20, Math.min(e.clientY - containerRect.top - logoY, maxHeight));
+            // PURE CANVA FREEDOM - Resize anywhere, any size!
+            const newWidth = Math.max(10, e.clientX - containerRect.left - logoX);
+            const newHeight = Math.max(10, e.clientY - containerRect.top - logoY);
             
             onLogoChange({ logo_width: newWidth, logo_height: newHeight });
         }
