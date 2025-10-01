@@ -1691,23 +1691,27 @@ async def generate_template_driven_pdf(
 async def hash_password(password: str) -> str:
     salt = bcrypt.gensalt()
     return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
-            
-        story.append(Spacer(1, 10))
-        
-        # 2. INVOICE DETAILS SECTION
-        invoice_details_style = ParagraphStyle(
-            'InvoiceDetails',
-            parent=styles['Normal'],
-            fontSize=template_config.invoice_details_font_size,
-            fontName='Helvetica',
-            leftIndent=0,
-            spaceAfter=6
-        )
-        
-        # Format invoice date
-        invoice_date = invoice_data.get('invoice_date')
-        if isinstance(invoice_date, datetime):
-            formatted_date = invoice_date.strftime("%d/%m/%Y")
+
+async def verify_password(password: str, hashed: str) -> bool:
+    return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+
+async def create_token(user_id: str, email: str, role: str) -> str:
+    payload = {
+        'user_id': user_id,
+        'email': email,
+        'role': role,
+        'exp': datetime.now(timezone.utc) + timedelta(days=7)
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+
+async def verify_token(token: str) -> Dict:
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
         else:
             formatted_date = datetime.now(timezone.utc).strftime("%d/%m/%Y")
         
