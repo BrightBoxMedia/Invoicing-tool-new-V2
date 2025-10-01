@@ -496,22 +496,21 @@
 
 ## metadata:
   created_by: "main_agent"
-  version: "2.2"
-  test_sequence: 3
+  version: "3.0"
+  test_sequence: 1
   run_ui: false
 
 ## test_plan:
   current_focus:
-    - "COMPLETED: Enhanced Basic Project Information with Client GST and Shipping Address Testing"
-    - "COMPLETED: Comprehensive GST Workflow and Invoice Amendment Frontend Testing"
-    - "COMPLETED: Enhanced Project Creation with GST Configuration Testing"
-    - "COMPLETED: GST Approval Workflow Endpoints Testing"
-    - "COMPLETED: Enhanced Invoice Creation with GST Types Testing"
-    - "COMPLETED: GST Migration and Backward Compatibility Testing"
-    - "COMPLETED: Complete GST Workflow Integration Testing"
+    - "PDF Template Management System Backend Implementation"
+    - "PDF Template CRUD API Endpoints"  
+    - "Dynamic PDF Generation with Template Engine"
+    - "Frontend Template Editor Integration"
+    - "Logo Upload and File Management"
+    - "Live Preview Functionality"
   stuck_tasks: []
   test_all: false
-  test_priority: "enhanced_project_creation_client_gst_shipping_testing"
+  test_priority: "pdf_template_management_system"
 
   - task: "Proforma Invoice Tax Options"
     implemented: true
