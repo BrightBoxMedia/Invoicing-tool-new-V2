@@ -1652,11 +1652,7 @@ async def generate_template_driven_pdf(
         except Exception as fallback_error:
             logger.error(f"Fallback PDF generation also failed: {fallback_error}")
             raise
-# Traditional PDF generation function placeholder - code moved below
-        
-        # 1. HEADER WITH LOGO AND TAX INVOICE TITLE
-        # Create header table with logo and title
-        header_data = []
+# End of generate_template_driven_pdf function
         
         # Check if template has logo
         if hasattr(template_config, 'logo_url') and template_config.logo_url:
