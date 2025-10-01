@@ -1687,13 +1687,7 @@ async def generate_template_driven_pdf(
             logger.error(f"Fallback PDF generation also failed: {fallback_error}")
             raise
 # End of generate_template_driven_pdf function
-# Old code removed
-                    
-                    # Create header with logo
-                    if template_config.logo_position == "TOP_LEFT":
-                        header_data = [[logo_img, "TAX INVOICE"]]
-                    else:  # TOP_RIGHT (default)
-                        header_data = [["TAX INVOICE", logo_img]]
+# Authentication functions
                         
                     header_table = Table(header_data, colWidths=[95*mm, 95*mm])
                     header_table.setStyle(TableStyle([
