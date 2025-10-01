@@ -7,7 +7,7 @@ import requests
 import json
 
 def check_invoice_gst_breakdown():
-    base_url = "https://projectpulse-42.preview.emergentagent.com"
+    base_url = "https://flex-invoice.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     # Login

@@ -8,7 +8,7 @@ import requests
 import json
 
 def test_enhanced_invoice_debug():
-    base_url = "https://projectpulse-42.preview.emergentagent.com"
+    base_url = "https://flex-invoice.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     # Login first
