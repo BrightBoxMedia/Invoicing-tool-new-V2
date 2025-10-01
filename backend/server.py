@@ -1412,9 +1412,314 @@ async def generate_template_driven_pdf(
     Returns:
         bytes: Generated PDF as bytes
     """
-    # Implementation will be added here
-    # For now, return empty bytes to prevent errors
-    return b""
+    try:
+        # Create PDF buffer
+        buffer = BytesIO()
+        
+        # Determine page size
+        page_size = A4 if template_config.page_size == "A4" else letter
+        
+        # Create document with template margins
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=page_size,
+            topMargin=template_config.margin_top * mm,
+            bottomMargin=template_config.margin_bottom * mm,
+            leftMargin=template_config.margin_left * mm,
+            rightMargin=template_config.margin_right * mm
+        )
+        
+        # Create story (content elements)
+        story = []
+        
+        # Get styles
+        styles = getSampleStyleSheet()
+        
+        # 1. TAX INVOICE HEADER
+        header_style = ParagraphStyle(
+            'CustomHeader',
+            parent=styles['Normal'],
+            fontSize=template_config.header_tax_invoice_font_size,
+            alignment=getattr(
+                sys.modules['reportlab.lib.enums'], 
+                f'TA_{template_config.header_tax_invoice_alignment}', 
+                TA_CENTER
+            ),
+            textColor=colors.toColor(template_config.header_tax_invoice_color),
+            fontName='Helvetica-Bold',
+            spaceAfter=template_config.invoice_details_spacing
+        )
+        
+        story.append(Paragraph("TAX INVOICE", header_style))
+        story.append(Spacer(1, 10))
+        
+        # 2. INVOICE DETAILS SECTION
+        invoice_details_style = ParagraphStyle(
+            'InvoiceDetails',
+            parent=styles['Normal'],
+            fontSize=template_config.invoice_details_font_size,
+            fontName='Helvetica',
+            leftIndent=0,
+            spaceAfter=6
+        )
+        
+        # Format invoice date
+        invoice_date = invoice_data.get('invoice_date')
+        if isinstance(invoice_date, datetime):
+            formatted_date = invoice_date.strftime("%d/%m/%Y")
+        else:
+            formatted_date = datetime.now(timezone.utc).strftime("%d/%m/%Y")
+        
+        # Invoice details
+        story.append(Paragraph(f"<b>Invoice No:</b> #{invoice_data.get('invoice_number', 'N/A')}", invoice_details_style))
+        story.append(Paragraph(f"<b>Invoice Date:</b> {formatted_date}", invoice_details_style))
+        story.append(Paragraph(f"<b>Created By:</b> Activus Industrial Design & Build", invoice_details_style))
+        story.append(Spacer(1, template_config.billing_section_spacing))
+        
+        # 3. BILLING SECTIONS
+        billing_style = ParagraphStyle(
+            'BillingStyle',
+            parent=styles['Normal'],
+            fontSize=template_config.billing_font_size,
+            fontName='Helvetica',
+            leading=template_config.billing_line_height
+        )
+        
+        # Create billing table
+        billing_data = [
+            [
+                Paragraph(f"""<b>BILLED BY:</b><br/>
+                Activus Industrial Design & Build<br/>
+                Plot no. A-52, Sector no. 27, Phase - 2<br/>
+                Taloja, Maharashtra, India - 410206<br/>
+                GST: 27ABCCS1234A1Z5<br/>
+                Email: info@activus.co.in<br/>
+                Phone: +91 99999 99999""", billing_style),
+                
+                Paragraph(f"""<b>BILLED TO:</b><br/>
+                {client_data.get('name', 'N/A')}<br/>
+                {client_data.get('bill_to_address', client_data.get('address', 'N/A'))}<br/>
+                GST: {client_data.get('gst_no', 'N/A')}<br/>
+                Email: {client_data.get('email', 'N/A')}<br/>
+                Phone: {client_data.get('phone', 'N/A')}""", billing_style)
+            ]
+        ]
+        
+        billing_table = Table(billing_data, colWidths=[95*mm, 95*mm])
+        billing_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, 0), colors.toColor('#E8F5E8')),
+            ('BACKGROUND', (1, 0), (1, 0), colors.toColor('#E8F8FF')),
+            ('PADDING', (0, 0), (-1, -1), template_config.table_padding_horizontal),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('BOX', (0, 0), (-1, -1), 1, colors.black),
+            ('INNERGRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        
+        story.append(billing_table)
+        story.append(Spacer(1, template_config.billing_section_spacing))
+        
+        # 4. PROJECT DETAILS
+        story.append(Paragraph(f"<b>Project:</b> {project_data.get('project_name', 'N/A')}", invoice_details_style))
+        story.append(Paragraph(f"<b>Location:</b> {project_data.get('location', 'N/A')}", invoice_details_style))
+        story.append(Spacer(1, template_config.billing_section_spacing))
+        
+        # 5. ITEMS TABLE
+        # Determine table structure based on GST type
+        gst_type = invoice_data.get('gst_type', 'IGST')
+        currency_symbol = template_manager.get_currency_symbol(template_config)
+        
+        if gst_type == 'CGST_SGST':
+            # CGST+SGST table structure
+            table_headers = ['Item', 'GST Rate', 'Quantity', 'Rate', 'Amount', 'CGST', 'SGST', 'Total']
+            col_widths = [
+                template_config.col_item_width * mm,
+                template_config.col_gst_rate_width * mm,
+                template_config.col_quantity_width * mm,
+                template_config.col_rate_width * mm,
+                template_config.col_amount_width * mm,
+                25 * mm,  # CGST width
+                25 * mm,  # SGST width
+                template_config.col_total_width * mm
+            ]
+        else:
+            # IGST table structure  
+            table_headers = ['Item', 'GST Rate', 'Quantity', 'Rate', 'Amount', 'IGST', 'Total']
+            col_widths = [
+                template_config.col_item_width * mm,
+                template_config.col_gst_rate_width * mm,
+                template_config.col_quantity_width * mm,
+                template_config.col_rate_width * mm,
+                template_config.col_amount_width * mm,
+                template_config.col_igst_width * mm,
+                template_config.col_total_width * mm
+            ]
+        
+        # Create table data
+        table_data = [table_headers]
+        
+        # Add items
+        for item in invoice_data.get('items', []):
+            if gst_type == 'CGST_SGST':
+                cgst_amount = item.get('amount', 0) * (item.get('gst_rate', 18) / 2) / 100
+                sgst_amount = item.get('amount', 0) * (item.get('gst_rate', 18) / 2) / 100
+                total_amount = item.get('amount', 0) + cgst_amount + sgst_amount
+                
+                row = [
+                    item.get('description', 'N/A'),
+                    f"{item.get('gst_rate', 18)}%",
+                    f"{item.get('quantity', 0):.2f}",
+                    f"{currency_symbol}{item.get('rate', 0):,.2f}",
+                    f"{currency_symbol}{item.get('amount', 0):,.2f}",
+                    f"{currency_symbol}{cgst_amount:,.2f}",
+                    f"{currency_symbol}{sgst_amount:,.2f}",
+                    f"{currency_symbol}{total_amount:,.2f}"
+                ]
+            else:
+                igst_amount = item.get('amount', 0) * item.get('gst_rate', 18) / 100
+                total_amount = item.get('amount', 0) + igst_amount
+                
+                row = [
+                    item.get('description', 'N/A'),
+                    f"{item.get('gst_rate', 18)}%",
+                    f"{item.get('quantity', 0):.2f}",
+                    f"{currency_symbol}{item.get('rate', 0):,.2f}",
+                    f"{currency_symbol}{item.get('amount', 0):,.2f}",
+                    f"{currency_symbol}{igst_amount:,.2f}",
+                    f"{currency_symbol}{total_amount:,.2f}"
+                ]
+            
+            table_data.append(row)
+        
+        # Create and style the table
+        invoice_table = Table(table_data, colWidths=col_widths)
+        
+        # Apply table styling from template
+        table_style = [
+            # Header styling
+            ('BACKGROUND', (0, 0), (-1, 0), colors.toColor(template_config.table_header_color)),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.toColor(template_config.table_header_text_color)),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), template_config.table_header_font_size),
+            
+            # Data styling
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), template_config.table_data_font_size),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('PADDING', (0, 0), (-1, -1), template_config.table_padding_horizontal),
+            
+            # Borders
+            ('BOX', (0, 0), (-1, -1), 1, colors.black),
+            ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.black),
+        ]
+        
+        # Add alternating row colors if enabled
+        if template_config.use_alternating_row_colors:
+            for i in range(1, len(table_data)):
+                if i % 2 == 0:  # Even rows (excluding header)
+                    table_style.append(
+                        ('BACKGROUND', (0, i), (-1, i), colors.toColor(template_config.alternating_row_color))
+                    )
+        
+        invoice_table.setStyle(TableStyle(table_style))
+        story.append(invoice_table)
+        story.append(Spacer(1, 20))
+        
+        # 6. FINANCIAL SUMMARY
+        summary_style = ParagraphStyle(
+            'SummaryStyle',
+            parent=styles['Normal'],
+            fontSize=template_config.summary_font_size,
+            fontName='Helvetica-Bold',
+            alignment=TA_RIGHT,
+            rightIndent=20
+        )
+        
+        subtotal = invoice_data.get('subtotal', 0)
+        total_gst = invoice_data.get('total_gst_amount', 0)
+        total_amount = invoice_data.get('total_amount', 0)
+        advance = invoice_data.get('advance_received', 0)
+        net_due = invoice_data.get('net_amount_due', 0)
+        
+        # Summary data
+        summary_data = [
+            ['Subtotal:', f"{currency_symbol}{subtotal:,.2f}"]
+        ]
+        
+        # Add GST breakdown based on type
+        if gst_type == 'CGST_SGST':
+            cgst_total = invoice_data.get('cgst_amount', 0)
+            sgst_total = invoice_data.get('sgst_amount', 0)
+            summary_data.extend([
+                [f'CGST ({9.0}%):', f"{currency_symbol}{cgst_total:,.2f}"],
+                [f'SGST ({9.0}%):', f"{currency_symbol}{sgst_total:,.2f}"]
+            ])
+        else:
+            summary_data.append([f'IGST ({18.0}%):', f"{currency_symbol}{total_gst:,.2f}"])
+        
+        summary_data.extend([
+            ['Total Amount:', f"{currency_symbol}{total_amount:,.2f}"],
+            ['Advance Received:', f"({currency_symbol}{advance:,.2f})"],
+            ['Net Amount Due:', f"{currency_symbol}{net_due:,.2f}"]
+        ])
+        
+        # Create summary table
+        summary_table = Table(summary_data, colWidths=[80*mm, 40*mm])
+        summary_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), template_config.summary_font_size),
+            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+            ('BACKGROUND', (0, -1), (-1, -1), colors.toColor(template_config.total_row_color)),
+            ('TEXTCOLOR', (0, -1), (-1, -1), colors.toColor(template_config.total_row_text_color)),
+            ('PADDING', (0, 0), (-1, -1), 6),
+            ('BOX', (0, 0), (-1, -1), 1, colors.black),
+            ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.black)
+        ]))
+        
+        story.append(summary_table)
+        story.append(Spacer(1, template_config.signature_spacing))
+        
+        # 7. PAYMENT TERMS AND SIGNATURE
+        signature_style = ParagraphStyle(
+            'SignatureStyle',
+            parent=styles['Normal'],
+            fontSize=template_config.signature_font_size,
+            fontName='Helvetica'
+        )
+        
+        story.append(Paragraph(f"<b>Payment Terms:</b> {invoice_data.get('payment_terms', 'Payment due within 30 days')}", signature_style))
+        story.append(Spacer(1, 20))
+        
+        # Signature section
+        signature_table_data = [
+            ['', 'Authorised Signatory'],
+            ['', 'Activus Industrial Design & Build']
+        ]
+        
+        signature_table = Table(signature_table_data, colWidths=[120*mm, 70*mm])
+        signature_table.setStyle(TableStyle([
+            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+            ('FONTNAME', (1, 0), (1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (1, 0), (1, -1), template_config.signature_font_size),
+            ('VALIGN', (1, 0), (1, -1), 'TOP')
+        ]))
+        
+        story.append(signature_table)
+        
+        # Build the PDF
+        doc.build(story)
+        
+        # Get the PDF data
+        buffer.seek(0)
+        pdf_data = buffer.read()
+        buffer.close()
+        
+        return pdf_data
+        
+    except Exception as e:
+        logger.error(f"Error generating template-driven PDF: {str(e)}")
+        raise
 
 # Authentication functions
 async def hash_password(password: str) -> str:
