@@ -1723,21 +1723,6 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         raise HTTPException(status_code=401, detail="Invalid authentication")
 
 # API Endpoints start here
-        )
-        
-        # Create billing table
-        billing_data = [
-            [
-                Paragraph(f"""<b>BILLED BY:</b><br/>
-                {getattr(template_config, 'company_name', 'Activus Industrial Design & Build')}<br/>
-                {getattr(template_config, 'company_address', 'Plot no. A-52, Sector no. 27, Phase - 2<br/>Taloja, Maharashtra, India - 410206')}<br/>
-                GST: {getattr(template_config, 'company_gst', '27ABCCS1234A1Z5')}<br/>
-                Email: {getattr(template_config, 'company_email', 'info@activus.co.in')}<br/>
-                Phone: {getattr(template_config, 'company_phone', '+91 99999 99999')}""", billing_style),
-                
-                Paragraph(f"""<b>BILLED TO:</b><br/>
-                {client_data.get('name', 'N/A')}<br/>
-                {client_data.get('bill_to_address', client_data.get('address', 'N/A'))}<br/>
                 GST: {client_data.get('gst_no', 'N/A')}<br/>
                 Email: {client_data.get('email', 'N/A')}<br/>
                 Phone: {client_data.get('phone', 'N/A')}""", billing_style)
