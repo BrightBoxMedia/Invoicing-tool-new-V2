@@ -151,8 +151,8 @@ const Sidebar = ({ currentUser }) => {
     {
       title: 'Document Templates',
       items: [
-        { path: '/modern-pdf-designer', icon: '🎨', label: 'Visual Invoice Designer', roles: ['super_admin'] },
-        { path: '/pdf-template-manager', icon: '📋', label: 'Classic Template Editor', roles: ['super_admin'] },
+        { path: '/visual-designer-2025', icon: '🚀', label: 'Visual Designer 2025', roles: ['super_admin'] },
+        { path: '/pdf-template-manager', icon: '📋', label: 'Classic Form Editor', roles: ['super_admin'] },
       ]
     },
     {
