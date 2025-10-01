@@ -151,8 +151,8 @@
         - comment: "IMPLEMENTED: Complete template-driven PDF generation engine added with generate_template_driven_pdf() function. Replaces static ReportLab with dynamic system using PDFTemplateConfig for layout, colors, fonts, margins, table styling, currency format, and GST breakdown (CGST+SGST vs IGST). Integrated into existing /api/invoices/{invoice_id}/pdf endpoint."
 
   - task: "Logo Upload and File Management"
-    implemented: false
-    working: false
+    implemented: true
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
@@ -161,6 +161,9 @@
         - working: false
         - agent: "main"
         - comment: "Need to implement file upload endpoint for template logos with proper validation, storage, and integration with template system."
+        - working: true
+        - agent: "main"
+        - comment: "IMPLEMENTED: Logo upload functionality with POST /api/admin/pdf-template/upload-logo endpoint. Features: file validation (image types, max 5MB), unique filename generation with UUID, base64 encoding for production deployment compatibility, proper error handling, activity logging, and integration with template system."
 
 ## backend:
   - task: "Pixel Perfect Invoice PDF Generation"
