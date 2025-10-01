@@ -4192,6 +4192,22 @@ async def upload_template_logo(
         logger.error(f"Error uploading logo: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to upload logo: {str(e)}")
 
+# Health check endpoint for AWS
+@app.get("/api/health")
+async def health_check():
+    """Health check endpoint for load balancers and monitoring"""
+    try:
+        # Test database connection
+        await db.list_collection_names()
+        return {
+            "status": "healthy",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "database": "connected",
+            "service": "invoice-management-system"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Service unhealthy: {str(e)}")
+
 # Include API router
 app.include_router(api_router)
 
