@@ -2242,6 +2242,162 @@ async def update_client(client_id: str, client_data: dict, current_user: dict = 
         logger.error(f"Error updating client: {e}")
         raise HTTPException(status_code=500, detail="Error updating client")
 
+# ============================================================================
+# INVOICES API - INVOICE MANAGEMENT
+# ============================================================================
+
+@api_router.get("/invoices")
+async def get_invoices(current_user: dict = Depends(get_current_user)):
+    """Get all invoices for the current user"""
+    try:
+        invoices = await db.invoices.find({"user_id": current_user["user_id"]}).to_list(length=None)
+        
+        # Convert MongoDB documents to proper format
+        formatted_invoices = []
+        for invoice in invoices:
+            invoice["id"] = invoice.pop("_id", str(invoice.get("_id", "")))
+            formatted_invoices.append(invoice)
+        
+        return formatted_invoices
+    except Exception as e:
+        logger.error(f"Error fetching invoices: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching invoices")
+
+@api_router.post("/invoices")
+async def create_invoice(invoice_data: dict, current_user: dict = Depends(get_current_user)):
+    """Create a new invoice"""
+    try:
+        # Add metadata
+        invoice_data.update({
+            "id": f"inv_{int(datetime.now(timezone.utc).timestamp())}",
+            "user_id": current_user["user_id"],
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "status": "draft"
+        })
+        
+        # Insert into database
+        result = await db.invoices.insert_one(invoice_data)
+        
+        # Return the created invoice
+        invoice_data["_id"] = str(result.inserted_id)
+        return {"message": "Invoice created successfully", "invoice": invoice_data}
+        
+    except Exception as e:
+        logger.error(f"Error creating invoice: {e}")
+        raise HTTPException(status_code=500, detail="Error creating invoice")
+
+@api_router.put("/invoices/{invoice_id}")
+async def update_invoice(invoice_id: str, invoice_data: dict, current_user: dict = Depends(get_current_user)):
+    """Update an existing invoice"""
+    try:
+        # Add updated timestamp
+        invoice_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+        
+        result = await db.invoices.update_one(
+            {"id": invoice_id, "user_id": current_user["user_id"]},
+            {"$set": invoice_data}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Invoice not found")
+        
+        return {"message": "Invoice updated successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating invoice: {e}")
+        raise HTTPException(status_code=500, detail="Error updating invoice")
+
+@api_router.get("/invoices/{invoice_id}/pdf")
+async def generate_invoice_pdf(invoice_id: str, current_user: dict = Depends(get_current_user)):
+    """Generate PDF for a specific invoice"""
+    try:
+        # Get invoice data
+        invoice = await db.invoices.find_one({"id": invoice_id, "user_id": current_user["user_id"]})
+        if not invoice:
+            raise HTTPException(status_code=404, detail="Invoice not found")
+        
+        # Get client data (optional)
+        client_data = {}
+        if invoice.get("client_id"):
+            client = await db.clients.find_one({"id": invoice["client_id"]})
+            if client:
+                client_data = client
+        
+        # Get project data (optional)
+        project_data = {}
+        if invoice.get("project_id"):
+            project = await db.projects.find_one({"id": invoice["project_id"]})
+            if project:
+                project_data = project
+        
+        # Get active template
+        template = await template_manager.get_active_template()
+        
+        # Generate PDF using template-driven generation
+        pdf_buffer = await generate_template_driven_pdf(template, invoice, client_data, project_data)
+        
+        return StreamingResponse(
+            io.BytesIO(pdf_buffer),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename=invoice_{invoice_id}.pdf"}
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating invoice PDF: {e}")
+        raise HTTPException(status_code=500, detail="Error generating PDF")
+
+# ============================================================================
+# ACTIVITY LOGS API - SYSTEM ACTIVITY TRACKING
+# ============================================================================
+
+@api_router.get("/activity-logs")
+async def get_activity_logs(
+    current_user: dict = Depends(get_current_user),
+    limit: int = Query(50, description="Number of logs to return"),
+    offset: int = Query(0, description="Number of logs to skip")
+):
+    """Get activity logs for the current user"""
+    try:
+        logs = await db.activity_logs.find(
+            {"user_id": current_user["user_id"]}
+        ).sort("created_at", -1).skip(offset).limit(limit).to_list(length=None)
+        
+        # Convert MongoDB documents to proper format
+        formatted_logs = []
+        for log in logs:
+            log["id"] = log.pop("_id", str(log.get("_id", "")))
+            formatted_logs.append(log)
+        
+        return formatted_logs
+    except Exception as e:
+        logger.error(f"Error fetching activity logs: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching activity logs")
+
+@api_router.post("/activity-logs")
+async def create_activity_log(log_data: dict, current_user: dict = Depends(get_current_user)):
+    """Create a new activity log entry"""
+    try:
+        # Add metadata
+        log_data.update({
+            "id": f"log_{int(datetime.now(timezone.utc).timestamp())}",
+            "user_id": current_user["user_id"],
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        # Insert into database
+        result = await db.activity_logs.insert_one(log_data)
+        
+        return {"message": "Activity log created successfully", "log_id": str(result.inserted_id)}
+        
+    except Exception as e:
+        logger.error(f"Error creating activity log: {e}")
+        raise HTTPException(status_code=500, detail="Error creating activity log")
+
 # Include the API router in the app
 app.include_router(api_router)
 
