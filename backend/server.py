@@ -1869,14 +1869,7 @@ async def startup_event():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=PORT)
-                template_config.col_item_width * mm,
-                template_config.col_gst_rate_width * mm,
-                template_config.col_quantity_width * mm,
-                template_config.col_rate_width * mm,
-                template_config.col_amount_width * mm,
-                template_config.col_igst_width * mm,
-                template_config.col_total_width * mm
-            ]
+# End of file
         
         # Create table data
         table_data = [table_headers]
