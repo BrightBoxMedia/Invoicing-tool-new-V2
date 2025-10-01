@@ -2076,7 +2076,10 @@ async def get_projects(current_user: dict = Depends(get_current_user)):
         # Convert MongoDB documents to proper format
         formatted_projects = []
         for project in projects:
-            project["id"] = project.pop("_id", str(project.get("_id", "")))
+            # Handle ObjectId serialization
+            if "_id" in project:
+                project["id"] = str(project["_id"])
+                del project["_id"]
             formatted_projects.append(project)
         
         return formatted_projects
