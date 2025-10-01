@@ -748,62 +748,60 @@ const SimplePDFEditor = ({ currentUser }) => {
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                            Position X (Within Invoice)
+                                                            🆓 Position X (Complete Freedom)
                                                         </label>
                                                         <input
-                                                            type="range"
-                                                            min="0"
-                                                            max="450"
+                                                            type="number"
                                                             value={template.logo_x}
-                                                            onChange={(e) => updateField('logo_x', parseInt(e.target.value))}
-                                                            className="w-full"
+                                                            onChange={(e) => updateField('logo_x', parseInt(e.target.value) || 0)}
+                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                            placeholder="Any position"
                                                         />
-                                                        <div className="text-xs text-gray-500 text-center mt-1">{template.logo_x}px from left</div>
+                                                        <div className="text-xs text-gray-500 text-center mt-1">Pixels from left</div>
                                                     </div>
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                            Position Y (Within Invoice)
+                                                            🆓 Position Y (Complete Freedom)
                                                         </label>
                                                         <input
-                                                            type="range"
-                                                            min="0"
-                                                            max="200"
+                                                            type="number"
                                                             value={template.logo_y}
-                                                            onChange={(e) => updateField('logo_y', parseInt(e.target.value))}
-                                                            className="w-full"
+                                                            onChange={(e) => updateField('logo_y', parseInt(e.target.value) || 0)}
+                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                            placeholder="Any position"
                                                         />
-                                                        <div className="text-xs text-gray-500 text-center mt-1">{template.logo_y}px from top</div>
+                                                        <div className="text-xs text-gray-500 text-center mt-1">Pixels from top</div>
                                                     </div>
                                                 </div>
 
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                            Width (Canva Style)
+                                                            📏 Width (Any Size)
                                                         </label>
                                                         <input
-                                                            type="range"
-                                                            min="30"
-                                                            max="300"
+                                                            type="number"
+                                                            min="10"
                                                             value={template.logo_width}
-                                                            onChange={(e) => updateField('logo_width', parseInt(e.target.value))}
-                                                            className="w-full"
+                                                            onChange={(e) => updateField('logo_width', parseInt(e.target.value) || 10)}
+                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                            placeholder="Any width"
                                                         />
-                                                        <div className="text-xs text-gray-500 text-center mt-1">{template.logo_width}px wide</div>
+                                                        <div className="text-xs text-gray-500 text-center mt-1">Pixels wide</div>
                                                     </div>
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                            Height (Canva Style)
+                                                            📏 Height (Any Size)
                                                         </label>
                                                         <input
-                                                            type="range"
-                                                            min="20"
-                                                            max="200"
+                                                            type="number"
+                                                            min="10"
                                                             value={template.logo_height}
-                                                            onChange={(e) => updateField('logo_height', parseInt(e.target.value))}
-                                                            className="w-full"
+                                                            onChange={(e) => updateField('logo_height', parseInt(e.target.value) || 10)}
+                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                            placeholder="Any height"
                                                         />
-                                                        <div className="text-xs text-gray-500 text-center mt-1">{template.logo_height}px tall</div>
+                                                        <div className="text-xs text-gray-500 text-center mt-1">Pixels tall</div>
                                                     </div>
                                                 </div>
 
