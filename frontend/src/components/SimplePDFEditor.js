@@ -129,19 +129,32 @@ const SimplePDFEditor = ({ currentUser }) => {
         
         // Invoice Styling
         header_color: '#127285',
+        header_text_color: '#127285',
         table_header_color: '#127285',
         table_header_text_color: '#ffffff',
         currency_symbol: 'Rs.',
+        
+        // Text Colors
+        invoice_details_text_color: '#000000',
+        company_text_color: '#000000',
+        client_text_color: '#000000',
+        project_text_color: '#000000',
+        table_data_text_color: '#000000',
+        summary_text_color: '#000000',
         
         // Fonts
         header_font_size: 24,
         content_font_size: 12,
         table_font_size: 11,
         
-        // Colors
+        // Section Background Colors
         company_section_color: '#e8f5e8',
         client_section_color: '#e8f8ff',
-        total_row_color: '#f0f9ff'
+        total_row_color: '#f0f9ff',
+        
+        // Alternate Colors
+        table_alt_row_color: '#f8fafc',
+        border_color: '#e2e8f0'
     });
 
     const [activeTab, setActiveTab] = useState('company');
