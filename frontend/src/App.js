@@ -14,6 +14,7 @@ import InvoiceDesignCustomizer from './components/InvoiceDesignCustomizer';
 import PixelPerfectInvoiceTemplate from './components/PixelPerfectInvoiceTemplate';
 import PDFTemplateManager from './components/PDFTemplateManager';
 import ModernPDFDesigner from './components/ModernPDFDesigner';
+import ModernPDFDesigner2025 from './components/ModernPDFDesigner2025';
 import EnhancedInvoiceCreation from './components/EnhancedInvoiceCreation';
 import InvoiceSuccessModal from './components/InvoiceSuccessModal';
 import GSTApprovalInterface from './components/GSTApprovalInterface';
