@@ -5,6 +5,7 @@ Professional invoice and project management for construction industry
 """
 
 import os
+import sys
 import uuid
 import bcrypt
 import jwt
