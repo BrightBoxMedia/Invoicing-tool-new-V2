@@ -132,8 +132,8 @@ const SimplePDFEditor = ({ currentUser }) => {
         logo_url: null,
         logo_width: 120,
         logo_height: 60,
-        logo_x: 400,
-        logo_y: 10,
+        logo_x: 350,
+        logo_y: 20,
         logo_layer: 'above', // 'above' or 'behind' text
         logo_opacity: 100,
         logo_fit: 'contain',
