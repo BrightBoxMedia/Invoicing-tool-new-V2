@@ -89,7 +89,7 @@ class PDFTemplateConfig(BaseModel):
     # Metadata
     created_by: str = "system"
     created_at: datetime = datetime.now(timezone.utc)
-    updated_at: datetime = datetime.utc)
+    updated_at: datetime = datetime.now(timezone.utc)
     is_active: bool = True
 
 class PDFTemplateManager:
