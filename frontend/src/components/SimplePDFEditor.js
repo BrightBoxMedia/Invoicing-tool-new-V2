@@ -553,32 +553,128 @@ const SimplePDFEditor = ({ currentUser }) => {
                                         </div>
 
                                         {template.logo_url && (
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                        Logo Width
-                                                    </label>
-                                                    <input
-                                                        type="number"
-                                                        min="50"
-                                                        max="200"
-                                                        value={template.logo_width}
-                                                        onChange={(e) => updateField('logo_width', parseInt(e.target.value))}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                    />
+                                            <div className="space-y-4">
+                                                {/* Logo Positioning Controls */}
+                                                <div className="bg-blue-50 p-4 rounded-lg">
+                                                    <h4 className="font-medium text-blue-900 mb-3">Interactive Logo Controls</h4>
+                                                    <div className="text-sm text-blue-700 space-y-2">
+                                                        <p>💡 <strong>In the preview:</strong> Drag the logo to move it around</p>
+                                                        <p>🔧 <strong>Resize:</strong> Drag the blue dot in bottom-right corner</p>
+                                                        <p>📑 <strong>Layer:</strong> Click ⬆️/⬇️ button to move above/behind text</p>
+                                                    </div>
                                                 </div>
+
+                                                {/* Precise Controls */}
                                                 <div>
                                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                        Logo Height
+                                                        Logo Layer Position
                                                     </label>
-                                                    <input
-                                                        type="number"
-                                                        min="30"
-                                                        max="120"
-                                                        value={template.logo_height}
-                                                        onChange={(e) => updateField('logo_height', parseInt(e.target.value))}
+                                                    <select
+                                                        value={template.logo_layer}
+                                                        onChange={(e) => updateField('logo_layer', e.target.value)}
                                                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                    />
+                                                    >
+                                                        <option value="above">Above Text (Front Layer)</option>
+                                                        <option value="behind">Behind Text (Background)</option>
+                                                    </select>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                            Position X (Left)
+                                                        </label>
+                                                        <input
+                                                            type="range"
+                                                            min="0"
+                                                            max="500"
+                                                            value={template.logo_x}
+                                                            onChange={(e) => updateField('logo_x', parseInt(e.target.value))}
+                                                            className="w-full"
+                                                        />
+                                                        <div className="text-xs text-gray-500 text-center mt-1">{template.logo_x}px</div>
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                            Position Y (Top)
+                                                        </label>
+                                                        <input
+                                                            type="range"
+                                                            min="0"
+                                                            max="150"
+                                                            value={template.logo_y}
+                                                            onChange={(e) => updateField('logo_y', parseInt(e.target.value))}
+                                                            className="w-full"
+                                                        />
+                                                        <div className="text-xs text-gray-500 text-center mt-1">{template.logo_y}px</div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                            Width
+                                                        </label>
+                                                        <input
+                                                            type="range"
+                                                            min="50"
+                                                            max="300"
+                                                            value={template.logo_width}
+                                                            onChange={(e) => updateField('logo_width', parseInt(e.target.value))}
+                                                            className="w-full"
+                                                        />
+                                                        <div className="text-xs text-gray-500 text-center mt-1">{template.logo_width}px</div>
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                            Height
+                                                        </label>
+                                                        <input
+                                                            type="range"
+                                                            min="30"
+                                                            max="200"
+                                                            value={template.logo_height}
+                                                            onChange={(e) => updateField('logo_height', parseInt(e.target.value))}
+                                                            className="w-full"
+                                                        />
+                                                        <div className="text-xs text-gray-500 text-center mt-1">{template.logo_height}px</div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Quick Preset Positions */}
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                        Quick Position Presets
+                                                    </label>
+                                                    <div className="grid grid-cols-3 gap-2">
+                                                        <button
+                                                            onClick={() => {
+                                                                updateField('logo_x', 10);
+                                                                updateField('logo_y', 10);
+                                                            }}
+                                                            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm transition-colors"
+                                                        >
+                                                            Top Left
+                                                        </button>
+                                                        <button
+                                                            onClick={() => {
+                                                                updateField('logo_x', 250);
+                                                                updateField('logo_y', 10);
+                                                            }}
+                                                            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm transition-colors"
+                                                        >
+                                                            Top Center
+                                                        </button>
+                                                        <button
+                                                            onClick={() => {
+                                                                updateField('logo_x', 450);
+                                                                updateField('logo_y', 10);
+                                                            }}
+                                                            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm transition-colors"
+                                                        >
+                                                            Top Right
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         )}
