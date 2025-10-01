@@ -939,7 +939,9 @@ const SimplePDFEditor = ({ currentUser }) => {
                                         className="p-3 rounded"
                                         style={{ 
                                             backgroundColor: template.company_section_color,
-                                            fontSize: `${template.content_font_size}px`
+                                            fontSize: `${template.content_font_size}px`,
+                                            color: template.company_text_color,
+                                            borderColor: template.border_color
                                         }}
                                     >
                                         <div className="font-bold mb-2">BILLED BY:</div>
@@ -954,7 +956,9 @@ const SimplePDFEditor = ({ currentUser }) => {
                                         className="p-3 rounded"
                                         style={{ 
                                             backgroundColor: template.client_section_color,
-                                            fontSize: `${template.content_font_size}px`
+                                            fontSize: `${template.content_font_size}px`,
+                                            color: template.client_text_color,
+                                            borderColor: template.border_color
                                         }}
                                     >
                                         <div className="font-bold mb-2">BILLED TO:</div>
