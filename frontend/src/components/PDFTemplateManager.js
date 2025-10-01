@@ -525,7 +525,7 @@ const PDFTemplateManager = ({ currentUser }) => {
                     <div className="space-y-6">
                         <h3 className="text-lg font-semibold text-gray-900">Colors & Typography</h3>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="space-y-4">
                                 <h4 className="font-medium text-gray-800">Table Colors</h4>
                                 
@@ -548,10 +548,20 @@ const PDFTemplateManager = ({ currentUser }) => {
                                         className="w-full h-10 border border-gray-300 rounded-md"
                                     />
                                 </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Total Row Background</label>
+                                    <input
+                                        type="color"
+                                        value={template.total_row_color}
+                                        onChange={(e) => updateTemplate('total_row_color', e.target.value)}
+                                        className="w-full h-10 border border-gray-300 rounded-md"
+                                    />
+                                </div>
                             </div>
 
                             <div className="space-y-4">
-                                <h4 className="font-medium text-gray-800">Currency Settings</h4>
+                                <h4 className="font-medium text-gray-800">Currency & Display</h4>
                                 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">Currency Symbol</label>
@@ -574,6 +584,98 @@ const PDFTemplateManager = ({ currentUser }) => {
                                         <option value="SYMBOL">Symbol (₹)</option>
                                         <option value="TEXT">Text (Rs.)</option>
                                     </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
+                                    <input
+                                        type="text"
+                                        value={template.company_name || "Activus Industrial Design & Build"}
+                                        onChange={(e) => updateTemplate('company_name', e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <h4 className="font-medium text-gray-800">Font Settings</h4>
+                                
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Header Font Size</label>
+                                    <input
+                                        type="number"
+                                        min="10"
+                                        max="24"
+                                        value={template.table_header_font_size}
+                                        onChange={(e) => updateTemplate('table_header_font_size', parseFloat(e.target.value))}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                    />
+                                </div>
+                                
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Data Font Size</label>
+                                    <input
+                                        type="number"
+                                        min="8"
+                                        max="16"
+                                        value={template.table_data_font_size}
+                                        onChange={(e) => updateTemplate('table_data_font_size', parseFloat(e.target.value))}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Summary Font Size</label>
+                                    <input
+                                        type="number"
+                                        min="8"
+                                        max="16"
+                                        value={template.summary_font_size}
+                                        onChange={(e) => updateTemplate('summary_font_size', parseFloat(e.target.value))}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="border-t pt-6">
+                            <h4 className="font-medium text-gray-800 mb-4">Company Information</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Company Address</label>
+                                    <textarea
+                                        rows="3"
+                                        value={template.company_address || "Plot no. A-52, Sector no. 27, Phase - 2\nTaloja, Maharashtra, India - 410206"}
+                                        onChange={(e) => updateTemplate('company_address', e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Company GST Number</label>
+                                    <input
+                                        type="text"
+                                        value={template.company_gst || "27ABCCS1234A1Z5"}
+                                        onChange={(e) => updateTemplate('company_gst', e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Company Email</label>
+                                    <input
+                                        type="email"
+                                        value={template.company_email || "info@activus.co.in"}
+                                        onChange={(e) => updateTemplate('company_email', e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Company Phone</label>
+                                    <input
+                                        type="tel"
+                                        value={template.company_phone || "+91 99999 99999"}
+                                        onChange={(e) => updateTemplate('company_phone', e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                    />
                                 </div>
                             </div>
                         </div>
