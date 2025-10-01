@@ -1687,13 +1687,7 @@ async def generate_template_driven_pdf(
             logger.error(f"Fallback PDF generation also failed: {fallback_error}")
             raise
 # End of generate_template_driven_pdf function
-                    
-                    # Create logo image
-                    logo_img = RLImage(
-                        logo_buffer,
-                        width=template_config.logo_width,
-                        height=template_config.logo_height
-                    )
+# Old code removed
                     
                     # Create header with logo
                     if template_config.logo_position == "TOP_LEFT":
