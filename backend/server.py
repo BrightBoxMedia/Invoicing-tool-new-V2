@@ -1742,11 +1742,32 @@ api_router = APIRouter(prefix="/api")
 
 # Authentication endpoints
 @api_router.post("/auth/login")
-            ('PADDING', (0, 0), (-1, -1), template_config.table_padding_horizontal),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('BOX', (0, 0), (-1, -1), 1, colors.black),
-            ('INNERGRID', (0, 0), (-1, -1), 1, colors.black)
-        ]))
+async def login(user_data: UserLogin):
+    try:
+        user = await db.users.find_one({"email": user_data.email, "is_active": True})
+        if not user:
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+        
+        if not await verify_password(user_data.password, user["password_hash"]):
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+        
+        token = await create_token(user["id"], user["email"], user["role"])
+        
+        return {
+            "access_token": token,
+            "token_type": "bearer",
+            "user": {
+                "id": user["id"],
+                "email": user["email"],
+                "role": user["role"],
+                "company_name": user["company_name"]
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Login error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
         
         story.append(billing_table)
         story.append(Spacer(1, template_config.billing_section_spacing))
