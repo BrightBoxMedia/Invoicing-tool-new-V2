@@ -738,12 +738,12 @@ const SimplePDFEditor = ({ currentUser }) => {
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                            Position X (Left)
+                                                            Position X (Left) - UNLIMITED
                                                         </label>
                                                         <input
                                                             type="range"
-                                                            min="0"
-                                                            max="500"
+                                                            min="-200"
+                                                            max="800"
                                                             value={template.logo_x}
                                                             onChange={(e) => updateField('logo_x', parseInt(e.target.value))}
                                                             className="w-full"
@@ -752,12 +752,12 @@ const SimplePDFEditor = ({ currentUser }) => {
                                                     </div>
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                            Position Y (Top)
+                                                            Position Y (Top) - UNLIMITED
                                                         </label>
                                                         <input
                                                             type="range"
-                                                            min="0"
-                                                            max="150"
+                                                            min="-100"
+                                                            max="400"
                                                             value={template.logo_y}
                                                             onChange={(e) => updateField('logo_y', parseInt(e.target.value))}
                                                             className="w-full"
@@ -769,12 +769,12 @@ const SimplePDFEditor = ({ currentUser }) => {
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                            Width
+                                                            Width - UNLIMITED
                                                         </label>
                                                         <input
                                                             type="range"
-                                                            min="50"
-                                                            max="300"
+                                                            min="20"
+                                                            max="500"
                                                             value={template.logo_width}
                                                             onChange={(e) => updateField('logo_width', parseInt(e.target.value))}
                                                             className="w-full"
@@ -783,12 +783,12 @@ const SimplePDFEditor = ({ currentUser }) => {
                                                     </div>
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                            Height
+                                                            Height - UNLIMITED
                                                         </label>
                                                         <input
                                                             type="range"
-                                                            min="30"
-                                                            max="200"
+                                                            min="15"
+                                                            max="300"
                                                             value={template.logo_height}
                                                             onChange={(e) => updateField('logo_height', parseInt(e.target.value))}
                                                             className="w-full"
