@@ -931,9 +931,14 @@ const SimplePDFEditor = ({ currentUser }) => {
                 const data = await response.json();
                 setTemplate(prev => ({ ...prev, ...data }));
                 
-                // Load canvas elements if they exist
-                if (data.canvas_elements) {
+                // Only load canvas elements if they exist and have meaningful content
+                // Otherwise keep the default canvas elements (original invoice design)
+                if (data.canvas_elements && Object.keys(data.canvas_elements).length > 2) {
                     setCanvasElements(data.canvas_elements);
+                } else {
+                    // Keep the default canvas elements (original invoice design format)
+                    console.log('Using default canvas elements - original invoice design');
+                    // Don't override canvasElements state - let it keep the defaults
                 }
             }
         } catch (error) {
