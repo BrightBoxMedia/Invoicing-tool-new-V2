@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 // Interactive Logo Editor Component
-const LogoEditor = ({ logoUrl, logoWidth, logoHeight, logoX, logoY, logoLayer, onLogoChange }) => {
+const LogoEditor = ({ logoUrl, logoWidth, logoHeight, logoX, logoY, logoLayer, logoOpacity = 100, logoFit = 'contain', onLogoChange }) => {
     const [isDragging, setIsDragging] = useState(false);
     const [isResizing, setIsResizing] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
