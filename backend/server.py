@@ -2394,7 +2394,10 @@ async def get_activity_logs(
         # Convert MongoDB documents to proper format
         formatted_logs = []
         for log in logs:
-            log["id"] = log.pop("_id", str(log.get("_id", "")))
+            # Handle ObjectId serialization
+            if "_id" in log:
+                log["id"] = str(log["_id"])
+                del log["_id"]
             formatted_logs.append(log)
         
         return formatted_logs
