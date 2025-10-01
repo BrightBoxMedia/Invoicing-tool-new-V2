@@ -1688,16 +1688,7 @@ async def generate_template_driven_pdf(
             raise
 # End of generate_template_driven_pdf function
 # Authentication functions
-                        
-                    header_table = Table(header_data, colWidths=[95*mm, 95*mm])
-                    header_table.setStyle(TableStyle([
-                        ('ALIGN', (0, 0), (0, 0), 'LEFT'),
-                        ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
-                        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
-                        ('FONTSIZE', (0, 0), (-1, -1), template_config.header_tax_invoice_font_size),
-                        ('TEXTCOLOR', (0, 0), (-1, -1), colors.toColor(template_config.header_tax_invoice_color)),
-                        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')
-                    ]))
+async def hash_password(password: str) -> str:
                     story.append(header_table)
                     
             except Exception as e:
