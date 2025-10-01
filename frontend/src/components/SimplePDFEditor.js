@@ -971,7 +971,10 @@ const SimplePDFEditor = ({ currentUser }) => {
                                 </div>
 
                                 {/* Project Info */}
-                                <div className="mb-4" style={{ fontSize: `${template.content_font_size}px` }}>
+                                <div className="mb-4" style={{ 
+                                    fontSize: `${template.content_font_size}px`,
+                                    color: template.project_text_color 
+                                }}>
                                     <div><strong>Project:</strong> Sample Construction Project</div>
                                     <div><strong>Location:</strong> Sample Location, Sample City</div>
                                 </div>
