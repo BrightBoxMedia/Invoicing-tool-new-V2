@@ -817,30 +817,30 @@ const SimplePDFEditor = ({ currentUser }) => {
                                                     <div className="grid grid-cols-3 gap-2">
                                                         <button
                                                             onClick={() => {
-                                                                updateField('logo_x', 10);
-                                                                updateField('logo_y', 10);
+                                                                updateField('logo_x', 20);
+                                                                updateField('logo_y', 15);
                                                             }}
                                                             className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm transition-colors"
                                                         >
-                                                            Top Left
+                                                            📍 Top Left
                                                         </button>
                                                         <button
                                                             onClick={() => {
-                                                                updateField('logo_x', 250);
-                                                                updateField('logo_y', 10);
+                                                                updateField('logo_x', 220);
+                                                                updateField('logo_y', 15);
                                                             }}
                                                             className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm transition-colors"
                                                         >
-                                                            Top Center
+                                                            📍 Top Center
                                                         </button>
                                                         <button
                                                             onClick={() => {
-                                                                updateField('logo_x', 450);
-                                                                updateField('logo_y', 10);
+                                                                updateField('logo_x', 350);
+                                                                updateField('logo_y', 15);
                                                             }}
                                                             className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm transition-colors"
                                                         >
-                                                            Top Right
+                                                            📍 Top Right
                                                         </button>
                                                     </div>
                                                 </div>
