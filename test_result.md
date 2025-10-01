@@ -683,8 +683,8 @@
   run_ui: false
 
 ## test_plan:
-  current_focus: ["Enhanced Interactive Logo Functionality Testing"]
-  stuck_tasks: []
+  current_focus: ["Enhanced PDF Template Management with Canva-like Functionality"]
+  stuck_tasks: ["Enhanced PDF Template Management with Canva-like Functionality"]
   test_all: false
   test_priority: "high_first"
 
