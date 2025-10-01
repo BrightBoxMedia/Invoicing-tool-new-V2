@@ -1905,6 +1905,149 @@ async def generate_template_preview(template_data: dict, current_user: dict = De
         logger.error(f"Error generating template preview: {str(e)}")
         raise HTTPException(status_code=500, detail="Error generating preview")
 
+# BOQ Upload endpoint for project creation
+@api_router.post("/upload-boq")
+async def upload_boq_file(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
+    """Upload and parse Excel BOQ file for project creation"""
+    try:
+        # Validate file type
+        allowed_types = [
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',  # .xlsx
+            'application/vnd.ms-excel',  # .xls
+        ]
+        
+        if file.content_type not in allowed_types:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Invalid file type. Only .xlsx and .xls files are allowed. Got: {file.content_type}"
+            )
+        
+        # Validate file size (max 10MB)
+        max_size = 10 * 1024 * 1024  # 10MB
+        contents = await file.read()
+        if len(contents) > max_size:
+            raise HTTPException(status_code=400, detail="File size exceeds 10MB limit")
+        
+        # Parse Excel file
+        import pandas as pd
+        from io import BytesIO
+        
+        try:
+            # Read Excel file
+            excel_buffer = BytesIO(contents)
+            
+            # Try to read the first sheet
+            df = pd.read_excel(excel_buffer, sheet_name=0)
+            
+            # Clean and process the data
+            df = df.dropna(how='all')  # Remove empty rows
+            df = df.fillna('')  # Fill NaN with empty string
+            
+            # Convert to list of dictionaries
+            boq_items = []
+            
+            # Try to identify columns (flexible column mapping)
+            columns = df.columns.tolist()
+            
+            # Common column name variations
+            item_columns = ['item', 'description', 'work', 'particular', 'details', 'service']
+            qty_columns = ['qty', 'quantity', 'amount', 'nos', 'unit']
+            rate_columns = ['rate', 'price', 'cost', 'unit_price', 'unit_rate']
+            
+            # Find the best matching columns
+            item_col = None
+            qty_col = None  
+            rate_col = None
+            
+            for col in columns:
+                col_lower = str(col).lower().strip()
+                if not item_col and any(term in col_lower for term in item_columns):
+                    item_col = col
+                elif not qty_col and any(term in col_lower for term in qty_columns):
+                    qty_col = col
+                elif not rate_col and any(term in col_lower for term in rate_columns):
+                    rate_col = col
+            
+            # If columns not found by keywords, use first 3 columns as fallback
+            if not item_col and len(columns) > 0:
+                item_col = columns[0]
+            if not qty_col and len(columns) > 1:
+                qty_col = columns[1]
+            if not rate_col and len(columns) > 2:
+                rate_col = columns[2]
+            
+            # Process each row
+            for index, row in df.iterrows():
+                try:
+                    item_description = str(row.get(item_col, '')).strip()
+                    if not item_description or item_description.lower() in ['nan', 'none', '']:
+                        continue
+                    
+                    # Parse quantity
+                    qty_value = row.get(qty_col, 0)
+                    try:
+                        quantity = float(str(qty_value).replace(',', '')) if qty_value != '' else 1.0
+                    except:
+                        quantity = 1.0
+                    
+                    # Parse rate  
+                    rate_value = row.get(rate_col, 0)
+                    try:
+                        rate = float(str(rate_value).replace(',', '').replace('₹', '').replace('Rs.', '')) if rate_value != '' else 0.0
+                    except:
+                        rate = 0.0
+                    
+                    boq_item = {
+                        "id": f"boq_{index + 1}",
+                        "description": item_description,
+                        "quantity": quantity,
+                        "rate": rate,
+                        "amount": quantity * rate,
+                        "billed_quantity": 0.0,
+                        "remaining_quantity": quantity,
+                        "unit": "Nos"  # Default unit
+                    }
+                    
+                    boq_items.append(boq_item)
+                    
+                except Exception as row_error:
+                    logger.warning(f"Error processing row {index}: {row_error}")
+                    continue
+            
+            if not boq_items:
+                raise HTTPException(
+                    status_code=400, 
+                    detail="No valid BOQ items found in the Excel file. Please check the file format."
+                )
+            
+            # Return parsed BOQ data
+            return {
+                "message": "BOQ file uploaded and parsed successfully",
+                "filename": file.filename,
+                "total_items": len(boq_items),
+                "boq_items": boq_items,
+                "columns_detected": {
+                    "item_column": item_col,
+                    "quantity_column": qty_col,
+                    "rate_column": rate_col
+                },
+                "total_value": sum(item["amount"] for item in boq_items)
+            }
+            
+        except pd.errors.EmptyDataError:
+            raise HTTPException(status_code=400, detail="Excel file is empty or corrupted")
+        except pd.errors.ParserError:
+            raise HTTPException(status_code=400, detail="Unable to parse Excel file. Please check the file format")
+        except Exception as parse_error:
+            logger.error(f"Excel parsing error: {parse_error}")
+            raise HTTPException(status_code=400, detail=f"Error parsing Excel file: {str(parse_error)}")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"BOQ upload error: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error during file upload")
+
 # Include the API router in the app
 app.include_router(api_router)
 
