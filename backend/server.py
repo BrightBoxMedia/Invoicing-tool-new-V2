@@ -4134,6 +4134,7 @@ app.include_router(api_router)
 @app.on_event("startup")
 async def startup_event():
     await init_super_admin()
+    await initialize_template_manager(db)
     logger.info("Activus Invoice Management System started successfully")
 
 # Production server configuration
