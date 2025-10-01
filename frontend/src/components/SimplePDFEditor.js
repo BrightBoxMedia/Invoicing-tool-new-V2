@@ -700,13 +700,19 @@ const SimplePDFEditor = ({ currentUser }) => {
     const saveTemplate = async () => {
         setSaving(true);
         try {
+            // Include canvas elements in template data
+            const templateWithCanvas = {
+                ...template,
+                canvas_elements: canvasElements
+            };
+            
             const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/pdf-template`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
-                body: JSON.stringify(template)
+                body: JSON.stringify(templateWithCanvas)
             });
 
             if (response.ok) {
