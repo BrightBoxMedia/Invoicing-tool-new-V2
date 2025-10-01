@@ -867,12 +867,21 @@ const SimplePDFEditor = ({ currentUser }) => {
                             {/* Invoice Preview - Canva Style Free Area */}
                             <div className="border border-gray-300 bg-white p-6 rounded-lg relative overflow-visible" style={{ fontSize: '12px', fontFamily: 'Arial, sans-serif', minHeight: '800px' }}>
                                 
-                                {/* Header with Interactive Logo - Canva Free Zone */}
+                                {/* Header with ALL Draggable Elements */}
                                 <div className="relative mb-6" style={{ minHeight: '200px', overflow: 'visible' }}>
-                                    {/* Header Text */}
-                                    <div className="relative z-10">
+                                    
+                                    {/* Draggable TAX INVOICE Title */}
+                                    <DraggableElement
+                                        elementId="tax-invoice-title"
+                                        x={template.title_x || 20}
+                                        y={template.title_y || 20}
+                                        onPositionChange={(x, y) => {
+                                            updateField('title_x', x);
+                                            updateField('title_y', y);
+                                        }}
+                                    >
                                         <h1 
-                                            className="font-bold mb-2" 
+                                            className="font-bold select-none" 
                                             style={{ 
                                                 fontSize: `${template.header_font_size}px`, 
                                                 color: template.header_text_color 
@@ -880,6 +889,18 @@ const SimplePDFEditor = ({ currentUser }) => {
                                         >
                                             TAX INVOICE
                                         </h1>
+                                    </DraggableElement>
+                                    
+                                    {/* Draggable Invoice Details */}
+                                    <DraggableElement
+                                        elementId="invoice-details"
+                                        x={template.details_x || 20}
+                                        y={template.details_y || 70}
+                                        onPositionChange={(x, y) => {
+                                            updateField('details_x', x);
+                                            updateField('details_y', y);
+                                        }}
+                                    >
                                         <div style={{ 
                                             fontSize: `${template.content_font_size}px`,
                                             color: template.invoice_details_text_color 
@@ -888,9 +909,9 @@ const SimplePDFEditor = ({ currentUser }) => {
                                             <div><strong>Invoice Date:</strong> {new Date().toLocaleDateString()}</div>
                                             <div><strong>Created By:</strong> {template.company_name}</div>
                                         </div>
-                                    </div>
+                                    </DraggableElement>
                                     
-                                    {/* SIMPLE Draggable Logo */}
+                                    {/* Draggable Logo */}
                                     {template.logo_url && (
                                         <DraggableLogo 
                                             logoUrl={template.logo_url}
