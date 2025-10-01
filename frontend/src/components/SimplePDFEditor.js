@@ -700,14 +700,12 @@ const SimplePDFEditor = ({ currentUser }) => {
                                         {template.logo_url && (
                                             <div className="space-y-4">
                                                 {/* Logo Positioning Controls */}
-                                                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                                                    <h4 className="font-medium text-green-900 mb-3">🆓 COMPLETE CANVA FREEDOM</h4>
-                                                    <div className="text-sm text-green-700 space-y-2">
-                                                        <p>✨ <strong>NO RULES:</strong> Move logo absolutely anywhere you want</p>
-                                                        <p>🖱️ <strong>Pure Drag Freedom:</strong> Click and drag - no boundaries!</p>
-                                                        <p>📏 <strong>Free Resize:</strong> Drag handles - any size you want</p>
-                                                        <p>🎨 <strong>Like Canva:</strong> Complete creative control, zero restrictions</p>
-                                                        <p>⚡ <strong>Direct Input:</strong> Type exact X, Y, width, height values</p>
+                                                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                                    <h4 className="font-medium text-blue-900 mb-3">📝 How to Use Logo</h4>
+                                                    <div className="text-sm text-blue-700 space-y-2">
+                                                        <p>1. <strong>Drag Logo:</strong> Click the logo in preview and drag to move</p>
+                                                        <p>2. <strong>Resize:</strong> Drag the blue circle in bottom-right corner</p>
+                                                        <p>3. <strong>Position:</strong> Or use the number inputs below for precise control</p>
                                                     </div>
                                                 </div>
 
