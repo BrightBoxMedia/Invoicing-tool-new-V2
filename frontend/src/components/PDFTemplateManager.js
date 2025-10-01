@@ -6,6 +6,7 @@ const PDFTemplateManager = ({ currentUser }) => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [activeTab, setActiveTab] = useState('layout');
+    const [uploadingLogo, setUploadingLogo] = useState(false);
 
     useEffect(() => {
         loadCurrentTemplate();
