@@ -76,13 +76,20 @@ class PDFTemplateConfig(BaseModel):
     currency_symbol: str = "₹"
     currency_format: str = "SYMBOL"  # SYMBOL, TEXT (₹ vs Rs.)
     
+    # Company Information
+    company_name: str = "Activus Industrial Design & Build"
+    company_address: str = "Plot no. A-52, Sector no. 27, Phase - 2\nTaloja, Maharashtra, India - 410206"
+    company_gst: str = "27ABCCS1234A1Z5"
+    company_email: str = "info@activus.co.in"
+    company_phone: str = "+91 99999 99999"
+    
     # Custom Styling
     custom_css: Optional[str] = None
     
     # Metadata
     created_by: str = "system"
     created_at: datetime = datetime.now(timezone.utc)
-    updated_at: datetime = datetime.now(timezone.utc)
+    updated_at: datetime = datetime.utc)
     is_active: bool = True
 
 class PDFTemplateManager:
