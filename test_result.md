@@ -58,7 +58,7 @@
 ##
 ## agent_communication:
 ##     -agent: "main"  # or "testing" or "user"
-##     -message: "Communication message between agents"
+##     -message: "Starting Phase 1 implementation of Canva-like WYSIWYG PDF Template Editor. Current issue identified: DraggableElement component is missing. Will implement complete interactive canvas with all elements draggable/resizable, add/remove elements functionality, and click-to-edit text."
 
 # Protocol Guidelines for Main agent
 #
