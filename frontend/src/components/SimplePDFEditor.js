@@ -998,24 +998,27 @@ const SimplePDFEditor = ({ currentUser }) => {
                                             <th className="border border-gray-400 p-2">Total</th>
                                         </tr>
                                     </thead>
-                                    <tbody style={{ fontSize: `${template.table_font_size}px` }}>
+                                    <tbody style={{ 
+                                        fontSize: `${template.table_font_size}px`,
+                                        color: template.table_data_text_color 
+                                    }}>
                                         <tr>
-                                            <td className="border border-gray-400 p-2">Sample Construction Work</td>
-                                            <td className="border border-gray-400 p-2 text-center">18%</td>
-                                            <td className="border border-gray-400 p-2 text-center">100</td>
-                                            <td className="border border-gray-400 p-2 text-right">{template.currency_symbol} 1,000</td>
-                                            <td className="border border-gray-400 p-2 text-right">{template.currency_symbol} 100,000</td>
-                                            <td className="border border-gray-400 p-2 text-right">{template.currency_symbol} 18,000</td>
-                                            <td className="border border-gray-400 p-2 text-right">{template.currency_symbol} 118,000</td>
+                                            <td className="border p-2" style={{ borderColor: template.border_color }}>Sample Construction Work</td>
+                                            <td className="border p-2 text-center" style={{ borderColor: template.border_color }}>18%</td>
+                                            <td className="border p-2 text-center" style={{ borderColor: template.border_color }}>100</td>
+                                            <td className="border p-2 text-right" style={{ borderColor: template.border_color }}>{template.currency_symbol} 1,000</td>
+                                            <td className="border p-2 text-right" style={{ borderColor: template.border_color }}>{template.currency_symbol} 100,000</td>
+                                            <td className="border p-2 text-right" style={{ borderColor: template.border_color }}>{template.currency_symbol} 18,000</td>
+                                            <td className="border p-2 text-right" style={{ borderColor: template.border_color }}>{template.currency_symbol} 118,000</td>
                                         </tr>
-                                        <tr className="bg-gray-50">
-                                            <td className="border border-gray-400 p-2">Additional Work</td>
-                                            <td className="border border-gray-400 p-2 text-center">18%</td>
-                                            <td className="border border-gray-400 p-2 text-center">50</td>
-                                            <td className="border border-gray-400 p-2 text-right">{template.currency_symbol} 800</td>
-                                            <td className="border border-gray-400 p-2 text-right">{template.currency_symbol} 40,000</td>
-                                            <td className="border border-gray-400 p-2 text-right">{template.currency_symbol} 7,200</td>
-                                            <td className="border border-gray-400 p-2 text-right">{template.currency_symbol} 47,200</td>
+                                        <tr style={{ backgroundColor: template.table_alt_row_color }}>
+                                            <td className="border p-2" style={{ borderColor: template.border_color }}>Additional Work</td>
+                                            <td className="border p-2 text-center" style={{ borderColor: template.border_color }}>18%</td>
+                                            <td className="border p-2 text-center" style={{ borderColor: template.border_color }}>50</td>
+                                            <td className="border p-2 text-right" style={{ borderColor: template.border_color }}>{template.currency_symbol} 800</td>
+                                            <td className="border p-2 text-right" style={{ borderColor: template.border_color }}>{template.currency_symbol} 40,000</td>
+                                            <td className="border p-2 text-right" style={{ borderColor: template.border_color }}>{template.currency_symbol} 7,200</td>
+                                            <td className="border p-2 text-right" style={{ borderColor: template.border_color }}>{template.currency_symbol} 47,200</td>
                                         </tr>
                                     </tbody>
                                 </table>
