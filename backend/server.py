@@ -85,12 +85,13 @@ app = FastAPI(
     version="2.0.0"
 )
 
-# CORS configuration for production
+# CORS configuration - AWS production ready
+ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS', '*').split(',')
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=ALLOWED_ORIGINS,  # Set ALLOWED_ORIGINS env var for production
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
 
