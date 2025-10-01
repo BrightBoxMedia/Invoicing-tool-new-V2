@@ -898,12 +898,15 @@ const SimplePDFEditor = ({ currentUser }) => {
                                             className="font-bold mb-2" 
                                             style={{ 
                                                 fontSize: `${template.header_font_size}px`, 
-                                                color: template.header_color 
+                                                color: template.header_text_color 
                                             }}
                                         >
                                             TAX INVOICE
                                         </h1>
-                                        <div style={{ fontSize: `${template.content_font_size}px` }}>
+                                        <div style={{ 
+                                            fontSize: `${template.content_font_size}px`,
+                                            color: template.invoice_details_text_color 
+                                        }}>
                                             <div><strong>Invoice No:</strong> #PREVIEW-001</div>
                                             <div><strong>Invoice Date:</strong> {new Date().toLocaleDateString()}</div>
                                             <div><strong>Created By:</strong> {template.company_name}</div>
