@@ -919,6 +919,29 @@ const SimplePDFEditor = ({ currentUser }) => {
         loadActiveTemplate();
     }, []);
 
+    // Save default template with canvas elements when component first loads
+    useEffect(() => {
+        const saveDefaultTemplate = async () => {
+            try {
+                // Wait a moment to ensure canvasElements are set
+                setTimeout(async () => {
+                    if (Object.keys(canvasElements).length > 2) {
+                        console.log('Saving default template with canvas elements...');
+                        await saveTemplate();
+                    }
+                }, 2000); // 2 second delay to ensure everything is loaded
+            } catch (error) {
+                console.error('Error saving default template:', error);
+            }
+        };
+
+        // Only save default template once on first load
+        if (!localStorage.getItem('default_template_saved')) {
+            saveDefaultTemplate();
+            localStorage.setItem('default_template_saved', 'true');
+        }
+    }, [canvasElements]);
+
     const loadActiveTemplate = async () => {
         try {
             const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/pdf-template/active`, {
