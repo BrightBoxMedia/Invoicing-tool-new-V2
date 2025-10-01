@@ -136,7 +136,7 @@ class PDFTemplateManager:
         try:
             if hasattr(self, 'db') and self.db is not None:
                 template_data = await self.db.find_one({"id": template_id})
-                if template_data:
+                if template_data is not None:
                     return PDFTemplateConfig(**template_data)
             return None
         except Exception as e:
