@@ -115,6 +115,9 @@ const SimplePDFEditor = ({ currentUser }) => {
         logo_url: null,
         logo_width: 120,
         logo_height: 60,
+        logo_x: 400,
+        logo_y: 10,
+        logo_layer: 'above', // 'above' or 'behind' text
         
         // Invoice Styling
         header_color: '#127285',
