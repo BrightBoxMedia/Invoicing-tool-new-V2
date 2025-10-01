@@ -2398,6 +2398,250 @@ async def create_activity_log(log_data: dict, current_user: dict = Depends(get_c
         logger.error(f"Error creating activity log: {e}")
         raise HTTPException(status_code=500, detail="Error creating activity log")
 
+# ============================================================================
+# SEARCH & FILTERS API
+# ============================================================================
+
+@api_router.get("/search")
+async def search_data(
+    query: str = Query(..., description="Search query"),
+    current_user: dict = Depends(get_current_user)
+):
+    """Search across projects, invoices, and clients"""
+    try:
+        results = {"projects": [], "invoices": [], "clients": []}
+        
+        if query.strip():
+            # Search projects
+            projects = await db.projects.find({
+                "user_id": current_user["user_id"],
+                "$or": [
+                    {"project_name": {"$regex": query, "$options": "i"}},
+                    {"description": {"$regex": query, "$options": "i"}}
+                ]
+            }).limit(10).to_list(length=None)
+            results["projects"] = [{"id": p.get("id", str(p["_id"])), "name": p.get("project_name", "")} for p in projects]
+            
+            # Search invoices  
+            invoices = await db.invoices.find({
+                "user_id": current_user["user_id"],
+                "$or": [
+                    {"invoice_number": {"$regex": query, "$options": "i"}},
+                    {"description": {"$regex": query, "$options": "i"}}
+                ]
+            }).limit(10).to_list(length=None)
+            results["invoices"] = [{"id": i.get("id", str(i["_id"])), "number": i.get("invoice_number", "")} for i in invoices]
+            
+            # Search clients
+            clients = await db.clients.find({
+                "user_id": current_user["user_id"],
+                "$or": [
+                    {"name": {"$regex": query, "$options": "i"}},
+                    {"company": {"$regex": query, "$options": "i"}},
+                    {"email": {"$regex": query, "$options": "i"}}
+                ]
+            }).limit(10).to_list(length=None)
+            results["clients"] = [{"id": c.get("id", str(c["_id"])), "name": c.get("name", "")} for c in clients]
+        
+        return results
+        
+    except Exception as e:
+        logger.error(f"Error performing search: {e}")
+        raise HTTPException(status_code=500, detail="Error performing search")
+
+@api_router.get("/filters/projects")
+async def get_project_filters(current_user: dict = Depends(get_current_user)):
+    """Get filter options for projects"""
+    try:
+        # Get unique statuses
+        statuses = await db.projects.distinct("status", {"user_id": current_user["user_id"]})
+        
+        # Get date range
+        date_range = await db.projects.aggregate([
+            {"$match": {"user_id": current_user["user_id"]}},
+            {"$group": {
+                "_id": None,
+                "min_date": {"$min": "$created_at"},
+                "max_date": {"$max": "$created_at"}
+            }}
+        ]).to_list(length=1)
+        
+        return {
+            "statuses": statuses or ["active", "completed", "on_hold"],
+            "date_range": date_range[0] if date_range else {"min_date": None, "max_date": None}
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching project filters: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching filters")
+
+# ============================================================================
+# REPORTS API
+# ============================================================================
+
+@api_router.get("/reports/gst-summary")
+async def get_gst_summary(current_user: dict = Depends(get_current_user)):
+    """Get GST summary report"""
+    try:
+        # Get all invoices for GST calculation
+        invoices = await db.invoices.find({"user_id": current_user["user_id"]}).to_list(length=None)
+        
+        total_gst = sum(float(inv.get("gst_amount", 0)) for inv in invoices)
+        total_cgst = sum(float(inv.get("cgst_amount", 0)) for inv in invoices)
+        total_sgst = sum(float(inv.get("sgst_amount", 0)) for inv in invoices)
+        total_igst = sum(float(inv.get("igst_amount", 0)) for inv in invoices)
+        
+        return {
+            "total_gst": total_gst,
+            "cgst": total_cgst,
+            "sgst": total_sgst, 
+            "igst": total_igst,
+            "total_invoices": len(invoices),
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error generating GST summary: {e}")
+        raise HTTPException(status_code=500, detail="Error generating GST summary")
+
+@api_router.get("/reports/insights")
+async def get_business_insights(current_user: dict = Depends(get_current_user)):
+    """Get business insights and analytics"""
+    try:
+        user_id = current_user["user_id"]
+        
+        # Project insights
+        projects = await db.projects.find({"user_id": user_id}).to_list(length=None)
+        active_projects = len([p for p in projects if p.get("status") == "active"])
+        
+        # Invoice insights
+        invoices = await db.invoices.find({"user_id": user_id}).to_list(length=None)
+        paid_invoices = len([i for i in invoices if i.get("status") == "paid"])
+        pending_invoices = len(invoices) - paid_invoices
+        
+        # Revenue insights
+        total_revenue = sum(float(inv.get("total_amount", 0)) for inv in invoices)
+        avg_invoice_value = total_revenue / len(invoices) if invoices else 0
+        
+        return {
+            "project_insights": {
+                "total_projects": len(projects),
+                "active_projects": active_projects,
+                "completion_rate": (len(projects) - active_projects) / len(projects) * 100 if projects else 0
+            },
+            "invoice_insights": {
+                "total_invoices": len(invoices),
+                "paid_invoices": paid_invoices,
+                "pending_invoices": pending_invoices,
+                "collection_rate": paid_invoices / len(invoices) * 100 if invoices else 0
+            },
+            "financial_insights": {
+                "total_revenue": total_revenue,
+                "average_invoice_value": avg_invoice_value,
+                "monthly_revenue": total_revenue / 12  # Simple monthly average
+            },
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error generating insights: {e}")
+        raise HTTPException(status_code=500, detail="Error generating business insights")
+
+# ============================================================================
+# USER MANAGEMENT API
+# ============================================================================
+
+@api_router.get("/users")
+async def get_users(current_user: dict = Depends(get_current_user)):
+    """Get all users (admin only)"""
+    try:
+        # Check if user has admin privileges
+        if current_user.get("role") not in ["admin", "super_admin"]:
+            raise HTTPException(status_code=403, detail="Insufficient privileges")
+        
+        users = await db.users.find({}).to_list(length=None)
+        
+        # Remove sensitive information
+        safe_users = []
+        for user in users:
+            safe_user = {
+                "id": user.get("id", str(user["_id"])),
+                "email": user.get("email"),
+                "role": user.get("role"),
+                "company_name": user.get("company_name"),
+                "created_at": user.get("created_at"),
+                "is_active": user.get("is_active", True)
+            }
+            safe_users.append(safe_user)
+        
+        return safe_users
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching users: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching users")
+
+@api_router.get("/auth/me")
+async def get_current_user_info(current_user: dict = Depends(get_current_user)):
+    """Get current user information"""
+    try:
+        # Remove sensitive data
+        safe_user = {
+            "id": current_user.get("user_id"),
+            "email": current_user.get("email"), 
+            "role": current_user.get("role"),
+            "company_name": current_user.get("company_name", "")
+        }
+        return safe_user
+        
+    except Exception as e:
+        logger.error(f"Error fetching current user: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching user information")
+
+# ============================================================================
+# GST APPROVAL API
+# ============================================================================
+
+@api_router.get("/gst-approval")
+async def get_gst_approvals(current_user: dict = Depends(get_current_user)):
+    """Get GST approval status for invoices"""
+    try:
+        approvals = await db.gst_approvals.find({"user_id": current_user["user_id"]}).to_list(length=None)
+        
+        # Convert MongoDB documents to proper format
+        formatted_approvals = []
+        for approval in approvals:
+            approval["id"] = approval.pop("_id", str(approval.get("_id", "")))
+            formatted_approvals.append(approval)
+        
+        return formatted_approvals
+        
+    except Exception as e:
+        logger.error(f"Error fetching GST approvals: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching GST approvals")
+
+@api_router.post("/gst-approval")
+async def submit_gst_approval(approval_data: dict, current_user: dict = Depends(get_current_user)):
+    """Submit GST approval request"""
+    try:
+        # Add metadata
+        approval_data.update({
+            "id": f"gst_{int(datetime.now(timezone.utc).timestamp())}",
+            "user_id": current_user["user_id"],
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "status": "pending"
+        })
+        
+        # Insert into database
+        result = await db.gst_approvals.insert_one(approval_data)
+        
+        return {"message": "GST approval request submitted successfully", "approval_id": str(result.inserted_id)}
+        
+    except Exception as e:
+        logger.error(f"Error submitting GST approval: {e}")
+        raise HTTPException(status_code=500, detail="Error submitting GST approval")
+
 # Include the API router in the app
 app.include_router(api_router)
 
