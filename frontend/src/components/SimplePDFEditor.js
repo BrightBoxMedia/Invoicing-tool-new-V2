@@ -598,9 +598,9 @@ const SimplePDFEditor = ({ currentUser }) => {
                 return 'New Text Element';
             case 'text-group':
                 return {
-                    line1: 'Text Line 1',
-                    line2: 'Text Line 2',
-                    line3: 'Text Line 3'
+                    invoice_no: '#NEW-001',
+                    invoice_date: new Date().toLocaleDateString(),
+                    created_by: 'Company Name'
                 };
             case 'info-section':
                 return {
@@ -610,6 +610,21 @@ const SimplePDFEditor = ({ currentUser }) => {
                     company_gst: 'GST Number',
                     company_email: 'email@company.com',
                     company_phone: '+91 1234567890'
+                };
+            case 'table':
+                return {
+                    headers: ['Item', 'Qty', 'Rate', 'Amount'],
+                    rows: [
+                        ['New Item 1', '1', 'Rs. 100', 'Rs. 100'],
+                        ['New Item 2', '2', 'Rs. 200', 'Rs. 400']
+                    ]
+                };
+            case 'total-section':
+                return {
+                    title: 'TOTAL SUMMARY:',
+                    subtotal: 'Rs. 0',
+                    igst: 'Rs. 0',
+                    total: 'Rs. 0'
                 };
             default:
                 return 'New Element';
