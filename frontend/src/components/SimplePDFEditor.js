@@ -417,100 +417,235 @@ const SimplePDFEditor = ({ currentUser }) => {
                                     <div className="space-y-6">
                                         <h3 className="text-lg font-medium text-gray-900">Colors & Styling</h3>
                                         
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Header Color
-                                                </label>
-                                                <input
-                                                    type="color"
-                                                    value={template.header_color}
-                                                    onChange={(e) => updateField('header_color', e.target.value)}
-                                                    className="w-full h-10 border border-gray-300 rounded-md"
-                                                />
-                                            </div>
-                                            
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Table Header Color
-                                                </label>
-                                                <input
-                                                    type="color"
-                                                    value={template.table_header_color}
-                                                    onChange={(e) => updateField('table_header_color', e.target.value)}
-                                                    className="w-full h-10 border border-gray-300 rounded-md"
-                                                />
-                                            </div>
+                                        {/* Background Colors Section */}
+                                        <div className="bg-gray-50 p-4 rounded-lg">
+                                            <h4 className="font-medium text-gray-800 mb-4">Background Colors</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                        Header Background
+                                                    </label>
+                                                    <input
+                                                        type="color"
+                                                        value={template.header_color}
+                                                        onChange={(e) => updateField('header_color', e.target.value)}
+                                                        className="w-full h-10 border border-gray-300 rounded-md"
+                                                    />
+                                                </div>
+                                                
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                        Table Header Background
+                                                    </label>
+                                                    <input
+                                                        type="color"
+                                                        value={template.table_header_color}
+                                                        onChange={(e) => updateField('table_header_color', e.target.value)}
+                                                        className="w-full h-10 border border-gray-300 rounded-md"
+                                                    />
+                                                </div>
 
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Company Section Color
-                                                </label>
-                                                <input
-                                                    type="color"
-                                                    value={template.company_section_color}
-                                                    onChange={(e) => updateField('company_section_color', e.target.value)}
-                                                    className="w-full h-10 border border-gray-300 rounded-md"
-                                                />
-                                            </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                        Company Section Background
+                                                    </label>
+                                                    <input
+                                                        type="color"
+                                                        value={template.company_section_color}
+                                                        onChange={(e) => updateField('company_section_color', e.target.value)}
+                                                        className="w-full h-10 border border-gray-300 rounded-md"
+                                                    />
+                                                </div>
 
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Client Section Color
-                                                </label>
-                                                <input
-                                                    type="color"
-                                                    value={template.client_section_color}
-                                                    onChange={(e) => updateField('client_section_color', e.target.value)}
-                                                    className="w-full h-10 border border-gray-300 rounded-md"
-                                                />
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                        Client Section Background
+                                                    </label>
+                                                    <input
+                                                        type="color"
+                                                        value={template.client_section_color}
+                                                        onChange={(e) => updateField('client_section_color', e.target.value)}
+                                                        className="w-full h-10 border border-gray-300 rounded-md"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                        Total Row Background
+                                                    </label>
+                                                    <input
+                                                        type="color"
+                                                        value={template.total_row_color}
+                                                        onChange={(e) => updateField('total_row_color', e.target.value)}
+                                                        className="w-full h-10 border border-gray-300 rounded-md"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                        Alternate Row Background
+                                                    </label>
+                                                    <input
+                                                        type="color"
+                                                        value={template.table_alt_row_color}
+                                                        onChange={(e) => updateField('table_alt_row_color', e.target.value)}
+                                                        className="w-full h-10 border border-gray-300 rounded-md"
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Header Font Size
-                                                </label>
-                                                <input
-                                                    type="number"
-                                                    min="16"
-                                                    max="32"
-                                                    value={template.header_font_size}
-                                                    onChange={(e) => updateField('header_font_size', parseInt(e.target.value))}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                />
-                                            </div>
-                                            
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Content Font Size
-                                                </label>
-                                                <input
-                                                    type="number"
-                                                    min="10"
-                                                    max="16"
-                                                    value={template.content_font_size}
-                                                    onChange={(e) => updateField('content_font_size', parseInt(e.target.value))}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                />
-                                            </div>
-                                            
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Table Font Size
-                                                </label>
-                                                <input
-                                                    type="number"
-                                                    min="8"
-                                                    max="14"
-                                                    value={template.table_font_size}
-                                                    onChange={(e) => updateField('table_font_size', parseInt(e.target.value))}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                />
+                                        {/* Text Colors Section */}
+                                        <div className="bg-blue-50 p-4 rounded-lg">
+                                            <h4 className="font-medium text-blue-800 mb-4">Text Colors</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                        Header Text Color
+                                                    </label>
+                                                    <input
+                                                        type="color"
+                                                        value={template.header_text_color}
+                                                        onChange={(e) => updateField('header_text_color', e.target.value)}
+                                                        className="w-full h-10 border border-gray-300 rounded-md"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                        Table Header Text Color
+                                                    </label>
+                                                    <input
+                                                        type="color"
+                                                        value={template.table_header_text_color}
+                                                        onChange={(e) => updateField('table_header_text_color', e.target.value)}
+                                                        className="w-full h-10 border border-gray-300 rounded-md"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                        Invoice Details Text Color
+                                                    </label>
+                                                    <input
+                                                        type="color"
+                                                        value={template.invoice_details_text_color}
+                                                        onChange={(e) => updateField('invoice_details_text_color', e.target.value)}
+                                                        className="w-full h-10 border border-gray-300 rounded-md"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                        Company Text Color
+                                                    </label>
+                                                    <input
+                                                        type="color"
+                                                        value={template.company_text_color}
+                                                        onChange={(e) => updateField('company_text_color', e.target.value)}
+                                                        className="w-full h-10 border border-gray-300 rounded-md"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                        Client Text Color
+                                                    </label>
+                                                    <input
+                                                        type="color"
+                                                        value={template.client_text_color}
+                                                        onChange={(e) => updateField('client_text_color', e.target.value)}
+                                                        className="w-full h-10 border border-gray-300 rounded-md"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                        Table Data Text Color
+                                                    </label>
+                                                    <input
+                                                        type="color"
+                                                        value={template.table_data_text_color}
+                                                        onChange={(e) => updateField('table_data_text_color', e.target.value)}
+                                                        className="w-full h-10 border border-gray-300 rounded-md"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                        Summary Text Color
+                                                    </label>
+                                                    <input
+                                                        type="color"
+                                                        value={template.summary_text_color}
+                                                        onChange={(e) => updateField('summary_text_color', e.target.value)}
+                                                        className="w-full h-10 border border-gray-300 rounded-md"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                        Border Color
+                                                    </label>
+                                                    <input
+                                                        type="color"
+                                                        value={template.border_color}
+                                                        onChange={(e) => updateField('border_color', e.target.value)}
+                                                        className="w-full h-10 border border-gray-300 rounded-md"
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
 
+                                        {/* Font Sizes */}
+                                        <div className="bg-green-50 p-4 rounded-lg">
+                                            <h4 className="font-medium text-green-800 mb-4">Font Sizes</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                        Header Font Size
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        min="16"
+                                                        max="32"
+                                                        value={template.header_font_size}
+                                                        onChange={(e) => updateField('header_font_size', parseInt(e.target.value))}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                </div>
+                                                
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                        Content Font Size
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        min="10"
+                                                        max="16"
+                                                        value={template.content_font_size}
+                                                        onChange={(e) => updateField('content_font_size', parseInt(e.target.value))}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                </div>
+                                                
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                        Table Font Size
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        min="8"
+                                                        max="14"
+                                                        value={template.table_font_size}
+                                                        onChange={(e) => updateField('table_font_size', parseInt(e.target.value))}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Currency & Formatting */}
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                                 Currency Symbol
