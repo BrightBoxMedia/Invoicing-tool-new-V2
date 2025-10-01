@@ -1652,22 +1652,7 @@ async def generate_template_driven_pdf(
         except Exception as fallback_error:
             logger.error(f"Fallback PDF generation also failed: {fallback_error}")
             raise
-        
-        # Create document with template margins
-        doc = SimpleDocTemplate(
-            buffer,
-            pagesize=page_size,
-            topMargin=template_config.margin_top * mm,
-            bottomMargin=template_config.margin_bottom * mm,
-            leftMargin=template_config.margin_left * mm,
-            rightMargin=template_config.margin_right * mm
-        )
-        
-        # Create story (content elements)
-        story = []
-        
-        # Get styles
-        styles = getSampleStyleSheet()
+# Traditional PDF generation function placeholder - code moved below
         
         # 1. HEADER WITH LOGO AND TAX INVOICE TITLE
         # Create header table with logo and title
