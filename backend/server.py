@@ -1787,20 +1787,6 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
 
-@api_router.get("/health")
-async def api_health_check():
-    """API health check endpoint"""
-    try:
-        # Test database connection
-        await db.command("ping")
-        return {
-            "status": "healthy",
-            "database": "connected", 
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
-    except Exception as e:
-        raise HTTPException(status_code=503, detail=f"Database connection failed: {str(e)}")
-
 @app.get("/ready")
 async def readiness_check():
     try:
