@@ -199,7 +199,7 @@ async def initialize_template_manager(db):
         
         # Ensure default template exists
         default_exists = await template_manager.db.find_one({"id": "default"})
-        if not default_exists:
+        if default_exists is None:
             default_template = PDFTemplateConfig()
             await template_manager.save_template(default_template)
     except Exception as e:
