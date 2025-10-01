@@ -1,19 +1,19 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-    PhotographIcon as PhotoIcon, 
+    PhotoIcon, 
     DocumentTextIcon, 
-    TableIcon as TableCellsIcon, 
-    CursorClickIcon as CursorArrowRippleIcon,
+    TableCellsIcon, 
+    CursorArrowRippleIcon,
     EyeIcon,
-    CloudUploadIcon as CloudArrowUpIcon,
-    AdjustmentsIcon as AdjustmentsHorizontalIcon,
-    DotsHorizontalIcon as GridDotsIcon,
+    CloudArrowUpIcon,
+    AdjustmentsHorizontalIcon,
+    Squares2X2Icon as GridDotsIcon,
     LockClosedIcon,
     LockOpenIcon,
     TrashIcon,
-    DuplicateIcon
-} from '@heroicons/react/outline';
+    DocumentDuplicateIcon as DuplicateIcon
+} from '@heroicons/react/24/outline';
 
 const ModernPDFDesigner2025 = ({ currentUser }) => {
     const [template, setTemplate] = useState({
