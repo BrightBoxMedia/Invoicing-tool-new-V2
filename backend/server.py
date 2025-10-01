@@ -1869,15 +1869,6 @@ async def startup_event():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=PORT)
-                template_config.col_amount_width * mm,
-                25 * mm,  # CGST width
-                25 * mm,  # SGST width
-                template_config.col_total_width * mm
-            ]
-        else:
-            # IGST table structure  
-            table_headers = ['Item', 'GST Rate', 'Quantity', 'Rate', 'Amount', 'IGST', 'Total']
-            col_widths = [
                 template_config.col_item_width * mm,
                 template_config.col_gst_rate_width * mm,
                 template_config.col_quantity_width * mm,
