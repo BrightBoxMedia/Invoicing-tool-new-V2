@@ -1645,7 +1645,7 @@ async def generate_template_driven_pdf(
         
         # Summary data
         summary_data = [
-            ['Subtotal:', f"{currency_symbol}{subtotal:,.2f}"]
+            ['Subtotal:', f"{currency_symbol} {subtotal:,.2f}"]
         ]
         
         # Add GST breakdown based on type
@@ -1653,16 +1653,16 @@ async def generate_template_driven_pdf(
             cgst_total = invoice_data.get('cgst_amount', 0)
             sgst_total = invoice_data.get('sgst_amount', 0)
             summary_data.extend([
-                [f'CGST ({9.0}%):', f"{currency_symbol}{cgst_total:,.2f}"],
-                [f'SGST ({9.0}%):', f"{currency_symbol}{sgst_total:,.2f}"]
+                [f'CGST ({9.0}%):', f"{currency_symbol} {cgst_total:,.2f}"],
+                [f'SGST ({9.0}%):', f"{currency_symbol} {sgst_total:,.2f}"]
             ])
         else:
-            summary_data.append([f'IGST ({18.0}%):', f"{currency_symbol}{total_gst:,.2f}"])
+            summary_data.append([f'IGST ({18.0}%):', f"{currency_symbol} {total_gst:,.2f}"])
         
         summary_data.extend([
-            ['Total Amount:', f"{currency_symbol}{total_amount:,.2f}"],
-            ['Advance Received:', f"({currency_symbol}{advance:,.2f})"],
-            ['Net Amount Due:', f"{currency_symbol}{net_due:,.2f}"]
+            ['Total Amount:', f"{currency_symbol} {total_amount:,.2f}"],
+            ['Advance Received:', f"({currency_symbol} {advance:,.2f})"],
+            ['Net Amount Due:', f"{currency_symbol} {net_due:,.2f}"]
         ])
         
         # Create summary table
