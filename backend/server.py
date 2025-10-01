@@ -70,6 +70,226 @@ from reportlab.pdfgen import canvas
 # Logging
 import logging
 
+# Canvas-based PDF generation for Canva-like functionality
+async def generate_canvas_based_pdf(
+    template_config: PDFTemplateConfig, 
+    invoice_data: dict, 
+    client_data: dict, 
+    project_data: dict
+) -> bytes:
+    """
+    Generate PDF using Canvas API for precise element positioning (Canva-like functionality)
+    
+    Args:
+        template_config: PDF template configuration with canvas_elements
+        invoice_data: Invoice data dictionary
+        client_data: Client information dictionary  
+        project_data: Project information dictionary
+        
+    Returns:
+        bytes: Generated PDF as bytes
+    """
+    try:
+        # Create PDF buffer
+        buffer = BytesIO()
+        
+        # Determine page size
+        page_size = A4 if template_config.page_size == "A4" else letter
+        page_width, page_height = page_size
+        
+        # Create canvas for precise positioning
+        c = canvas.Canvas(buffer, pagesize=page_size)
+        
+        # Helper function to convert frontend coordinates to ReportLab coordinates
+        # ReportLab uses bottom-left origin, frontend uses top-left origin
+        def convert_coordinates(x, y, element_height=0):
+            # Convert from top-left origin to bottom-left origin
+            converted_x = float(x) * (page_width / 600)  # Scale from 600px canvas to actual page width
+            converted_y = page_height - (float(y) * (page_height / 800)) - element_height  # Scale and flip Y axis
+            return converted_x, converted_y
+        
+        # Render each canvas element
+        for element_id, element in template_config.canvas_elements.items():
+            try:
+                # Get element properties
+                element_type = element.type
+                x, y = convert_coordinates(element.x, element.y, element.height or 20)
+                content = element.content
+                style = element.style
+                
+                # Set text properties
+                c.setFont("Helvetica", style.fontSize or 12)
+                c.setFillColor(colors.toColor(style.color or "#000000"))
+                
+                # Render based element type
+                if element_type == "text":
+                    # Simple text element
+                    text_content = str(content) if content else "Text Element"
+                    c.drawString(x, y, text_content)
+                    
+                elif element_type == "text-group":
+                    # Multi-line text group (invoice details)
+                    if isinstance(content, dict):
+                        line_height = (style.fontSize or 12) + 4
+                        current_y = y
+                        
+                        # Draw invoice number
+                        if content.get('invoice_no'):
+                            c.drawString(x, current_y, f"Invoice No: {content['invoice_no']}")
+                            current_y -= line_height
+                        
+                        # Draw invoice date  
+                        if content.get('invoice_date'):
+                            c.drawString(x, current_y, f"Invoice Date: {content['invoice_date']}")
+                            current_y -= line_height
+                            
+                        # Draw created by
+                        if content.get('created_by'):
+                            c.drawString(x, current_y, f"Created By: {content['created_by']}")
+                    
+                elif element_type == "info-section":
+                    # Company/client information section
+                    if isinstance(content, dict):
+                        line_height = (style.fontSize or 12) + 2
+                        current_y = y
+                        
+                        # Draw background rectangle if specified
+                        if style.backgroundColor:
+                            c.setFillColor(colors.toColor(style.backgroundColor))
+                            c.rect(x - 5, y - 5, element.width + 10, -(element.height or 100), fill=1, stroke=0)
+                            c.setFillColor(colors.toColor(style.color or "#000000"))
+                        
+                        # Draw title (BILLED BY: / BILLED TO:)
+                        if content.get('title'):
+                            c.setFont("Helvetica-Bold", (style.fontSize or 12) + 1)
+                            c.drawString(x, current_y, content['title'])
+                            current_y -= line_height + 2
+                        
+                        # Draw company name
+                        if content.get('company_name'):
+                            c.setFont("Helvetica-Bold", style.fontSize or 12)
+                            c.drawString(x, current_y, content['company_name'])
+                            current_y -= line_height
+                        
+                        # Draw address (multi-line)
+                        if content.get('company_address'):
+                            c.setFont("Helvetica", (style.fontSize or 12) - 1)
+                            address_lines = content['company_address'].split('\n')
+                            for line in address_lines:
+                                if line.strip():
+                                    c.drawString(x, current_y, line.strip())
+                                    current_y -= line_height - 2
+                        
+                        # Draw GST
+                        if content.get('company_gst'):
+                            c.drawString(x, current_y, f"GST: {content['company_gst']}")
+                            current_y -= line_height - 2
+                            
+                        # Draw email
+                        if content.get('company_email'):
+                            c.drawString(x, current_y, f"Email: {content['company_email']}")
+                            current_y -= line_height - 2
+                            
+                        # Draw phone
+                        if content.get('company_phone'):
+                            c.drawString(x, current_y, f"Phone: {content['company_phone']}")
+                
+                elif element_type == "project-info":
+                    # Project information
+                    if isinstance(content, dict):
+                        line_height = (style.fontSize or 12) + 4
+                        current_y = y
+                        
+                        if content.get('project_name'):
+                            c.drawString(x, current_y, f"Project: {content['project_name']}")
+                            current_y -= line_height
+                            
+                        if content.get('location'):
+                            c.drawString(x, current_y, f"Location: {content['location']}")
+                
+            except Exception as e:
+                logger.warning(f"Error rendering canvas element {element_id}: {e}")
+                continue
+        
+        # Render logo if present
+        if hasattr(template_config, 'logo_url') and template_config.logo_url:
+            try:
+                if template_config.logo_url.startswith('data:image'):
+                    # Extract base64 data
+                    logo_data = template_config.logo_url.split(',')[1]
+                    logo_bytes = base64.b64decode(logo_data)
+                    logo_buffer = BytesIO(logo_bytes)
+                    
+                    # Convert logo coordinates
+                    logo_x, logo_y = convert_coordinates(template_config.logo_x or 350, template_config.logo_y or 20, template_config.logo_height or 60)
+                    
+                    # Draw logo on canvas
+                    c.drawImage(
+                        logo_buffer,
+                        logo_x, logo_y,
+                        width=template_config.logo_width or 120,
+                        height=template_config.logo_height or 60
+                    )
+            except Exception as e:
+                logger.warning(f"Logo rendering failed in canvas mode: {e}")
+        
+        # Generate sample invoice table if no table element exists
+        # This ensures backward compatibility
+        table_exists = any(element.type == "table" for element in template_config.canvas_elements.values())
+        if not table_exists:
+            # Add a simple sample table at bottom of page
+            table_y = 200  # Fixed position for sample table
+            
+            # Table headers
+            headers = ["Item", "GST Rate", "Qty", "Rate", "Amount", "IGST", "Total"]
+            col_widths = [75, 18, 20, 22, 30, 25, 30]
+            start_x = 50
+            
+            # Draw table headers
+            c.setFillColor(colors.toColor(template_config.table_header_color or "#127285"))
+            c.rect(start_x, table_y, sum(col_widths), 20, fill=1, stroke=1)
+            
+            c.setFillColor(colors.toColor(template_config.table_header_text_color or "#FFFFFF"))
+            c.setFont("Helvetica-Bold", template_config.table_header_font_size or 11)
+            
+            current_x = start_x + 5
+            for i, header in enumerate(headers):
+                c.drawString(current_x, table_y + 5, header)
+                current_x += col_widths[i]
+            
+            # Draw sample row
+            c.setFillColor(colors.toColor("#000000"))
+            c.setFont("Helvetica", template_config.table_data_font_size or 10)
+            
+            sample_row = ["Sample Construction Work", "18%", "100", "Rs. 1,000", "Rs. 100,000", "Rs. 18,000", "Rs. 118,000"]
+            current_x = start_x + 5
+            for i, cell in enumerate(sample_row):
+                c.drawString(current_x, table_y - 15, cell)
+                current_x += col_widths[i]
+        
+        # Save the canvas
+        c.save()
+        
+        # Get PDF bytes
+        buffer.seek(0)
+        return buffer.getvalue()
+        
+    except Exception as e:
+        logger.error(f"Canvas-based PDF generation failed: {e}")
+        # Fall back to traditional generation
+        return await generate_traditional_pdf(template_config, invoice_data, client_data, project_data)
+
+# Traditional PDF generation (renamed for clarity)
+async def generate_traditional_pdf(
+    template_config: PDFTemplateConfig, 
+    invoice_data: dict, 
+    client_data: dict, 
+    project_data: dict
+) -> bytes:
+    """Traditional PDF generation using ReportLab Platypus (story-based)"""
+    # This is the existing implementation - will be renamed from generate_template_driven_pdf
+    pass
+
 # Environment setup
 SECRET_KEY = os.getenv('JWT_SECRET', 'activus-invoice-secret-key-2025')
 MONGO_URL = os.getenv('MONGO_URL', 'mongodb://localhost:27017')
