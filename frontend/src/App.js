@@ -163,13 +163,13 @@ const Sidebar = ({ currentUser }) => {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div className="w-64 bg-white shadow-lg h-full">
+    <div className="w-64 bg-white shadow-lg h-full flex flex-col">
       <div className="p-6 border-b border-gray-200">
         <h1 className="text-xl font-bold text-gray-800">Invoicing Tool</h1>
       </div>
       
-      <nav className="mt-6">
-        <div className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+      <nav className="flex-1 py-6">
+        <div className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">
           Navigation
         </div>
         <div className="space-y-1">
