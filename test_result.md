@@ -668,10 +668,10 @@
   run_ui: false
 
 ## test_plan:
-  current_focus: ["AWS Deployment Readiness Verification"]
+  current_focus: ["Enhanced Interactive Logo Functionality Testing"]
   stuck_tasks: []
   test_all: false
-  test_priority: "completed"
+  test_priority: "high_first"
 
 ## frontend:
   - task: "Navigation Cleanup and PDF Editor After Major Reorganization"
