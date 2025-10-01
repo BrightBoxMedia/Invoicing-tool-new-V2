@@ -641,7 +641,7 @@
   run_ui: false
 
 ## test_plan:
-  current_focus: []
+  current_focus: ["Navigation Cleanup and PDF Editor Testing"]
   stuck_tasks: []
   test_all: false
   test_priority: "completed"
