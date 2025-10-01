@@ -614,16 +614,10 @@
   run_ui: false
 
 ## test_plan:
-  current_focus:
-    - "PDF Template Management System Backend Implementation"
-    - "PDF Template CRUD API Endpoints"  
-    - "Dynamic PDF Generation with Template Engine"
-    - "Frontend Template Editor Integration"
-    - "Logo Upload and File Management"
-    - "Live Preview Functionality"
+  current_focus: []
   stuck_tasks: []
   test_all: false
-  test_priority: "pdf_template_management_system"
+  test_priority: "completed"
 
   - task: "Proforma Invoice Tax Options"
     implemented: true
