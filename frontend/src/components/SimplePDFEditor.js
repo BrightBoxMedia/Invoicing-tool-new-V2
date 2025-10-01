@@ -38,15 +38,12 @@ const DraggableLogo = ({ logoUrl, logoWidth, logoHeight, logoX, logoY, onLogoCha
 
     useEffect(() => {
         if (dragging) {
-            const handleMove = (e) => handleMouseMove(e);
-            const handleUp = () => setDragging(false);
-            
-            document.addEventListener('mousemove', handleMove);
-            document.addEventListener('mouseup', handleUp);
+            document.addEventListener('mousemove', handleGlobalMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
             
             return () => {
-                document.removeEventListener('mousemove', handleMove);
-                document.removeEventListener('mouseup', handleUp);
+                document.removeEventListener('mousemove', handleGlobalMouseMove);
+                document.removeEventListener('mouseup', handleMouseUp);
             };
         }
     }, [dragging, dragOffset]);
