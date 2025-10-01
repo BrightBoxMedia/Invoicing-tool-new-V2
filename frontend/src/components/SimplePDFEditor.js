@@ -1025,27 +1025,31 @@ const SimplePDFEditor = ({ currentUser }) => {
 
                                 {/* Totals */}
                                 <div className="flex justify-end">
-                                    <table className="border-collapse border border-gray-400" style={{ fontSize: `${template.content_font_size}px` }}>
+                                    <table className="border-collapse border" style={{ 
+                                        fontSize: `${template.content_font_size}px`,
+                                        color: template.summary_text_color,
+                                        borderColor: template.border_color 
+                                    }}>
                                         <tbody>
                                             <tr>
-                                                <td className="border border-gray-400 p-2 text-right">Subtotal:</td>
-                                                <td className="border border-gray-400 p-2 text-right font-semibold">{template.currency_symbol} 140,000</td>
+                                                <td className="border p-2 text-right" style={{ borderColor: template.border_color }}>Subtotal:</td>
+                                                <td className="border p-2 text-right font-semibold" style={{ borderColor: template.border_color }}>{template.currency_symbol} 140,000</td>
                                             </tr>
                                             <tr>
-                                                <td className="border border-gray-400 p-2 text-right">IGST (18%):</td>
-                                                <td className="border border-gray-400 p-2 text-right font-semibold">{template.currency_symbol} 25,200</td>
+                                                <td className="border p-2 text-right" style={{ borderColor: template.border_color }}>IGST (18%):</td>
+                                                <td className="border p-2 text-right font-semibold" style={{ borderColor: template.border_color }}>{template.currency_symbol} 25,200</td>
                                             </tr>
                                             <tr style={{ backgroundColor: template.total_row_color }}>
-                                                <td className="border border-gray-400 p-2 text-right font-bold">Total Amount:</td>
-                                                <td className="border border-gray-400 p-2 text-right font-bold">{template.currency_symbol} 165,200</td>
+                                                <td className="border p-2 text-right font-bold" style={{ borderColor: template.border_color }}>Total Amount:</td>
+                                                <td className="border p-2 text-right font-bold" style={{ borderColor: template.border_color }}>{template.currency_symbol} 165,200</td>
                                             </tr>
                                             <tr>
-                                                <td className="border border-gray-400 p-2 text-right">Advance Received:</td>
-                                                <td className="border border-gray-400 p-2 text-right font-semibold">({template.currency_symbol} 20,000)</td>
+                                                <td className="border p-2 text-right" style={{ borderColor: template.border_color }}>Advance Received:</td>
+                                                <td className="border p-2 text-right font-semibold" style={{ borderColor: template.border_color }}>({template.currency_symbol} 20,000)</td>
                                             </tr>
                                             <tr style={{ backgroundColor: template.total_row_color }}>
-                                                <td className="border border-gray-400 p-2 text-right font-bold">Net Amount Due:</td>
-                                                <td className="border border-gray-400 p-2 text-right font-bold">{template.currency_symbol} 145,200</td>
+                                                <td className="border p-2 text-right font-bold" style={{ borderColor: template.border_color }}>Net Amount Due:</td>
+                                                <td className="border p-2 text-right font-bold" style={{ borderColor: template.border_color }}>{template.currency_symbol} 145,200</td>
                                             </tr>
                                         </tbody>
                                     </table>
