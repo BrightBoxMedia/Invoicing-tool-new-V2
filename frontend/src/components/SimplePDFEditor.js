@@ -484,6 +484,147 @@ const SimplePDFEditor = ({ currentUser }) => {
     const [saving, setSaving] = useState(false);
     const [uploadingLogo, setUploadingLogo] = useState(false);
 
+    // ============================================================================
+    // PHASE 1: CANVAS MANAGEMENT FUNCTIONS
+    // ============================================================================
+
+    // Update element position
+    const updateElementPosition = (elementId, x, y) => {
+        setCanvasElements(prev => ({
+            ...prev,
+            [elementId]: {
+                ...prev[elementId],
+                x: x,
+                y: y
+            }
+        }));
+    };
+
+    // Update element size
+    const updateElementSize = (elementId, width, height) => {
+        setCanvasElements(prev => ({
+            ...prev,
+            [elementId]: {
+                ...prev[elementId],
+                width: width,
+                height: height
+            }
+        }));
+    };
+
+    // Update element content
+    const updateElementContent = (elementId, newContent) => {
+        setCanvasElements(prev => ({
+            ...prev,
+            [elementId]: {
+                ...prev[elementId],
+                content: typeof newContent === 'object' 
+                    ? { ...prev[elementId].content, ...newContent }
+                    : newContent
+            }
+        }));
+    };
+
+    // Add new element to canvas
+    const addCanvasElement = (elementType) => {
+        const newId = `${elementType}-${Date.now()}`;
+        const newElement = {
+            type: elementType,
+            x: 50 + Math.random() * 100, // Random position to avoid overlap
+            y: 50 + Math.random() * 100,
+            width: elementType === 'text' ? 200 : 300,
+            height: elementType === 'text' ? 40 : 100,
+            content: getDefaultContent(elementType),
+            style: getDefaultStyle(elementType),
+            editable: true
+        };
+        
+        setCanvasElements(prev => ({
+            ...prev,
+            [newId]: newElement
+        }));
+        
+        setSelectedElement(newId);
+    };
+
+    // Remove element from canvas
+    const removeCanvasElement = (elementId) => {
+        if (selectedElement === elementId) {
+            setSelectedElement(null);
+        }
+        setCanvasElements(prev => {
+            const newElements = { ...prev };
+            delete newElements[elementId];
+            return newElements;
+        });
+    };
+
+    // Get default content for new elements
+    const getDefaultContent = (elementType) => {
+        switch (elementType) {
+            case 'text':
+                return 'New Text Element';
+            case 'text-group':
+                return {
+                    line1: 'Text Line 1',
+                    line2: 'Text Line 2',
+                    line3: 'Text Line 3'
+                };
+            case 'info-section':
+                return {
+                    title: 'SECTION TITLE:',
+                    company_name: 'Company Name',
+                    company_address: 'Address Line 1\nAddress Line 2',
+                    company_gst: 'GST Number',
+                    company_email: 'email@company.com',
+                    company_phone: '+91 1234567890'
+                };
+            default:
+                return 'New Element';
+        }
+    };
+
+    // Get default style for new elements
+    const getDefaultStyle = (elementType) => {
+        switch (elementType) {
+            case 'text':
+                return { fontSize: 14, fontWeight: 'normal', color: '#000000' };
+            case 'text-group':
+                return { fontSize: 12, color: '#000000' };
+            case 'info-section':
+                return { backgroundColor: '#f5f5f5', fontSize: 12, color: '#000000', padding: 12 };
+            default:
+                return { fontSize: 12, color: '#000000' };
+        }
+    };
+
+    // Handle canvas clicks (deselect elements)
+    const handleCanvasClick = (e) => {
+        if (e.target === e.currentTarget) {
+            setSelectedElement(null);
+        }
+    };
+
+    // Duplicate element
+    const duplicateElement = (elementId) => {
+        const element = canvasElements[elementId];
+        if (!element) return;
+        
+        const newId = `${element.type}-${Date.now()}`;
+        const duplicatedElement = {
+            ...element,
+            x: element.x + 20,
+            y: element.y + 20
+        };
+        
+        setCanvasElements(prev => ({
+            ...prev,
+            [newId]: duplicatedElement
+        }));
+        
+        setSelectedElement(newId);
+    };
+
     // Load existing template
     useEffect(() => {
         loadActiveTemplate();
