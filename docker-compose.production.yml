@@ -1,58 +1,48 @@
+# Production Docker Compose for AWS deployment
 version: '3.8'
 
 services:
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile.frontend
-    ports:
-      - "80:80"
-    environment:
-      - NODE_ENV=production
-    depends_on:
-      - backend
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
   backend:
-    build:
+    build: 
       context: .
       dockerfile: Dockerfile.backend
     ports:
       - "8001:8001"
     environment:
-      - NODE_ENV=production
-      - MONGO_URL=${MONGO_URL}
-      - DB_NAME=${DB_NAME:-activus_invoice_db}
-      - JWT_SECRET=${JWT_SECRET}
+      - MONGO_URL=${MONGO_URL:-mongodb://mongo:27017/invoicing}
       - PORT=8001
-      - UPLOAD_DIR=/tmp/uploads/logos
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*}
-    volumes:
-      - uploads:/tmp/uploads
     depends_on:
-      - mongodb
+      - mongo
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/api/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
       interval: 30s
       timeout: 10s
       retries: 3
 
-  mongodb:
-    image: mongo:7
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL:-http://localhost:8001}
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:6.0
     ports:
       - "27017:27017"
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME:-admin}
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-password}
-      - MONGO_INITDB_DATABASE=${DB_NAME:-activus_invoice_db}
     volumes:
-      - mongodb_data:/data/db
+      - mongo_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    environment:
+      - MONGO_INITDB_DATABASE=invoicing
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
@@ -61,5 +51,5 @@ services:
       retries: 3
 
 volumes:
-  mongodb_data:
-  uploads:
+  mongo_data:
+    driver: local
