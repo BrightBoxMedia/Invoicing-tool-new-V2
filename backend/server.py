@@ -1768,16 +1768,83 @@ async def login(user_data: UserLogin):
     except Exception as e:
         logger.error(f"Login error: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
+# PDF Template Management endpoints with Canvas Elements support
+@api_router.get("/admin/pdf-template/active")
+async def get_active_template(current_user: dict = Depends(get_current_user)):
+    """Get the active PDF template configuration with canvas elements"""
+    try:
+        template = await template_manager.get_active_template()
+        # Convert to dict and ensure canvas_elements is included
+        template_dict = template.dict()
+        if not template_dict.get('canvas_elements'):
+            template_dict['canvas_elements'] = {}
+        return template_dict
+    except Exception as e:
+        logger.error(f"Error getting active template: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error loading template")
+
+@api_router.post("/admin/pdf-template")
+async def save_template(template_data: dict, current_user: dict = Depends(get_current_user)):
+    """Save PDF template configuration with canvas elements"""
+    try:
+        # Create template config from the data
+        template_config = PDFTemplateConfig(**template_data)
         
-        story.append(billing_table)
-        story.append(Spacer(1, template_config.billing_section_spacing))
+        # Save template
+        success = await template_manager.save_template(template_config)
+        if success:
+            return {"message": "Template saved successfully"}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to save template")
+    except Exception as e:
+        logger.error(f"Error saving template: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error saving template: {str(e)}")
+
+@api_router.post("/admin/pdf-template/preview")
+async def generate_template_preview(template_data: dict, current_user: dict = Depends(get_current_user)):
+    """Generate a preview PDF using the template configuration"""
+    try:
+        template_config = PDFTemplateConfig(**template_data)
         
-        # 4. PROJECT DETAILS
-        story.append(Paragraph(f"<b>Project:</b> {project_data.get('project_name', 'N/A')}", invoice_details_style))
-        story.append(Paragraph(f"<b>Location:</b> {project_data.get('location', 'N/A')}", invoice_details_style))
-        story.append(Spacer(1, template_config.billing_section_spacing))
+        # Sample data for preview
+        sample_invoice = {
+            "id": "preview-001",
+            "invoice_number": "PREVIEW-001", 
+            "subtotal": 100000.0,
+            "total_gst_amount": 18000.0,
+            "total_amount": 118000.0,
+            "advance_received": 0.0,
+            "net_amount_due": 118000.0,
+            "payment_terms": "Payment due within 30 days"
+        }
         
-        # 5. ITEMS TABLE
+        sample_client = {
+            "name": "Sample Client Ltd.",
+            "address": "123 Client Street, Client City - 400001",
+            "gst_no": "27BBBBB1234B1Z5",
+            "email": "client@example.com",
+            "phone": "+91 9876543210"
+        }
+        
+        sample_project = {
+            "project_name": "Sample Construction Project",
+            "location": "Sample Location, Sample City"
+        }
+        
+        # Generate PDF
+        pdf_buffer = await generate_template_driven_pdf(
+            template_config, sample_invoice, sample_client, sample_project
+        )
+        
+        return StreamingResponse(
+            io.BytesIO(pdf_buffer),
+            media_type="application/pdf",
+            headers={"Content-Disposition": "attachment; filename=template_preview.pdf"}
+        )
+    except Exception as e:
+        logger.error(f"Error generating template preview: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error generating preview")
         # Determine table structure based on GST type
         gst_type = invoice_data.get('gst_type', 'IGST')
         # Use "Rs." instead of ₹ symbol to avoid font encoding issues
