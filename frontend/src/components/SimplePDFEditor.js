@@ -895,8 +895,8 @@ const SimplePDFEditor = ({ currentUser }) => {
                         <div className="bg-white rounded-lg shadow-sm p-6">
                             <h3 className="text-lg font-medium text-gray-900 mb-4">Live Preview</h3>
                             
-                            {/* Invoice Preview */}
-                            <div className="border border-gray-300 bg-white p-6 rounded-lg" style={{ fontSize: '12px', fontFamily: 'Arial, sans-serif' }}>
+                            {/* Invoice Preview - Canva Style Free Area */}
+                            <div className="border border-gray-300 bg-white p-6 rounded-lg relative overflow-visible" style={{ fontSize: '12px', fontFamily: 'Arial, sans-serif', minHeight: '800px' }}>
                                 
                                 {/* Header with Interactive Logo */}
                                 <div className="relative mb-6" style={{ minHeight: '120px' }}>
