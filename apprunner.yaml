@@ -14,14 +14,12 @@ run:
     - name: PORT
       value: "8001"
     - name: MONGO_URL
-      value: "mongodb+srv://your-username:your-password@cluster.mongodb.net/invoicing"
+      value: "mongodb+srv://abhishek_db_user:6wnZLJTTyQ6eMIA@invoice-cluster.dhjcmx5.mongodb.net/invoicing?retryWrites=true&w=majority"
     - name: SECRET_KEY
-      value: "your-super-secret-key-change-in-production"
+      value: "super-secret-key-change-in-production"
     - name: ALLOWED_ORIGINS
       value: "*"
     - name: DB_NAME
       value: "invoicing"
     - name: UPLOAD_DIR
       value: "/tmp/uploads"
-    - name: REACT_APP_BACKEND_URL
-      value: "https://your-app-name.region.awsapprunner.com"

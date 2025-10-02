@@ -1,6 +1,4 @@
 # Multi-stage Dockerfile for AWS App Runner
-# This builds both frontend and backend in a single container
-
 FROM node:18-alpine AS frontend-builder
 
 # Build React frontend
