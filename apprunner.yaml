@@ -5,7 +5,6 @@ build:
     build:
       - echo "Building application with Docker"
 run:
-  runtime-version: latest
   command: python server.py
   network:
     port: 8001
